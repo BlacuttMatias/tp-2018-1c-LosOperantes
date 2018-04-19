@@ -45,26 +45,12 @@ RemoteSystemsTempFiles/
 .settings
 .settings/*
 
-log/
+#log/
 files/*.tmp
 *.tmp
-files/bloques/job*
-files/tmp/job*
-files/tmp/Mast*
-files/md5/*.tmp
-files/final/*.tar.gz
-files/final/*.csv
-files/final/*.txt
-files/export/*.tmp
-
-metadata/directorios.dat
-metadata/data.bin
-metadata/nodos.bin
-metadata/bitmaps/*.dat
 
 # excluyo los binarios
-yama
-fs
-master
-datanode
-worker
+planificador
+coordinador
+esi
+instancia

@@ -30,7 +30,7 @@ void recibirString(int socket, char* buf);
 int sendall(int, void *, int);
 
 int aceptarconexion(int socket_escucha);
-void enviar_estructura(int* socket ,t_solicitud_transformacion* solicitud);
+
 Encabezado recibir_header(int* socket);
 Paquete recibir_payload(int* socket,int* tam);
 

@@ -4,6 +4,9 @@
 #include <commons/log.h>
 #include <commons/string.h>
 #include <netinet/in.h>
+#include <readline/history.h>
+#include <readline/readline.h>
+#include <readline/rltypedefs.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -120,6 +123,10 @@ int main(int argc, char* argv[]){
     FD_ZERO(&temporales);
 
 
+
+    // Variables para la Consola Interactiva
+    const char* promptConsola = "#> "; // Prompt
+
     // Mensaje de Bienvenida de la Consola
     printf("Bienvenido a la Consola Interactiva del Planificador 1.0\n");
     printf("Para obtener ayuda de los comandos permitidos, escriba 'help'.\n");
@@ -127,8 +134,6 @@ int main(int argc, char* argv[]){
     log_info(infoLogger, "Inicio de la Consola Interactiva" );
     rl_callback_handler_install(promptConsola, (rl_vcpfunc_t*) &consola_interactiva);
 
-    // Variables para la Consola Interactiva
-    const char* promptConsola = "#> "; // Prompt
 
 
     // Creo el Servidor para escuchar conexiones

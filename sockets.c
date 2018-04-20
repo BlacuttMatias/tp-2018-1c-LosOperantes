@@ -95,15 +95,7 @@ int aceptarconexion (int socket_escucha){
 	printf("conectado\n");
 	return newfd;
 }
-void enviar_estructura(int* socket ,t_solicitud_transformacion* solicitud){
-	Paquete paquete;
-	t_solicitud_transformacion solicitud_transformacion =*solicitud;
-    int socket1=*socket;
-	paquete=srlz_solicitudTransformacion(&solicitud_transformacion);
-	if (send(socket1,paquete.buffer,paquete.tam_buffer,0)==-1){
-		perror("fallo envio");
-	}
-}
+
 
 Encabezado recibir_header(int* socket){
 	int num,tam_buf,codigo_ope;

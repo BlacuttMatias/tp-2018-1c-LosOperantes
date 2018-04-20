@@ -34,8 +34,8 @@
 Paquete crearHeader(char proceso, int cod_operacion, int tamPayload);
 
 	// EJEMPLO
-	Paquete srlz_solicitudTransformacion(t_solicitud_transformacion* solicitud);
-	t_solicitud_transformacion dsrlz_solicitudTransformacion(void* buffer);
+	//Paquete srlz_solicitudTransformacion(t_solicitud_transformacion* solicitud);
+	//t_solicitud_transformacion dsrlz_solicitudTransformacion(void* buffer);
 
 /* ---------------------------------------- */
 /*  Funciones de ESI 						*/

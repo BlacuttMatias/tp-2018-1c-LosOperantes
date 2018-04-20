@@ -39,7 +39,7 @@ int main(int argc, char* argv[]){
 	Encabezado encabezado;
 	Paquete paquete;
     struct sockaddr_in servidor_addr,my_addr,master_addr; // información de la dirección de destino
-    int sockfd, numbytes,escucha_master,fd_maximo,nuevo_fd,i,size, nbytes;
+    int servidor, numbytes,escucha_master,fd_maximo,nuevo_fd,i,size, nbytes;
     fd_set master,temporales;
     FD_ZERO(&master);
     FD_ZERO(&temporales);
@@ -113,7 +113,7 @@ int main(int argc, char* argv[]){
     log_destroy(infoLogger);
     config_destroy(cfg);
 
-    close(sockfd);
+    close(servidor);
 
     return 0;
 }

@@ -2,6 +2,7 @@
 
 //*********************** SERIALIZADO Y DESERIALIZADO ********************************//
 
+/*
 Paquete srlz_solicitudTransformacion(t_solicitud_transformacion* solicitud)
 {
 	int codigo = INICIAR_TRANSFORMACION_ARCHIVO;
@@ -80,7 +81,7 @@ t_solicitud_transformacion dsrlz_solicitudTransformacion(void* buffer) //este bu
 
 	return solicitud;
 }
-
+*/
 
 //**************************************************************************//
 // Creacion del Encabezado Fijo del Paquete 								

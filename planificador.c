@@ -69,22 +69,59 @@ void consola_interactiva(char* comandoConsola) {
             comandoAceptado = true;
 
             printf("Los comandos aceptados por esta consola son:\n\n");
-            printf("\tformat \t- Formatear el Filesystem. \n\n");
-            printf("\n\trm [path_archivo] ó rm -d [path_directorio] ó rm -b [path_archivo] [nro_bloque] [nro_copia] \t- Eliminar un Archivo/Directorio/Bloque. Si un directorio a eliminar no se encuentra vacío, la operación debe fallar. Además, si el bloque a eliminar fuera la última copia del mismo, se deberá abortar la operación informando lo sucedido. \n\n");
-            printf("\n\trename [path_original] [nombre_final] \t- Renombra un Archivo o Directorio \n\n");
-            printf("\n\tmv [path_original] [path_final] \t- Mueve un Archivo o Directorio \n\n");
-            printf("\n\tcat [path_archivo] \t- Muestra el contenido del archivo como texto plano. \n\n");
-            printf("\n\tmkdir [path_dir] \t- Crea un directorio. \n\n");
-            printf("\n\tcpfrom [path_archivo_origen] [directorio_yamafs] [tipo_archivo]\t- Copia un archivo local al YamaFS. El tipo_archivo puede ser binario (b) o texto (t)\n\n");
-            printf("\n\tcpto [path_archivo_yamafs] [directorio_filesystem] \t- Copia un archivo local al YamaFS. \n\n");
-            printf("\n\tcpblock [path_archivo] [nro_bloque] [id_nodo] \t- Crea una copia de un bloque de un archivo en el nodo dado. \n\n");
-            printf("\n\tmd5 [path_archivo_yamafs] \t- Solicitar el MD5 de un archivo en YamaFS. \n\n");
-            printf("\n\tls [path_directorio] \t- Lista los archivos de un directorio. Si no se indica un directorio, se muestra la Tabla de Directorios y la Tabla de Nodos.\n\n");
-            printf("\n\tinfo [path_archivo_yamafs] \t- Muestra toda la información del archivo, incluyendo tamaño, bloques, ubicación de los bloques, etc. \n\n");
+
+            printf("\tPausar/Continuar \t- El Planificador no le dará nuevas órdenes de ejecución a ningún ESI mientras se encuentre pausado. \n\n");
+
+            printf("\n\tbloquear <clave> <ID> \t- Se bloqueará el proceso ESI hasta ser desbloqueado (ver más adelante), especificado por dicho <ID> en la cola del recurso <clave>. Vale recordar que cada línea del script a ejecutar es atómica, y no podrá ser interrumpida; si no que se bloqueará en la próxima oportunidad posible. Solo se podrán bloquear de esta manera ESIs que estén en el estado de listo o ejecutando. \n\n");
+
+            printf("\n\tdesbloquear <clave> \t- Se desbloqueara el proceso ESI con el ID especificado. Solo se bloqueará ESIs que fueron bloqueados con la consola. Si un ESI está bloqueado esperando un recurso, no podrá ser desbloqueado de esta forma. \n\n");
+
+            printf("\n\tlistar <recurso> \t- Lista los procesos encolados esperando al recurso. \n\n");
+
+            printf("\n\tkill <ID> \t- finaliza el proceso. Recordando la atomicidad mencionada en “bloquear”. \n\n");
+
+            printf("\n\tstatus <clave> \t- Debido a que para la correcta coordinación de las sentencias de acuerdo a los algoritmos de distribución se requiere de cierta información sobre las instancias del sistema, el Coordinador proporcionará una consola que permita consultar esta información. \n\n");
+
+            printf("\n\tdeadlock\t- Esta consola también permitirá analizar los deadlocks que existan en el sistema y a que ESI están asociados. Pudiendo resolverlos manualmente con la sentencia de kill previamente descrita.\n\n");
         }
 
 
-        if(string_starts_with(comandoConsola,"CPBLOCK")){
+        if(string_starts_with(comandoConsola,"PAUSAR")){
+            comandoAceptado = true;
+            printf("Comando no implementado...\n");
+        }
+
+        if(string_starts_with(comandoConsola,"CONTINUAR")){
+            comandoAceptado = true;
+            printf("Comando no implementado...\n");
+        }
+
+        if(string_starts_with(comandoConsola,"BLOQUEAR")){
+            comandoAceptado = true;
+            printf("Comando no implementado...\n");
+        }
+
+        if(string_starts_with(comandoConsola,"DESBLOQUEAR")){
+            comandoAceptado = true;
+            printf("Comando no implementado...\n");
+        }
+
+        if(string_starts_with(comandoConsola,"LISTAR")){
+            comandoAceptado = true;
+            printf("Comando no implementado...\n");
+        }
+
+        if(string_starts_with(comandoConsola,"KILL")){
+            comandoAceptado = true;
+            printf("Comando no implementado...\n");
+        }
+
+        if(string_starts_with(comandoConsola,"STATUS")){
+            comandoAceptado = true;
+            printf("Comando no implementado...\n");
+        }
+
+        if(string_starts_with(comandoConsola,"DEADLOCK")){
             comandoAceptado = true;
             printf("Comando no implementado...\n");
         }
@@ -126,6 +163,7 @@ int main(int argc, char* argv[]){
 
     // Variables para la Consola Interactiva
     const char* promptConsola = "#> "; // Prompt
+    struct timeval to; // Timer
 
     // Mensaje de Bienvenida de la Consola
     printf("Bienvenido a la Consola Interactiva del Planificador 1.0\n");
@@ -133,8 +171,8 @@ int main(int argc, char* argv[]){
 
     log_info(infoLogger, "Inicio de la Consola Interactiva" );
     rl_callback_handler_install(promptConsola, (rl_vcpfunc_t*) &consola_interactiva);
-
-
+    to.tv_sec = 0;
+    to.tv_usec = 1;
 
     // Creo el Servidor para escuchar conexiones
     servidor=crearServidor(config_get_int_value(cfg,"PLANIFICADOR_PUERTO"));
@@ -155,20 +193,20 @@ int main(int argc, char* argv[]){
 
     	temporales=master;
 
-    	if(select(fd_maximo+1,&temporales,NULL,NULL,NULL)==-1){
-    		perror("select");
-    		exit (1);
-    	}
+        if (select(fd_maximo + 1, &temporales, NULL, NULL, &to) == -1) {
+            perror("select");
+            exit(1);
+        }
 
         // Para la Consola Interactiva
         rl_callback_read_char();
 
     	for(i = 0; i <= fd_maximo; i++) {
             if (FD_ISSET(i, &temporales)) { // ¡¡tenemos datos!!
-                if (i == escucha_master) {
+                if (i == servidor) {
                     // gestionar nuevas conexiones
                     size = sizeof(master_addr);
-                    if ((nuevo_fd = accept(escucha_master, (struct sockaddr *)&master_addr,
+                    if ((nuevo_fd = accept(servidor, (struct sockaddr *)&master_addr,
                                                              &size)) == -1) {
                         perror("accept");
                     } else {

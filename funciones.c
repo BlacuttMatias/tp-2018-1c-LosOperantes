@@ -103,3 +103,47 @@ Paquete crearHeader(char proceso, int cod_operacion, int tamPayload){
 	return paquete;
 }
 
+
+//**************************************************************************//
+// Persistir Datos en el Coordinador
+//**************************************************************************//
+bool persistirDatos(Instruccion* datosInstruccion, char* algoritmoDistricucion){
+
+	// Dependiendo el algoritmoDistricucion, persistir los datos localmente
+
+	return true;
+}
+
+//**************************************************************************//
+// Procesar script de Instrucciones
+//**************************************************************************//
+bool procesarScript(char* pathScript, t_list* listaInstrucciones){
+
+	// Leer el script ubicado en pathScript y cargar la lista listaInstrucciones con todas las instrucciones para posteriormente ir leyendo instruccion a instruccion 
+
+
+	return true;
+}
+
+//**************************************************************************//
+// Generar las Estructuras Administrativas del Coordinador
+//**************************************************************************//
+void inicializarEstructurasAdministrativas(){
+
+}
+
+//**************************************************************************//
+// Registrar las Instrucciones en el Log de Operaciones
+//**************************************************************************//
+bool registrarLogOperaciones(Instruccion* datosInstruccion, char* nombreProceso){
+
+	return true;
+}
+
+//**************************************************************************//
+// El Coordinador procesa la instruccion y elige la Instancia que lo va a ejecutar
+//**************************************************************************//
+char* procesarSolicitudEjecucion(Instruccion* datosInstruccion, char* algoritmoDistribucion){
+
+	return "INSTANCIA1";
+}

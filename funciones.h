@@ -41,7 +41,7 @@ Paquete crearHeader(char proceso, int cod_operacion, int tamPayload);
 /*  Funciones de ESI 						*/
 /* ---------------------------------------- */
 
-
+	bool procesarScript(char* pathScript, t_list* listaInstrucciones);
 
 /* ---------------------------------------- */
 /*  Funciones de Planificador 				*/
@@ -53,13 +53,16 @@ Paquete crearHeader(char proceso, int cod_operacion, int tamPayload);
 /*  Funciones de Coordinador 				*/
 /* ---------------------------------------- */
 
+	void inicializarEstructurasAdministrativas();
+	bool registrarLogOperaciones(Instruccion* datosInstruccion, char* nombreProceso);
+	char* procesarSolicitudEjecucion(Instruccion* datosInstruccion, char* algoritmoDistribucion);
 
 
 /* ---------------------------------------- */
 /*  Funciones de Instancia 					*/
 /* ---------------------------------------- */
 
-
+	bool persistirDatos(Instruccion* datosInstruccion, char* algoritmoAlmacenamiento);
 
 /* ---------------------------------------- */
 #endif

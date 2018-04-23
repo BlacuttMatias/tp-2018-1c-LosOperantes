@@ -53,6 +53,35 @@ int main(int argc, char* argv[]){
 	FD_SET(servidor, &master);
 	fd_maximo = servidor;	
 
+// -----------------------------------------------------------------------
+//    Prueba de funciones
+// -----------------------------------------------------------------------
+
+    inicializarEstructurasAdministrativas();
+
+
+    Instruccion* datosInstruccion;
+
+    datosInstruccion->texto_instruccion = malloc(strlen("STORE clave")+1);
+    strcpy( datosInstruccion->texto_instruccion ,"STORE clave");
+    datosInstruccion->texto_instruccion[strlen("STORE clave")] = '\0';
+
+    if(registrarLogOperaciones(datosInstruccion, "PROCESO1")){
+
+    }
+
+    // Defino el Algoritmo de Distribucion a utlizar
+    char* algoritmoDistribucion = string_new();
+    string_append(&algoritmoDistribucion,"CIRCULAR");
+    char* instanciaElegida = string_new();
+
+    instanciaElegida = procesarSolicitudEjecucion(datosInstruccion, algoritmoDistribucion);
+
+    free(algoritmoDistribucion);
+    free(instanciaElegida);
+
+// -----------------------------------------------------------------------
+
 
     while(1){
     	temporales=master;

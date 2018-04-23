@@ -54,6 +54,35 @@ int main(int argc, char* argv[]){
 	fd_maximo = servidor;	
 
 
+
+
+
+// -----------------------------------------------------------------------
+//    Prueba de funciones
+// -----------------------------------------------------------------------
+
+    Instruccion* datosInstruccion;
+
+    datosInstruccion->texto_instruccion = malloc(strlen("STORE clave")+1);
+    strcpy( datosInstruccion->texto_instruccion ,"STORE clave");
+    datosInstruccion->texto_instruccion[strlen("STORE clave")] = '\0';
+
+    // Defino el Algoritmo de Almacenamiento a utlizar
+    char* algoritmoAlmacenamiento = string_new();
+    string_append(&algoritmoAlmacenamiento,"CIRCULAR");
+
+
+    if(persistirDatos(datosInstruccion, algoritmoAlmacenamiento)){
+        // Proceso a realizar si se persistiron correctamente los datos
+    }else{
+        // Proceso a realizar si fallo la persistencia
+    }
+
+    free(algoritmoAlmacenamiento);
+
+
+// -----------------------------------------------------------------------
+
     while(1){
     	temporales=master;
 

@@ -12,6 +12,7 @@ enum cod_operacion {
 	EJECUTAR_INSTRUCCION = 1,
 	SOLICITUD_EJECUCION_INSTRUCCION = 2,
 	NOTIFICAR_USO_RECURSO = 3,
+	HANDSHAKE = 4,
 };
 
 
@@ -29,6 +30,11 @@ typedef struct //Encabezado
 	int tam_payload;
 }Encabezado;
 
+
+typedef struct
+{
+	char* texto_instruccion;
+}Instruccion;
 
 
 #endif

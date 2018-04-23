@@ -23,6 +23,7 @@
 
 t_log* infoLogger;
 t_config* cfg;
+t_list* listaInstrucciones;
 
 /* ---------------------------------------- */
 
@@ -52,6 +53,31 @@ int main(int argc, char* argv[]){
 
 	FD_SET(servidor, &master);
 	fd_maximo = servidor;	
+
+
+
+
+// -----------------------------------------------------------------------
+//    Prueba de funciones
+// -----------------------------------------------------------------------
+
+
+    // Defino el Algoritmo de Districucion a utlizar
+    char* pathScript = string_new();
+    string_append(&pathScript,"/path/script.txt");
+
+    // Cargo todas las Instrucciones en una Lista
+    if(procesarScript(pathScript, listaInstrucciones)){
+        // Si se pudieron cargar todas las instrucciones en la Lista
+    }else{
+        // Si fallo el proceso
+    }
+
+    free(pathScript);
+
+
+// -----------------------------------------------------------------------
+
 
 
     while(1){

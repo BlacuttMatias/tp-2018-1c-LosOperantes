@@ -64,7 +64,7 @@ int main(int argc, char* argv[]){
 
     // Defino el Algoritmo de Districucion a utlizar
     char* pathScript = string_new();
-    string_append(&pathScript,"/path/script.txt");
+    string_append(&pathScript,"files/script.txt");
 
     // Cargo todas las Instrucciones en una Lista
     if(procesarScript(pathScript, listaInstrucciones)){

@@ -122,6 +122,31 @@ bool procesarScript(char* pathScript, t_list* listaInstrucciones){
 	// Leer el script ubicado en pathScript y cargar la lista listaInstrucciones con todas las instrucciones para posteriormente ir leyendo instruccion a instruccion 
 
 
+	// Abro el Script
+    FILE *archivo = fopen(pathScript, "r");
+
+	struct stat s;
+	stat(pathScript, &s);
+
+    int caracter;
+
+	// Si se pudo posicionar dentro del archivo
+	if(fseek( archivo, 0, SEEK_SET ) == 0){
+
+
+	    while ((caracter = fgetc(archivo)) != EOF) {
+
+			printf("%c", caracter);
+
+			if(caracter == '\n'){
+				printf("\n");
+			}
+	    }
+	}
+
+	// Cierro el FD
+	fclose(archivo);
+
 	return true;
 }
 

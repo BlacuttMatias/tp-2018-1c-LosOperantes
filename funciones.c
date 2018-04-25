@@ -119,16 +119,14 @@ bool persistirDatos(Instruccion* datosInstruccion, char* algoritmoDistricucion){
 //**************************************************************************//
 bool procesarScript(char* pathScript, t_list* listaInstrucciones){
 
-	// Leer el script ubicado en pathScript y cargar la lista listaInstrucciones con todas las instrucciones para posteriormente ir leyendo instruccion a instruccion 
-
-
 	// Abro el Script
     FILE *archivo = fopen(pathScript, "r");
-
-	struct stat s;
-	stat(pathScript, &s);
-
     int caracter;
+
+	Instruccion* registroInstruccion = NULL;
+	registroInstruccion = malloc(sizeof(Instruccion));
+
+	char *unaInstruccion = string_new();
 
 	// Si se pudo posicionar dentro del archivo
 	if(fseek( archivo, 0, SEEK_SET ) == 0){
@@ -136,13 +134,52 @@ bool procesarScript(char* pathScript, t_list* listaInstrucciones){
 
 	    while ((caracter = fgetc(archivo)) != EOF) {
 
-			printf("%c", caracter);
+// printf("%c", caracter);
 
+			// Si leyo una linea completa, agrego la instruccion a la lista
 			if(caracter == '\n'){
-				printf("\n");
+ 
+ printf("%s\n",unaInstruccion);
+
+        		// Cargo el Registro de la instruccion
+        		registroInstruccion->texto_instruccion = malloc(strlen(unaInstruccion)+1);       		
+        		strcpy( registroInstruccion->texto_instruccion ,unaInstruccion);        		
+        		registroInstruccion->texto_instruccion[strlen(unaInstruccion)] = '\0';
+
+        		// Agrego la instruccion a la lista
+				list_add(listaInstrucciones,registroInstruccion);
+
+				// Inicializo el string de la Instruccion
+				unaInstruccion = string_new();
+			}else{
+				string_append_with_format(&unaInstruccion, "%c", caracter);	
 			}
 	    }
 	}
+
+
+	// Muestro por pantalla el contenido de la Lista
+	int indice = 0;
+
+	if(list_size(listaInstrucciones) > 0){
+
+	    void _each_elemento_(Instruccion* registroInstruccionAux)
+		{
+			indice = indice + 1;
+
+			// Muestro el encabezaado
+			if(indice == 1) {
+				printf("\nINSTRUCCIONES\n");
+				printf("--------------\n");
+			}
+
+			printf("%s\n", registroInstruccionAux->texto_instruccion);
+
+		}
+	    list_iterate(listaInstrucciones, (void*)_each_elemento_);
+	}
+
+
 
 	// Cierro el FD
 	fclose(archivo);

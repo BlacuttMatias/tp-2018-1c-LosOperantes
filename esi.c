@@ -37,6 +37,10 @@ int main(int argc, char* argv[]){
 	printf("Iniciando ESI\n");
 
 
+    // Creo la lista de las Instrucciones del Proceso
+    listaInstrucciones = list_create();
+
+
 	Encabezado encabezado;
 	Paquete paquete;
     struct sockaddr_in servidor_addr,my_addr,master_addr; // información de la dirección de destino

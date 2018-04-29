@@ -25,7 +25,8 @@
 /*  Variables Globales 						*/
 /* ---------------------------------------- */
 
-#define TAM_BLOQUE 1048576 // 1 MB
+t_log* infoLogger;
+t_config* cfg;
 
 /* ---------------------------------------- */
 // Funciones de Serializacion/Deserializacion

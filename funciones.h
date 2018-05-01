@@ -51,6 +51,8 @@
 /* ---------------------------------------- */
 
 	void showContenidolistaReady(t_list* listaReady);
+	void showContenidocolaReady(t_queue* colaReady);
+	t_queue* planificarReady(t_list* listaReady, char* algoritmoPlanificacion);
 
 /* ---------------------------------------- */
 /*  Funciones de Coordinador 				*/

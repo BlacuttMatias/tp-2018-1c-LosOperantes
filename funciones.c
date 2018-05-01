@@ -152,17 +152,22 @@ bool procesarScript(char* pathScript, t_list* listaInstrucciones){
 	return true;
 }
 
+//**************************************************************************//
+// Obtener la Proxima Instruccion a Ejecutar de un ESI
+//**************************************************************************//
 char* obtenerProximaInstruccion(t_list* listaInstrucciones){
 
 	char* proximaInstruccion = string_new();
 	return proximaInstruccion;
 }
 
+//**************************************************************************//
+// Obtener el tamano de la Proxima Instruccion a Ejecutar de un ESI
+//**************************************************************************//
 int obtenerTamanoProximaInstruccion(t_list* listaInstrucciones){
 
 	return 10;
 }
-
 
 //**************************************************************************//
 // Generar las Estructuras Administrativas del Coordinador
@@ -213,5 +218,81 @@ void showContenidolistaReady(t_list* listaReady){
 		}
 	    list_iterate(listaReady, (void*)_each_elemento_);
 	}
+}
 
+//**************************************************************************//
+// Mostrar el contenido de la Cola Ready
+//**************************************************************************//
+void showContenidocolaReady(t_queue* colaReady){ 
+
+	int indice = 0;
+	Proceso* registroProcesoAux = NULL;
+
+	if(queue_size(colaReady) > 0){
+
+
+		for (indice = 0; indice  < queue_size(colaReady); indice=indice+1 ) {
+
+			// Obtengo un elemento
+			registroProcesoAux = queue_pop(colaReady);
+
+
+			// Muestro el encabezaado
+			if(indice == 0) {
+				printf("\nCOLA READY\n");
+				printf("Proceso \t Rafaga Anterior \t Rafaga Actual\n");
+				printf("------\t -------\n");
+			}
+
+			printf("%s \t %d \t %d\n", registroProcesoAux->nombreProceso,registroProcesoAux->rafagaAnterior, registroProcesoAux->rafagaActual);
+
+
+			// Lo vuelvo a agregar a la cola
+			queue_push(colaReady, registroProcesoAux);
+		}
+
+
+
+	}
+}
+
+
+//**************************************************************************//
+// Ordena la ColaReady y la devuelve segun el Planificador
+//**************************************************************************//
+t_queue* planificarReady(t_list* listaReady, char* algoritmoPlanificacion){
+
+	t_queue* colaAux;
+	colaAux = queue_create();
+
+
+	if(string_starts_with(algoritmoPlanificacion,"SJF-SD")){
+
+
+	}	
+
+	if(string_starts_with(algoritmoPlanificacion,"SJF-CD")){
+
+
+	}	
+
+
+	if(string_starts_with(algoritmoPlanificacion,"HRRN")){
+
+
+		if(list_size(listaReady) > 0){
+
+		    void _each_elemento_(Proceso* registroProcesoAux)
+			{
+
+				// Agrego el Registro a la cola
+				queue_push(colaAux, registroProcesoAux);
+			}
+		    list_iterate(listaReady, (void*)_each_elemento_);
+		}
+
+
+	}	
+
+	return colaAux;
 }

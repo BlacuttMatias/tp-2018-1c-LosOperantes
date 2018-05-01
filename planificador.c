@@ -100,6 +100,18 @@ void hiloConsolaInteractiva(void * unused) {
                 }
 
 
+
+                if(string_starts_with(comandoConsola,"PLANIFICAR")){
+                    comandoAceptado = true;
+
+                    colaReady =  planificarReady(listaReady, config_get_string_value(cfg,"ALGORITMO_PLANIFICACION"));
+                    showContenidocolaReady(colaReady);
+
+                }
+
+
+
+
                 if(string_starts_with(comandoConsola,"PAUSAR")){
                     comandoAceptado = true;
                     printf("Comando no implementado...\n");
@@ -245,7 +257,6 @@ void servidorPlanificador(void* puerto){
 
                                     // Cargo el Proceso en la listaReady
                                     list_add(listaReady, registroProcesoAux);
-                                    
 
                                     // Muestro por pantalla el contenido de la listaReady
                                     showContenidolistaReady(listaReady);

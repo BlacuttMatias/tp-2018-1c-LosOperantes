@@ -65,6 +65,13 @@ int main(int argc, char* argv[]){
     // Creo conexión con Planificador
     int planificador_fd = conectarseAservidor(config_get_string_value(cfg,"PLANIFICADOR_IP"),config_get_int_value(cfg,"PLANIFICADOR_PUERTO"));
 
+    if(planificador_fd == -1){
+        printf("Error de conexion con el Planificador\n");
+        return EXIT_FAILURE;        
+    }
+
+
+
     FD_SET(planificador_fd, &master);
     fd_maximo = planificador_fd;   
 
@@ -163,5 +170,5 @@ int main(int argc, char* argv[]){
 
     close(servidor);
 
-    return 0;
+    return EXIT_SUCCESS;
 }

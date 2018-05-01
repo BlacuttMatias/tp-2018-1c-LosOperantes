@@ -36,5 +36,10 @@ typedef struct
 	char* texto_instruccion;
 }Instruccion;
 
+typedef struct
+{
+	int proceso;
+}Proceso;
+
 
 #endif

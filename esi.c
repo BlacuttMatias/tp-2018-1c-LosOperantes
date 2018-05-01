@@ -50,16 +50,18 @@ int main(int argc, char* argv[]){
     FD_ZERO(&temporales);
 
 
-	// Creo el Servidor para escuchar conexiones
-	servidor=crearServidor(config_get_int_value(cfg,"ESI_PUERTO"));
-	log_info(infoLogger, "Escuchando conexiones" );
+    // Creo conexión con Planificador
+    int planificador_fd = conectarseAservidor(config_get_string_value(cfg,"PLANIFICADOR_IP"),config_get_int_value(cfg,"PLANIFICADOR_PUERTO"));
 
 
-	FD_SET(servidor, &master);
-	fd_maximo = servidor;	
+    // Envio al Planificador el Handshake
+    paquete = crearHeader('E', HANDSHAKE, 'A');
+    send(planificador_fd,paquete.buffer,paquete.tam_buffer,0);
+    free(paquete.buffer);
 
 
-
+    FD_SET(planificador_fd, &master);
+    fd_maximo = planificador_fd;   
 
 // -----------------------------------------------------------------------
 //    Prueba de funciones

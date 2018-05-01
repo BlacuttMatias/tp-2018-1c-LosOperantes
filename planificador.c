@@ -22,6 +22,18 @@
 #include "sockets.h"
 
 /* ---------------------------------------- */
+/*  Variables Globales                      */
+/* ---------------------------------------- */
+
+    t_queue* colaReady;
+    t_queue* colaEjecucion;
+    t_queue* colaBloqueados;
+    t_queue* colaTerminados;
+    t_list* listaClavesBloqueadas;
+
+    bool planificadorPausado = false;
+
+/* ---------------------------------------- */
 /*  Consola interactiva                     */
 /* ---------------------------------------- */
 
@@ -160,6 +172,11 @@ void servidorPlanificador(void* puerto){
     fd_maximo = servidor;   
 
 
+    Proceso* registroProceso = NULL;
+    registroProceso = malloc(sizeof(Proceso));
+
+    int indice = 0;
+
     while(1){
 
         temporales=master;
@@ -182,11 +199,10 @@ void servidorPlanificador(void* puerto){
                         if (nuevo_fd > fd_maximo) {    // actualizar el máximo
                             fd_maximo = nuevo_fd;
                         }
-                        log_trace(infoLogger, "Conexion nueva recibida" );
-                        printf("Conexion nueva recibida\n");
                     }
-                } else {
+                } else { // Atiendo las conexiones ya establecidas, es decir, clientes
 
+                    // Recibo el Encabezado del Paquete
                     encabezado=recibir_header(&i);
 
                     // gestionar datos de un cliente
@@ -202,13 +218,26 @@ void servidorPlanificador(void* puerto){
                          FD_CLR(i, &master); // eliminar del conjunto maestro
                     } else {
 
-                        switch(encabezado.cod_operacion){
+                        // Si el mensaje proviene de ESI
+                        if(encabezado.proceso == 'E'){
+                            switch(encabezado.cod_operacion){
 
-                            case EJECUTAR_INSTRUCCION:
-                                log_trace(infoLogger,"Pedido de Ejecución de Instruccion.");
-                                break;
+                                case HANDSHAKE:
 
+                                    // Recibo de ESI el nombre del Proceso
+                                    log_info(infoLogger,"Proceso %c conectado.", encabezado.tam_payload);
+
+                                    // Cargo el Proceso en la ColaReady
+                                    registroProceso->proceso = encabezado.tam_payload;
+                                    queue_push(colaReady, registroProceso);
+
+                                    // Muestro por pantalla el contenido de la ColaReady
+                                    printf("Elementos en colaReady: %d\n", queue_size(colaReady) );
+
+                                    break;
+                            }
                         }
+
                     }
                 }
             }
@@ -217,6 +246,8 @@ void servidorPlanificador(void* puerto){
 
     close(servidor);
     FD_CLR(servidor, &master);
+
+    free(registroProceso);
 }
 
 
@@ -229,6 +260,16 @@ int main(int argc, char* argv[]){
 	infoLogger = log_create("log/planificador.log", "PLANIFICADOR", false, LOG_LEVEL_INFO);
 
 	log_trace(infoLogger, "Iniciando PLANIFICADOR" );
+
+    // Creo las Colas para la Planificacion
+    colaReady = queue_create();
+    colaEjecucion = queue_create();
+    colaBloqueados = queue_create();
+    colaTerminados = queue_create();
+
+    // Creo la Lista de Claves Bloqueadas
+    listaClavesBloqueadas = list_create();
+
 
 
     pthread_t hiloConsola;
@@ -245,6 +286,12 @@ int main(int argc, char* argv[]){
     /* ---------------------------------------- */
     log_destroy(infoLogger);
     config_destroy(cfg);
+
+    queue_destroy(colaReady);
+    queue_destroy(colaEjecucion);
+    queue_destroy(colaBloqueados);
+    queue_destroy(colaTerminados);
+    list_destroy(listaClavesBloqueadas);
 
     return EXIT_SUCCESS;
 }

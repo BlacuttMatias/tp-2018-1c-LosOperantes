@@ -65,14 +65,6 @@ int main(int argc, char* argv[]){
     // Creo conexión con Planificador
     int planificador_fd = conectarseAservidor(config_get_string_value(cfg,"PLANIFICADOR_IP"),config_get_int_value(cfg,"PLANIFICADOR_PUERTO"));
 
-
-    // Envio al Planificador el Handshake y Serializado el Proceso
-    paquete = srlz_datosProceso('E', HANDSHAKE, nombreProceso, config_get_int_value(cfg,"ESTIMACION_INICIAL") );
-    send(planificador_fd,paquete.buffer,paquete.tam_buffer,0);
-    free(paquete.buffer);
-
-
-
     FD_SET(planificador_fd, &master);
     fd_maximo = planificador_fd;   
 
@@ -88,6 +80,16 @@ int main(int argc, char* argv[]){
     // Cargo todas las Instrucciones en una Lista
     if(procesarScript(pathScript, listaInstrucciones)){
         // Si se pudieron cargar todas las instrucciones en la Lista
+
+
+        int tamanoProximaInstruccion = obtenerTamanoProximaInstruccion(listaInstrucciones);
+
+        // Envio al Planificador el Handshake y Serializado el Proceso y el tamaño de la proxima instruccion
+        paquete = srlz_datosProceso('E', HANDSHAKE, nombreProceso, config_get_int_value(cfg,"ESTIMACION_INICIAL"), tamanoProximaInstruccion);
+        send(planificador_fd,paquete.buffer,paquete.tam_buffer,0);
+        free(paquete.buffer);
+
+
     }else{
         // Si fallo el proceso
     }

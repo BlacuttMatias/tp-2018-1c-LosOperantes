@@ -2,7 +2,7 @@
 
 //*********************** SERIALIZADO Y DESERIALIZADO ********************************//
 
-Paquete srlz_datosProceso(char proceso, int codigoOperacion, char* nombreProceso, int rafagaAnterior){
+Paquete srlz_datosProceso(char proceso, int codigoOperacion, char* nombreProceso, int rafagaAnterior, int rafagaActual){
 
 	int posicion = 0;//int para ir guiando desde donde se copia
 	int sizeBuffer = 0;
@@ -12,7 +12,7 @@ Paquete srlz_datosProceso(char proceso, int codigoOperacion, char* nombreProceso
 
 
 	sizeBuffer =sizeof(char)+
-			(sizeof(int)*4)
+			(sizeof(int)*5)
 			+ strlen(nombreProceso);
 
 	paquete.tam_buffer = sizeBuffer;
@@ -28,6 +28,7 @@ Paquete srlz_datosProceso(char proceso, int codigoOperacion, char* nombreProceso
 	memcpy(paquete.buffer + (posicion += sizeof(int) )						,nombreProceso					,strlen(nombreProceso)); //se copia el nombre
 
 	memcpy(paquete.buffer + (posicion += strlen(nombreProceso))				,&(rafagaAnterior)				,sizeof(int));
+	memcpy(paquete.buffer + (posicion += sizeof(int))						,&(rafagaActual)				,sizeof(int));
 
 	return paquete;
 }
@@ -44,8 +45,8 @@ Proceso dsrlz_datosProceso(void* buffer)
 	memcpy(solicitud.nombreProceso			,buffer+(posicion+=sizeof(int))							,sizeof(char)*tamString);
 	solicitud.nombreProceso[tamString]='\0';
 
-	memcpy(&solicitud.rafagaAnterior 		,buffer+(posicion+=tamString)							,sizeof(int));
-
+	memcpy(&solicitud.rafagaAnterior 		,buffer+(posicion+=sizeof(char) * tamString)			,sizeof(int));
+	memcpy(&solicitud.rafagaActual 			,buffer+(posicion+=sizeof(int))							,sizeof(int));
 
 	return solicitud;
 }
@@ -90,24 +91,20 @@ bool procesarScript(char* pathScript, t_list* listaInstrucciones){
 	// Abro el Script
     FILE *archivo = fopen(pathScript, "r");
     int caracter;
-
-	Instruccion* registroInstruccion = NULL;
-	registroInstruccion = malloc(sizeof(Instruccion));
-
 	char *unaInstruccion = string_new();
 
 	// Si se pudo posicionar dentro del archivo
 	if(fseek( archivo, 0, SEEK_SET ) == 0){
 
-
 	    while ((caracter = fgetc(archivo)) != EOF) {
-
-// printf("%c", caracter);
 
 			// Si leyo una linea completa, agrego la instruccion a la lista
 			if(caracter == '\n'){
  
- printf("%s\n",unaInstruccion);
+ //printf("%s\n",unaInstruccion);
+
+				Instruccion* registroInstruccion = NULL;
+				registroInstruccion = malloc(sizeof(Instruccion));
 
         		// Cargo el Registro de la instruccion
         		registroInstruccion->texto_instruccion = malloc(strlen(unaInstruccion)+1);       		
@@ -125,6 +122,9 @@ bool procesarScript(char* pathScript, t_list* listaInstrucciones){
 	    }
 	}
 
+	// Cierro el FD
+	fclose(archivo);
+
 
 	// Muestro por pantalla el contenido de la Lista
 	int indice = 0;
@@ -137,7 +137,7 @@ bool procesarScript(char* pathScript, t_list* listaInstrucciones){
 
 			// Muestro el encabezaado
 			if(indice == 1) {
-				printf("\nINSTRUCCIONES\n");
+				printf("\nLISTA DE INSTRUCCIONES\n");
 				printf("--------------\n");
 			}
 
@@ -145,15 +145,24 @@ bool procesarScript(char* pathScript, t_list* listaInstrucciones){
 
 		}
 	    list_iterate(listaInstrucciones, (void*)_each_elemento_);
+	}else{		
+		return false;
 	}
-
-
-
-	// Cierro el FD
-	fclose(archivo);
 
 	return true;
 }
+
+char* obtenerProximaInstruccion(t_list* listaInstrucciones){
+
+	char* proximaInstruccion = string_new();
+	return proximaInstruccion;
+}
+
+int obtenerTamanoProximaInstruccion(t_list* listaInstrucciones){
+
+	return 10;
+}
+
 
 //**************************************************************************//
 // Generar las Estructuras Administrativas del Coordinador
@@ -195,11 +204,11 @@ void showContenidolistaReady(t_list* listaReady){
 			// Muestro el encabezaado
 			if(indice == 1) {
 				printf("\nLISTA READY\n");
-				printf("Proceso \t Rafaga Anterior\n");
+				printf("Proceso \t Rafaga Anterior \t Rafaga Actual\n");
 				printf("------\t -------\n");
 			}
 
-			printf("%s \t %d\n", registroProcesoAux->nombreProceso,registroProcesoAux->rafagaAnterior);
+			printf("%s \t %d \t %d\n", registroProcesoAux->nombreProceso,registroProcesoAux->rafagaAnterior, registroProcesoAux->rafagaActual);
 
 		}
 	    list_iterate(listaReady, (void*)_each_elemento_);

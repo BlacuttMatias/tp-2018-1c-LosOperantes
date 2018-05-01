@@ -34,7 +34,7 @@
 
 	Paquete crearHeader(char proceso, int cod_operacion, int tamPayload);
 
-	Paquete srlz_datosProceso(char proceso, int codigoOperacion, char* nombreProceso, int rafagaAnterior);
+	Paquete srlz_datosProceso(char proceso, int codigoOperacion, char* nombreProceso, int rafagaAnterior, int rafagaActual);
 	Proceso dsrlz_datosProceso(void* buffer);
 
 /* ---------------------------------------- */
@@ -42,6 +42,9 @@
 /* ---------------------------------------- */
 
 	bool procesarScript(char* pathScript, t_list* listaInstrucciones);
+
+	char* obtenerProximaInstruccion(t_list* listaInstrucciones);
+	int obtenerTamanoProximaInstruccion(t_list* listaInstrucciones);
 
 /* ---------------------------------------- */
 /*  Funciones de Planificador 				*/

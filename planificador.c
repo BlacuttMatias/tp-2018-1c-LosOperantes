@@ -238,6 +238,7 @@ void servidorPlanificador(void* puerto){
 
                                     // Cargo el Registro del Proceso
                                     registroProcesoAux->rafagaAnterior = registroProceso.rafagaAnterior;
+                                    registroProcesoAux->rafagaActual = registroProceso.rafagaActual;
                                     registroProcesoAux->nombreProceso = malloc(strlen(registroProceso.nombreProceso)+1);
                                     strcpy( registroProcesoAux->nombreProceso ,registroProceso.nombreProceso);
                                     registroProcesoAux->nombreProceso[strlen(registroProceso.nombreProceso)] = '\0';

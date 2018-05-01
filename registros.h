@@ -40,6 +40,7 @@ typedef struct
 {
 	char* nombreProceso;
 	int rafagaAnterior;
+	int rafagaActual;	
 }Proceso;
 
 

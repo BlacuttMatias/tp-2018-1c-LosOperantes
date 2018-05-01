@@ -21,25 +21,37 @@
 /*  Variables Globales 						*/
 /* ---------------------------------------- */
 
-t_log* infoLogger;
-t_config* cfg;
 t_list* listaInstrucciones;
 
 /* ---------------------------------------- */
 
 int main(int argc, char* argv[]){
 
+
+    char* nombreProceso;
+
+    /*************************************************
+     *
+     * Se obtienen parametros por consola
+     *
+     ************************************************/
+    if(argc > 1){
+        nombreProceso =   malloc(strlen(argv[1])+1);      strcpy(nombreProceso,   argv[1]);
+
+    }else{
+        printf("Error de formato\n\nForma de Uso:\n ./esi [nombre_proceso]\n");
+        return EXIT_FAILURE;
+    }
+
 	/* Creo la instancia del Archivo de Configuracion y del Log */
 	cfg = config_create("config/config.cfg");
 	infoLogger = log_create("log/esi.log", "ESI", false, LOG_LEVEL_INFO);
 
-	log_info(infoLogger, "Iniciando ESI" );
-	printf("Iniciando ESI\n");
-
+	log_info(infoLogger, "Iniciando ESI - Proceso %s", nombreProceso );
+	printf("Iniciando ESI - Proceso %s\n", nombreProceso);
 
     // Creo la lista de las Instrucciones del Proceso
     listaInstrucciones = list_create();
-
 
 	Encabezado encabezado;
 	Paquete paquete;
@@ -54,10 +66,11 @@ int main(int argc, char* argv[]){
     int planificador_fd = conectarseAservidor(config_get_string_value(cfg,"PLANIFICADOR_IP"),config_get_int_value(cfg,"PLANIFICADOR_PUERTO"));
 
 
-    // Envio al Planificador el Handshake
-    paquete = crearHeader('E', HANDSHAKE, 'A');
+    // Envio al Planificador el Handshake y Serializado el Proceso
+    paquete = srlz_datosProceso('E', HANDSHAKE, nombreProceso, config_get_int_value(cfg,"ESTIMACION_INICIAL") );
     send(planificador_fd,paquete.buffer,paquete.tam_buffer,0);
     free(paquete.buffer);
+
 
 
     FD_SET(planificador_fd, &master);
@@ -144,6 +157,7 @@ int main(int argc, char* argv[]){
     /* ---------------------------------------- */
     log_destroy(infoLogger);
     config_destroy(cfg);
+    free(nombreProceso);
 
     close(servidor);
 

@@ -38,7 +38,8 @@ typedef struct
 
 typedef struct
 {
-	int proceso;
+	char* nombreProceso;
+	int rafagaAnterior;
 }Proceso;
 
 

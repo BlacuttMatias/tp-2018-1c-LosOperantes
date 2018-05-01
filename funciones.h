@@ -25,18 +25,17 @@
 /*  Variables Globales 						*/
 /* ---------------------------------------- */
 
-t_log* infoLogger;
-t_config* cfg;
+	t_log* infoLogger;
+	t_config* cfg;
 
 /* ---------------------------------------- */
 // Funciones de Serializacion/Deserializacion
 /* ---------------------------------------- */
 
-Paquete crearHeader(char proceso, int cod_operacion, int tamPayload);
+	Paquete crearHeader(char proceso, int cod_operacion, int tamPayload);
 
-	// EJEMPLO
-	//Paquete srlz_solicitudTransformacion(t_solicitud_transformacion* solicitud);
-	//t_solicitud_transformacion dsrlz_solicitudTransformacion(void* buffer);
+	Paquete srlz_datosProceso(char proceso, int codigoOperacion, char* nombreProceso, int rafagaAnterior);
+	Proceso dsrlz_datosProceso(void* buffer);
 
 /* ---------------------------------------- */
 /*  Funciones de ESI 						*/
@@ -48,7 +47,7 @@ Paquete crearHeader(char proceso, int cod_operacion, int tamPayload);
 /*  Funciones de Planificador 				*/
 /* ---------------------------------------- */
 
-
+	void showContenidolistaReady(t_list* listaReady);
 
 /* ---------------------------------------- */
 /*  Funciones de Coordinador 				*/

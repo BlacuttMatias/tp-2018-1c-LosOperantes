@@ -30,8 +30,10 @@
     t_queue* colaBloqueados;
     t_queue* colaTerminados;
     t_list* listaClavesBloqueadas;
+    t_list* listaReady;
 
     bool planificadorPausado = false;
+
 
 /* ---------------------------------------- */
 /*  Consola interactiva                     */
@@ -172,9 +174,7 @@ void servidorPlanificador(void* puerto){
     fd_maximo = servidor;   
 
 
-    Proceso* registroProceso = NULL;
-    registroProceso = malloc(sizeof(Proceso));
-
+    Proceso registroProceso;
     int indice = 0;
 
     while(1){
@@ -224,16 +224,30 @@ void servidorPlanificador(void* puerto){
 
                                 case HANDSHAKE:
 
+                                    // Recibo los datos del Nodo
+                                    paquete = recibir_payload(&i,&encabezado.tam_payload);
+                                    registroProceso = dsrlz_datosProceso(paquete.buffer);
+                                    free(paquete.buffer);
+
                                     // Recibo de ESI el nombre del Proceso
-                                    log_info(infoLogger,"Proceso %c conectado.", encabezado.tam_payload);
+                                    log_info(infoLogger,"Proceso %s conectado.", registroProceso.nombreProceso);
 
-                                    // Cargo el Proceso en la ColaReady
-                                    registroProceso->proceso = encabezado.tam_payload;
-                                    queue_push(colaReady, registroProceso);
+                                    // Cargo el Registro del Proceso
+                                    Proceso* registroProcesoAux = NULL;
+                                    registroProcesoAux = malloc(sizeof(Proceso));
 
-                                    // Muestro por pantalla el contenido de la ColaReady
-                                    printf("Elementos en colaReady: %d\n", queue_size(colaReady) );
+                                    // Cargo el Registro del Proceso
+                                    registroProcesoAux->rafagaAnterior = registroProceso.rafagaAnterior;
+                                    registroProcesoAux->nombreProceso = malloc(strlen(registroProceso.nombreProceso)+1);
+                                    strcpy( registroProcesoAux->nombreProceso ,registroProceso.nombreProceso);
+                                    registroProcesoAux->nombreProceso[strlen(registroProceso.nombreProceso)] = '\0';
 
+                                    // Cargo el Proceso en la listaReady
+                                    list_add(listaReady, registroProcesoAux);
+                                    
+
+                                    // Muestro por pantalla el contenido de la listaReady
+                                    showContenidolistaReady(listaReady);
                                     break;
                             }
                         }
@@ -247,7 +261,6 @@ void servidorPlanificador(void* puerto){
     close(servidor);
     FD_CLR(servidor, &master);
 
-    free(registroProceso);
 }
 
 
@@ -255,11 +268,11 @@ void servidorPlanificador(void* puerto){
 
 int main(int argc, char* argv[]){
 
-	/* Creo la instancia del Archivo de Configuracion y del Log */
-	cfg = config_create("config/config.cfg");
-	infoLogger = log_create("log/planificador.log", "PLANIFICADOR", false, LOG_LEVEL_INFO);
+    /* Creo la instancia del Archivo de Configuracion y del Log */
+    cfg = config_create("config/config.cfg");
+    infoLogger = log_create("log/planificador.log", "PLANIFICADOR", false, LOG_LEVEL_INFO);
 
-	log_trace(infoLogger, "Iniciando PLANIFICADOR" );
+    log_trace(infoLogger, "Iniciando PLANIFICADOR" );
 
     // Creo las Colas para la Planificacion
     colaReady = queue_create();
@@ -267,10 +280,11 @@ int main(int argc, char* argv[]){
     colaBloqueados = queue_create();
     colaTerminados = queue_create();
 
+    // Creo las Listas para la Planificacion
+    listaReady = list_create();
+
     // Creo la Lista de Claves Bloqueadas
     listaClavesBloqueadas = list_create();
-
-
 
     pthread_t hiloConsola;
     pthread_create(&hiloConsola, NULL, (void*) hiloConsolaInteractiva, NULL);
@@ -292,6 +306,7 @@ int main(int argc, char* argv[]){
     queue_destroy(colaBloqueados);
     queue_destroy(colaTerminados);
     list_destroy(listaClavesBloqueadas);
+    list_destroy(listaReady);
 
     return EXIT_SUCCESS;
 }

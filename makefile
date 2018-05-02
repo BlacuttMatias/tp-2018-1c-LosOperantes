@@ -3,10 +3,10 @@ COMPILER=gcc
 all:
 	$(COMPILER) -c -g sockets.c
 	$(COMPILER) -c -g funciones.c
-	$(COMPILER) -o planificador planificador.c sockets.o funciones.o  -lcommons -lpthread -lreadline
-	$(COMPILER) -o instancia instancia.c sockets.o funciones.o  -lcommons
-	$(COMPILER) -o coordinador coordinador.c sockets.o funciones.o  -lcommons -lpthread
-	$(COMPILER) -o esi esi.c sockets.o funciones.o  -lcommons
+	$(COMPILER) -o planificador planificador.c sockets.o funciones.o  -lcommons -lpthread -lreadline -lparsi
+	$(COMPILER) -o instancia instancia.c sockets.o funciones.o  -lcommons -lparsi
+	$(COMPILER) -o coordinador coordinador.c sockets.o funciones.o  -lcommons -lpthread -lparsi
+	$(COMPILER) -o esi esi.c sockets.o funciones.o  -lcommons -lparsi
 
 clean:
 	rm -rf bin
@@ -27,5 +27,5 @@ coordinador:
 	$(COMPILER) -o coordinador coordinador.c sockets.o funciones.o  -lcommons -lpthread
 
 esi:
-	$(COMPILER) -o esi esi.c sockets.o funciones.o  -lcommons
+	$(COMPILER) -o esi esi.c sockets.o funciones.o  -lcommons -lparsi
 	

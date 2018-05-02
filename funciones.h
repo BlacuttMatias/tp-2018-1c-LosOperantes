@@ -18,6 +18,7 @@
 #include <commons/string.h>
 #include <commons/collections/list.h>
 #include <commons/collections/queue.h>
+#include <parsi/parser.h>
 #include "registros.h"
 #include "sockets.h"
 

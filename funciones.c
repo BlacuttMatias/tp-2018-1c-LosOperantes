@@ -103,6 +103,26 @@ bool procesarScript(char* pathScript, t_list* listaInstrucciones){
  
  //printf("%s\n",unaInstruccion);
 
+				//chequeo error de parseo
+				t_esi_operacion parsed= parse(unaInstruccion);
+				if(!parsed.valido){
+					printf("linea invalida");
+					exit(EXIT_FAILURE);
+				}
+				else{
+					switch(parsed.keyword){
+					case GET:
+						break;
+					case SET:
+						break;
+					case STORE:
+						break;
+					default:
+						printf("linea no interpretable");
+						exit(EXIT_FAILURE);
+					}
+				}
+
 				Instruccion* registroInstruccion = NULL;
 				registroInstruccion = malloc(sizeof(Instruccion));
 

@@ -118,7 +118,20 @@ int main(int argc, char* argv[]){
 
     free(pathScript);
 
-
+    //Probando la fc sacarSiguienteInstruccion
+/*    puts("anduvo todo, pruebo sacar instruccion \n \n");
+    Instruccion proximaInstruccion;
+    proximaInstruccion.operacion=20;
+    strcpy(proximaInstruccion.key, "BALALALALALA");
+    proximaInstruccion.dato= "jorojojojo";
+    sacarSiguienteInstruccion(listaInstrucciones,&proximaInstruccion);
+    puts("se pudo sacar instruccion, se chequea que sea lo correcto \n\n");
+    printf("codigo op es: %d \n\n key es %s \n\n",proximaInstruccion.operacion,proximaInstruccion.key);
+    if(proximaInstruccion.dato != NULL){
+    	printf("dato es: %s \n\n",proximaInstruccion.dato);
+    }
+    puts("termino de mostrar");
+*/
 // -----------------------------------------------------------------------
 
 

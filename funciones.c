@@ -107,16 +107,24 @@ Paquete srlz_datosInstruccion(Instruccion instruccion){
 
 //(todavia falta probar)
 	void sacarSiguienteInstruccion(t_list* listaInstruccion, Instruccion* instruccion){
+		puts("iniciando sacar");
 		t_list* listaAuxiliar;
 		Instruccion instruccionAux;
+		puts("variables declaradas");
 		listaAuxiliar= list_take_and_remove(listaInstruccion,1);
-		memcpy(&instruccionAux, list_get(listaAuxiliar,1),	sizeof(Instruccion));
+		Instruccion*p=list_get(listaAuxiliar,1);
+		puts("hacienddo primer memcpy \n\n");
+		memcpy(&instruccionAux, 			&p,			sizeof(Instruccion));
+		mostrarInstruccion(&instruccionAux);
+		puts("asignando cod.operacion");
 		instruccion->operacion=instruccionAux.operacion;
+		puts("haciendo 2do memcpy");
 		memcpy(instruccion->key,		instruccionAux.key		,sizeof(char)*40);
+		puts("haciendo if");
 		if(instruccionAux.dato != NULL){
 			instruccion->dato=instruccionAux.dato;
 		}
-		else{ instruccion->dato==NULL; }
+		else{ instruccion->dato=NULL; }
 
 	}
 

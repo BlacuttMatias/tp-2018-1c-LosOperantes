@@ -56,9 +56,9 @@ int main(int argc, char* argv[]){
 
     Instruccion* datosInstruccion;
 
-    datosInstruccion->texto_instruccion = malloc(strlen("STORE clave")+1);
-    strcpy( datosInstruccion->texto_instruccion ,"STORE clave");
-    datosInstruccion->texto_instruccion[strlen("STORE clave")] = '\0';
+    datosInstruccion->operacion = STORE;
+    strcpy(datosInstruccion->key, "clave\0");
+    datosInstruccion->dato=NULL;
 
     if(registrarLogOperaciones(datosInstruccion, "PROCESO1")){
 

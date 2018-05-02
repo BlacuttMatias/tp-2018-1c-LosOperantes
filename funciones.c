@@ -92,44 +92,57 @@ bool procesarScript(char* pathScript, t_list* listaInstrucciones){
     FILE *archivo = fopen(pathScript, "r");
     int caracter;
 	char *unaInstruccion = string_new();
+	int numeroLinea=0;
 
+	puts("abro archivo");
 	// Si se pudo posicionar dentro del archivo
 	if(fseek( archivo, 0, SEEK_SET ) == 0){
-
+		//puts("fseek");
 	    while ((caracter = fgetc(archivo)) != EOF) {
 
 			// Si leyo una linea completa, agrego la instruccion a la lista
 			if(caracter == '\n'){
- 
+				//puts("leo una linea");
+				numeroLinea +=1;
  //printf("%s\n",unaInstruccion);
 
 				//chequeo error de parseo
 				t_esi_operacion parsed= parse(unaInstruccion);
+				Instruccion* registroInstruccion = NULL;
+				//puts("alloco un registroInstruccion");
+				registroInstruccion = malloc(sizeof(Instruccion));
+				//puts("alloqué el registro");
 				if(!parsed.valido){
-					printf("linea invalida");
+					printf("instruccion %s invalida en posicion %d \n",unaInstruccion,numeroLinea);
+				//	log_info(infoLogger,"instruccion %s invalida en posicion %d \n",unaInstruccion,numeroLinea);
 					exit(EXIT_FAILURE);
 				}
 				else{
 					switch(parsed.keyword){
 					case GET:
+						cargarInstruccion(registroInstruccion,GET,parsed.argumentos.GET.clave,NULL);
+
 						break;
 					case SET:
+						cargarInstruccion(registroInstruccion,SET,parsed.argumentos.SET.clave,parsed.argumentos.SET.valor);
+
 						break;
 					case STORE:
+						cargarInstruccion(registroInstruccion,STORE,parsed.argumentos.STORE.clave,NULL);
+
 						break;
 					default:
-						printf("linea no interpretable");
+						printf("instruccion %s no es interpretable en posicion %d \n",unaInstruccion,numeroLinea);
+						//log_info("instruccion %s no es interpretable en posicion %d \n",unaInstruccion,numeroLinea);
 						exit(EXIT_FAILURE);
 					}
 				}
 
-				Instruccion* registroInstruccion = NULL;
-				registroInstruccion = malloc(sizeof(Instruccion));
 
         		// Cargo el Registro de la instruccion
-        		registroInstruccion->texto_instruccion = malloc(strlen(unaInstruccion)+1);       		
-        		strcpy( registroInstruccion->texto_instruccion ,unaInstruccion);        		
-        		registroInstruccion->texto_instruccion[strlen(unaInstruccion)] = '\0';
+        		//registroInstruccion->texto_instruccion = malloc(strlen(unaInstruccion)+1);
+        		//strcpy( registroInstruccion->texto_instruccion ,unaInstruccion);
+        		//registroInstruccion->texto_instruccion[strlen(unaInstruccion)] = '\0';
 
         		// Agrego la instruccion a la lista
 				list_add(listaInstrucciones,registroInstruccion);
@@ -161,7 +174,8 @@ bool procesarScript(char* pathScript, t_list* listaInstrucciones){
 				printf("--------------\n");
 			}
 
-			printf("%s\n", registroInstruccionAux->texto_instruccion);
+			mostrarInstruccion(registroInstruccionAux);
+			//printf("%s\n", registroInstruccionAux->texto_instruccion);
 
 		}
 	    list_iterate(listaInstrucciones, (void*)_each_elemento_);
@@ -171,6 +185,29 @@ bool procesarScript(char* pathScript, t_list* listaInstrucciones){
 
 	return true;
 }
+
+//*************************//
+//Llenar el registro instruccion al parsear
+//*************************//
+void cargarInstruccion(Instruccion* registro, int codigo, char key[40], char* valor){
+	//puts("cargando instruccion\n");
+	registro->operacion= codigo;
+	//puts("cargue operacion");
+	strcpy(registro->key, key);
+	//puts("cargue key");
+	if(valor != NULL){
+		registro->dato=malloc(strlen(valor)+1);
+		strcpy(registro->dato, valor);}
+	else {registro->dato=NULL;}
+		//puts("cargue instruccion");
+}
+
+void mostrarInstruccion(Instruccion* registro){
+	printf("%d ", registro->operacion);
+	printf("%s ",registro->key);
+	printf("%s \n",registro->dato);
+}
+
 
 //**************************************************************************//
 // Obtener la Proxima Instruccion a Ejecutar de un ESI

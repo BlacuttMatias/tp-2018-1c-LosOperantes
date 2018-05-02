@@ -33,7 +33,9 @@ typedef struct //Encabezado
 
 typedef struct
 {
-	char* texto_instruccion;
+	int operacion;
+	char key[40];
+	char* dato;
 }Instruccion;
 
 typedef struct

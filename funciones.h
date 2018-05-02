@@ -46,6 +46,8 @@
 
 	char* obtenerProximaInstruccion(t_list* listaInstrucciones);
 	int obtenerTamanoProximaInstruccion(t_list* listaInstrucciones);
+	void cargarInstruccion(Instruccion* registro,int codigo,char* key, char* valor);
+	void mostrarInstruccion(Instruccion* instruccion);
 
 /* ---------------------------------------- */
 /*  Funciones de Planificador 				*/

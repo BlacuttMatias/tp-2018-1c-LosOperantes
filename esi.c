@@ -66,7 +66,6 @@ int main(int argc, char* argv[]){
     FD_ZERO(&master);
     FD_ZERO(&temporales);
 
-
     // Creo conexión con Planificador
     int planificador_fd = conectarseAservidor(config_get_string_value(cfg,"PLANIFICADOR_IP"),config_get_int_value(cfg,"PLANIFICADOR_PUERTO"));
 
@@ -83,7 +82,6 @@ int main(int argc, char* argv[]){
 // -----------------------------------------------------------------------
 //    Prueba de funciones
 // -----------------------------------------------------------------------
-
     // Si se pudieron cargar todas las instrucciones en la Lista
     if(procesarScript(pathScript, listaInstrucciones)){ 
         

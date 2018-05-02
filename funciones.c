@@ -72,6 +72,33 @@ Paquete crearHeader(char proceso, int cod_operacion, int tamPayload){
 	return paquete;
 }
 
+//**************************************************************************//
+//Serealizar instrucciones en esi para enviar
+//**************************************************************************//
+
+Paquete srlz_datosInstruccion(Instruccion instruccion){
+	int posicion;
+	int sizeBuffer;
+	int tamanioPuntero;
+		if(instruccion.dato==NULL){
+			tamanioPuntero=0;
+		}
+		else{tamanioPuntero=strlen(instruccion.dato);}
+
+	Paquete paquete;
+	sizeBuffer=sizeof(int)+sizeof(char[40])+tamanioPuntero;
+	paquete.tam_buffer=sizeBuffer;
+	memcpy(paquete.buffer								,&(tamanioPuntero)					,sizeof(int));
+	memcpy(paquete.buffer + (posicion = sizeof(int))	,&(instruccion.operacion)			,sizeof(int));
+	memcpy(paquete.buffer + (posicion +=sizeof(int))	,&(instruccion.key[0])				,(sizeof(char))*40);
+	if(tamanioPuntero != 0){
+	memcpy(paquete.buffer + (posicion += (sizeof(char))*40),instruccion.dato			,tamanioPuntero);
+	}
+
+
+	return paquete;
+
+}
 
 //**************************************************************************//
 // Persistir Datos en el Coordinador

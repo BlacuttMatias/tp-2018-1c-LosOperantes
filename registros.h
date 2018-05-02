@@ -43,5 +43,13 @@ typedef struct
 	int rafagaActual;	
 }Proceso;
 
+//Instancia
+typedef struct{ //tipo entrada
+	char* clave;
+	char* valor;
+	int numeroDeEntrada;
+	int tamanioValorAlmacenado;
+} t_entrada;
+
 
 #endif

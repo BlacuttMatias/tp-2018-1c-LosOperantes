@@ -27,8 +27,34 @@ int main(int argc, char* argv[]){
 	infoLogger = log_create("log/instancia.log", "INSTANCIA", false, LOG_LEVEL_INFO);
 
 	log_info(infoLogger, "Iniciando INSTANCIA" );
+	
+	//PRUEBA TABLA ENTRADAS IMPLEMENTACION CON LISTAS
+	t_list* tablaEntradas = list_create(); //creo lista tabla de entradas
+
+	t_entrada* entrada1 = NULL; // entrada_create("FUTBOL","MESSI",1,sizeof("MESSI")-1); //ejemplo tipo de entrada Hardcodeada
+	entrada1 = malloc(sizeof(t_entrada));
+	entrada1->clave = malloc(strlen("FUTBOL"));
+	entrada1->clave = "FUTBOL";
+	entrada1->valor = malloc(strlen("MESSI"));
+	entrada1->valor = "MESSI";
+	entrada1->numeroDeEntrada = 1;
+	entrada1->tamanioValorAlmacenado = strlen("MESSI");
+
+	list_add(tablaEntradas,entrada1); //aniadir entrada1 (con val. cargador) a ultima posicion de la tabla de entradas)
+
+    	t_entrada* primerElemento;
+
+    	primerElemento = list_get(tablaEntradas,0);  //obtener primer elemento de la tabla de entradas
+
+    	printf("Clave:%s - Valor:%s - Numero:%d - Tamanio:%d \n",primerElemento->clave,primerElemento->valor,primerElemento->numeroDeEntrada,primerElemento->tamanioValorAlmacenado); //prueba imprimir por pantalla el elemento obtenido
+
 	printf("Iniciando INSTANCIA\n");
 
+	
+	
+	
+	
+	
 
 	Encabezado encabezado;
 	Paquete paquete;

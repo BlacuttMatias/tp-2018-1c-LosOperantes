@@ -27,8 +27,8 @@ t_list* listaInstrucciones;
 
 int main(int argc, char* argv[]){
 
-
-    char* nombreProceso;
+    char* nombreProceso = string_new();
+    char* pathScript = string_new();
 
     /*************************************************
      *
@@ -36,10 +36,15 @@ int main(int argc, char* argv[]){
      *
      ************************************************/
     if(argc > 1){
-        nombreProceso =   malloc(strlen(argv[1])+1);      strcpy(nombreProceso,   argv[1]);
+        string_append(&nombreProceso,argv[1]);
+        string_append(&pathScript,argv[2]);
+
+    char* pathScript = string_new();
+    string_append(&pathScript,"files/script.txt");
+
 
     }else{
-        printf("Error de formato\n\nForma de Uso:\n ./esi [nombre_proceso]\n");
+        printf("Error de formato\n\nForma de Uso:\n ./esi [nombre_proceso] [path_completo_script]\n");
         return EXIT_FAILURE;
     }
 
@@ -79,16 +84,9 @@ int main(int argc, char* argv[]){
 //    Prueba de funciones
 // -----------------------------------------------------------------------
 
-
-    // Defino el Algoritmo de Districucion a utlizar
-    char* pathScript = string_new();
-    string_append(&pathScript,"files/script.txt");
-
-    // Cargo todas las Instrucciones en una Lista
-    if(procesarScript(pathScript, listaInstrucciones)){
-        // Si se pudieron cargar todas las instrucciones en la Lista
-
-
+    // Si se pudieron cargar todas las instrucciones en la Lista
+    if(procesarScript(pathScript, listaInstrucciones)){ 
+        
         int tamanoProximaInstruccion = obtenerTamanoProximaInstruccion(listaInstrucciones);
 
         // Envio al Planificador el Handshake y Serializado el Proceso y el tamaño de la proxima instruccion
@@ -97,8 +95,8 @@ int main(int argc, char* argv[]){
         free(paquete.buffer);
 
 
-    }else{
-        // Si fallo el proceso
+    }else{ // Si fallo el proceso
+        
     }
 
     free(pathScript);

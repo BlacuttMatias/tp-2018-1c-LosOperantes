@@ -267,18 +267,17 @@ t_queue* planificarReady(t_list* listaReady, char* algoritmoPlanificacion){
 
 
 	if(string_starts_with(algoritmoPlanificacion,"SJF-SD")){
-
-
+		// TODO
 	}	
 
 	if(string_starts_with(algoritmoPlanificacion,"SJF-CD")){
-
-
+		// TODO
 	}	
 
 
 	if(string_starts_with(algoritmoPlanificacion,"HRRN")){
 
+		// TODO
 
 		if(list_size(listaReady) > 0){
 

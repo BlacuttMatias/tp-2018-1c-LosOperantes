@@ -101,6 +101,25 @@ Paquete srlz_datosInstruccion(Instruccion instruccion){
 }
 
 //**************************************************************************//
+//Sacar Siguiente instruccion de la lista
+//**************************************************************************//
+
+//(todavia falta probar)
+	void sacarSiguienteInstruccion(t_list* listaInstruccion, Instruccion* instruccion){
+		t_list* listaAuxiliar;
+		Instruccion instruccionAux;
+		listaAuxiliar= list_take_and_remove(listaInstruccion,1);
+		memcpy(&instruccionAux, list_get(listaAuxiliar,1),	sizeof(Instruccion));
+		instruccion->operacion=instruccionAux.operacion;
+		memcpy(instruccion->key,		instruccionAux.key		,sizeof(char)*40);
+		if(instruccionAux.dato != NULL){
+			instruccion->dato=instruccionAux.dato;
+		}
+		else{ instruccion->dato==NULL; }
+
+	}
+
+//**************************************************************************//
 // Persistir Datos en el Coordinador
 //**************************************************************************//
 bool persistirDatos(Instruccion* datosInstruccion, char* algoritmoDistricucion){

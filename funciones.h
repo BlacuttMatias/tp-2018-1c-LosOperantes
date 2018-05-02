@@ -42,6 +42,7 @@
 /*  Funciones de ESI 						*/
 /* ---------------------------------------- */
 
+	void sacarSiguienteInstruccion(t_list* listaInstrucciones, Instruccion* instruccion);
 	bool procesarScript(char* pathScript, t_list* listaInstrucciones);
 
 	char* obtenerProximaInstruccion(t_list* listaInstrucciones);

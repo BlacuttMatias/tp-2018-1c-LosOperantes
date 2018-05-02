@@ -86,7 +86,8 @@ Paquete srlz_datosInstruccion(Instruccion instruccion){
 		else{tamanioPuntero=strlen(instruccion.dato);}
 
 	Paquete paquete;
-	sizeBuffer=sizeof(int)+sizeof(char[40])+tamanioPuntero;
+	//				tam puntero		cod.op			key					contenido data
+	sizeBuffer= 	sizeof(int) + 	sizeof(int) + 	sizeof(char[40]) + tamanioPuntero;
 	paquete.tam_buffer=sizeBuffer;
 	memcpy(paquete.buffer								,&(tamanioPuntero)					,sizeof(int));
 	memcpy(paquete.buffer + (posicion = sizeof(int))	,&(instruccion.operacion)			,sizeof(int));

@@ -226,6 +226,10 @@ int obtenerTamanoProximaInstruccion(t_list* listaInstrucciones){
 	return 10;
 }
 
+//********************************************************************//
+
+
+
 //**************************************************************************//
 // Generar las Estructuras Administrativas del Coordinador
 //**************************************************************************//

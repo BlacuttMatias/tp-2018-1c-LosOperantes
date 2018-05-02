@@ -49,6 +49,9 @@
 	void cargarInstruccion(Instruccion* registro,int codigo,char* key, char* valor);
 	void mostrarInstruccion(Instruccion* instruccion);
 
+	Paquete srlz_datosInstruccion(Instruccion instruccion);
+	Instruccion dsrlz_datosInstruccion(void* buffer);
+
 /* ---------------------------------------- */
 /*  Funciones de Planificador 				*/
 /* ---------------------------------------- */

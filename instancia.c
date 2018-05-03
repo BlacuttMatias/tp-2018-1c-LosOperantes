@@ -33,10 +33,15 @@ int main(int argc, char* argv[]){
 
 	t_entrada* entrada1 = NULL; // entrada_create("FUTBOL","MESSI",1,sizeof("MESSI")-1); //ejemplo tipo de entrada Hardcodeada
 	entrada1 = malloc(sizeof(t_entrada));
-	entrada1->clave = malloc(strlen("FUTBOL"));
-	entrada1->clave = "FUTBOL";
-	entrada1->valor = malloc(strlen("MESSI"));
-	entrada1->valor = "MESSI";
+
+	entrada1->clave = malloc(strlen("FUTBOL")+1);
+    strcpy( entrada1->clave ,"FUTBOL");
+    entrada1->clave[strlen("FUTBOL")] = '\0';
+
+	entrada1->valor = malloc(strlen("MESSI")+1);
+    strcpy( entrada1->valor ,"MESSI");
+    entrada1->valor[strlen("MESSI")] = '\0';
+
 	entrada1->numeroDeEntrada = 1;
 	entrada1->tamanioValorAlmacenado = strlen("MESSI");
 
@@ -59,34 +64,45 @@ int main(int argc, char* argv[]){
 	Encabezado encabezado;
 	Paquete paquete;
     struct sockaddr_in servidor_addr,my_addr,master_addr; // información de la dirección de destino
-    int servidor, numbytes,escucha_master,fd_maximo,nuevo_fd,i,size, nbytes;
+    int numbytes,escucha_master,fd_maximo,nuevo_fd,i,size, nbytes;
     fd_set master,temporales;
     FD_ZERO(&master);
     FD_ZERO(&temporales);
 
+    // Creo conexión con el Coordinador
+    int coordinador_fd = conectarseAservidor(config_get_string_value(cfg,"COORDINADOR_IP"),config_get_int_value(cfg,"COORDINADOR_PUERTO"));
 
-	// Creo el Servidor para escuchar conexiones
-	servidor=crearServidor(config_get_int_value(cfg,"INSTANCIA_PUERTO"));
-	log_info(infoLogger, "Escuchando conexiones" );
+    if(coordinador_fd == -1){
+        printf("Error de conexion con el Coordinador\n");
+        return EXIT_FAILURE;        
+    }else{
+        log_info(infoLogger, "Conexion establecida con el Coordinador");        
+    }
 
 
-	FD_SET(servidor, &master);
-	fd_maximo = servidor;	
+    // Serializado el Proceso
+    paquete = srlz_datosProceso('I', HANDSHAKE, config_get_string_value(cfg,"INSTANCIA_NOMBRE"), INSTANCIA, 0);
 
+    // Envio al Coordinador el Handshake y Serializado el Proceso
+    send(coordinador_fd,paquete.buffer,paquete.tam_buffer,0);
+    free(paquete.buffer);
 
-
+    FD_SET(coordinador_fd, &master);
+    fd_maximo = coordinador_fd;   
 
 
 // -----------------------------------------------------------------------
 //    Prueba de funciones
 // -----------------------------------------------------------------------
 
-    Instruccion* datosInstruccion;
 
+    Instruccion* datosInstruccion;
+    
+/*
     datosInstruccion->operacion = STORE;
     strcpy(datosInstruccion->key, "clave\0");
     datosInstruccion->dato=NULL;
-
+*/
 
     //datosInstruccion->texto_instruccion = malloc(strlen("STORE clave")+1);
     //strcpy( datosInstruccion->texto_instruccion ,"STORE clave");
@@ -166,8 +182,6 @@ int main(int argc, char* argv[]){
     /* ---------------------------------------- */
     log_destroy(infoLogger);
     config_destroy(cfg);
-
-    close(servidor);
 
     return 0;
 }

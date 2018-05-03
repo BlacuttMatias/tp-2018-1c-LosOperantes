@@ -242,7 +242,7 @@ void servidorPlanificador(void* puerto){
                                     free(paquete.buffer);
 
                                     // Recibo de ESI el nombre del Proceso
-                                    log_info(infoLogger,"Proceso %s conectado.", registroProceso.nombreProceso);
+                                    log_info(infoLogger,"Proceso ESI %s conectado.", registroProceso.nombreProceso);
 
                                     // Cargo el Registro del Proceso
                                     Proceso* registroProcesoAux = NULL;
@@ -296,6 +296,25 @@ int main(int argc, char* argv[]){
 
     // Creo la Lista de Claves Bloqueadas
     listaClavesBloqueadas = list_create();
+
+
+    // Creo conexión con el Coordinador
+    int coordinador_fd = conectarseAservidor(config_get_string_value(cfg,"COORDINADOR_IP"),config_get_int_value(cfg,"COORDINADOR_PUERTO"));
+
+    if(coordinador_fd == -1){
+        printf("Error de conexion con el Coordinador\n");
+        return EXIT_FAILURE;        
+    }else{
+        log_info(infoLogger, "Conexion establecida con el Coordinador");        
+    }
+
+    // Serializado el Proceso
+    Paquete paquete = srlz_datosProceso('P', HANDSHAKE, "PLANIFICADOR", PLANIFICADOR, 0);
+
+    // Envio al Coordinador el Handshake y Serializado el Proceso
+    send(coordinador_fd,paquete.buffer,paquete.tam_buffer,0);
+    free(paquete.buffer);
+
 
     pthread_t hiloConsola;
     pthread_create(&hiloConsola, NULL, (void*) hiloConsolaInteractiva, NULL);

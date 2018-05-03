@@ -43,14 +43,15 @@ int main(int argc, char* argv[]){
         return EXIT_FAILURE;
     }
 
-
-    // Si no existe el archivo del Script, cierro el proceso
+    /*************************************************
+     *
+     * Si no existe el archivo del Script, cierro el proceso
+     *
+     ************************************************/
     if (!existeArchivo(pathScript)){
         printf("El Script %s no existe\n", pathScript);
         return EXIT_FAILURE;
     }
-
-
 
 	/* Creo la instancia del Archivo de Configuracion y del Log */
 	cfg = config_create("config/config.cfg");
@@ -76,12 +77,23 @@ int main(int argc, char* argv[]){
     if(planificador_fd == -1){
         printf("Error de conexion con el Planificador\n");
         return EXIT_FAILURE;        
+    }else{
+        log_info(infoLogger, "Conexion establecida con el Planificador");        
     }
 
+    // Creo conexión con el Coordinador
+    int coordinador_fd = conectarseAservidor(config_get_string_value(cfg,"COORDINADOR_IP"),config_get_int_value(cfg,"COORDINADOR_PUERTO"));
 
+    if(coordinador_fd == -1){
+        printf("Error de conexion con el Coordinador\n");
+        return EXIT_FAILURE;        
+    }else{
+        log_info(infoLogger, "Conexion establecida con el Coordinador");        
+    }
 
     FD_SET(planificador_fd, &master);
-    fd_maximo = planificador_fd;   
+    FD_SET(coordinador_fd, &master);    
+    fd_maximo = coordinador_fd;   
 
 // -----------------------------------------------------------------------
 //    Prueba de funciones
@@ -89,9 +101,14 @@ int main(int argc, char* argv[]){
     // Si se pudieron cargar todas las instrucciones en la Lista
     if(procesarScript(pathScript, listaInstrucciones)){ 
 
-        // Envio al Planificador el Handshake y Serializado el Proceso y el tamaño de la proxima instruccion
+        // Serializado el Proceso
         paquete = srlz_datosProceso('E', HANDSHAKE, nombreProceso, ESI, 0);
+
+        // Envio al Planificador el Handshake y Serializado el Proceso
         send(planificador_fd,paquete.buffer,paquete.tam_buffer,0);
+
+        // Envio al Coordinador el Handshake y Serializado el Proceso
+        send(coordinador_fd,paquete.buffer,paquete.tam_buffer,0);
         free(paquete.buffer);
 
 

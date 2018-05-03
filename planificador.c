@@ -249,8 +249,8 @@ void servidorPlanificador(void* puerto){
                                     registroProcesoAux = malloc(sizeof(Proceso));
 
                                     // Cargo el Registro del Proceso
-                                    registroProcesoAux->rafagaAnterior = registroProceso.rafagaAnterior;
-                                    registroProcesoAux->rafagaActual = registroProceso.rafagaActual;
+                                    registroProcesoAux->tipoProceso = registroProceso.tipoProceso;
+                                    registroProcesoAux->socketProceso = registroProceso.socketProceso;
                                     registroProcesoAux->nombreProceso = malloc(strlen(registroProceso.nombreProceso)+1);
                                     strcpy( registroProcesoAux->nombreProceso ,registroProceso.nombreProceso);
                                     registroProcesoAux->nombreProceso[strlen(registroProceso.nombreProceso)] = '\0';
@@ -272,7 +272,6 @@ void servidorPlanificador(void* puerto){
 
     close(servidor);
     FD_CLR(servidor, &master);
-
 }
 
 

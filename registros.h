@@ -15,6 +15,14 @@ enum cod_operacion {
 	HANDSHAKE = 4,
 };
 
+// Defino los Tipos de Procesos
+enum tipo_proceso {
+	ESI = 1,
+	PLANIFICADOR = 2,
+	INSTANCIA = 3,
+	COORDINADOR = 4,
+};
+
 
 
 typedef struct //Paquete
@@ -41,8 +49,8 @@ typedef struct
 typedef struct
 {
 	char* nombreProceso;
-	int rafagaAnterior;
-	int rafagaActual;	
+	int tipoProceso;
+	int socketProceso;	
 }Proceso;
 
 //Instancia

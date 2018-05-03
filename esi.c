@@ -38,15 +38,19 @@ int main(int argc, char* argv[]){
     if(argc > 1){
         string_append(&nombreProceso,argv[1]);
         string_append(&pathScript,argv[2]);
-
-    char* pathScript = string_new();
-    string_append(&pathScript,"files/script.txt");
-
-
     }else{
         printf("Error de formato\n\nForma de Uso:\n ./esi [nombre_proceso] [path_completo_script]\n");
         return EXIT_FAILURE;
     }
+
+
+    // Si no existe el archivo del Script, cierro el proceso
+    if (!existeArchivo(pathScript)){
+        printf("El Script %s no existe\n", pathScript);
+        return EXIT_FAILURE;
+    }
+
+
 
 	/* Creo la instancia del Archivo de Configuracion y del Log */
 	cfg = config_create("config/config.cfg");
@@ -84,11 +88,9 @@ int main(int argc, char* argv[]){
 // -----------------------------------------------------------------------
     // Si se pudieron cargar todas las instrucciones en la Lista
     if(procesarScript(pathScript, listaInstrucciones)){ 
-        
-        int tamanoProximaInstruccion = obtenerTamanoProximaInstruccion(listaInstrucciones);
 
         // Envio al Planificador el Handshake y Serializado el Proceso y el tamaño de la proxima instruccion
-        paquete = srlz_datosProceso('E', HANDSHAKE, nombreProceso, config_get_int_value(cfg,"ESTIMACION_INICIAL"), tamanoProximaInstruccion);
+        paquete = srlz_datosProceso('E', HANDSHAKE, nombreProceso, ESI, 0);
         send(planificador_fd,paquete.buffer,paquete.tam_buffer,0);
         free(paquete.buffer);
 

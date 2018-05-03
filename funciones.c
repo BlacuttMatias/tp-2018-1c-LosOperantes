@@ -2,7 +2,7 @@
 
 //*********************** SERIALIZADO Y DESERIALIZADO ********************************//
 
-Paquete srlz_datosProceso(char proceso, int codigoOperacion, char* nombreProceso, int rafagaAnterior, int rafagaActual){
+Paquete srlz_datosProceso(char proceso, int codigoOperacion, char* nombreProceso, int tipoProceso, int socketProceso){
 
 	int posicion = 0;//int para ir guiando desde donde se copia
 	int sizeBuffer = 0;
@@ -27,8 +27,8 @@ Paquete srlz_datosProceso(char proceso, int codigoOperacion, char* nombreProceso
 	memcpy(paquete.buffer + (posicion += sizeof(tamPayload))				,&(tamString)					,sizeof(int) ); //guardo el tam del siguiente array
 	memcpy(paquete.buffer + (posicion += sizeof(int) )						,nombreProceso					,strlen(nombreProceso)); //se copia el nombre
 
-	memcpy(paquete.buffer + (posicion += strlen(nombreProceso))				,&(rafagaAnterior)				,sizeof(int));
-	memcpy(paquete.buffer + (posicion += sizeof(int))						,&(rafagaActual)				,sizeof(int));
+	memcpy(paquete.buffer + (posicion += strlen(nombreProceso))				,&(tipoProceso)				,sizeof(int));
+	memcpy(paquete.buffer + (posicion += sizeof(int))						,&(socketProceso)				,sizeof(int));
 
 	return paquete;
 }
@@ -45,8 +45,8 @@ Proceso dsrlz_datosProceso(void* buffer)
 	memcpy(solicitud.nombreProceso			,buffer+(posicion+=sizeof(int))							,sizeof(char)*tamString);
 	solicitud.nombreProceso[tamString]='\0';
 
-	memcpy(&solicitud.rafagaAnterior 		,buffer+(posicion+=sizeof(char) * tamString)			,sizeof(int));
-	memcpy(&solicitud.rafagaActual 			,buffer+(posicion+=sizeof(int))							,sizeof(int));
+	memcpy(&solicitud.tipoProceso 		,buffer+(posicion+=sizeof(char) * tamString)			,sizeof(int));
+	memcpy(&solicitud.socketProceso 			,buffer+(posicion+=sizeof(int))							,sizeof(int));
 
 	return solicitud;
 }
@@ -270,11 +270,11 @@ void showContenidolistaReady(t_list* listaReady){
 			// Muestro el encabezaado
 			if(indice == 1) {
 				printf("\nLISTA READY\n");
-				printf("Proceso \t Rafaga Anterior \t Rafaga Actual\n");
-				printf("------\t -------\n");
+				printf("Proceso\n");
+				printf("------\n");
 			}
 
-			printf("%s \t %d \t %d\n", registroProcesoAux->nombreProceso,registroProcesoAux->rafagaAnterior, registroProcesoAux->rafagaActual);
+			printf("%s\n", registroProcesoAux->nombreProceso);
 
 		}
 	    list_iterate(listaReady, (void*)_each_elemento_);
@@ -301,11 +301,11 @@ void showContenidocolaReady(t_queue* colaReady){
 			// Muestro el encabezaado
 			if(indice == 0) {
 				printf("\nCOLA READY\n");
-				printf("Proceso \t Rafaga Anterior \t Rafaga Actual\n");
-				printf("------\t -------\n");
+				printf("Proceso\n");
+				printf("------\n");
 			}
 
-			printf("%s \t %d \t %d\n", registroProcesoAux->nombreProceso,registroProcesoAux->rafagaAnterior, registroProcesoAux->rafagaActual);
+			printf("%s\n", registroProcesoAux->nombreProceso);
 
 
 			// Lo vuelvo a agregar a la cola
@@ -355,4 +355,17 @@ t_queue* planificarReady(t_list* listaReady, char* algoritmoPlanificacion){
 	}	
 
 	return colaAux;
+}
+
+//Funcion para determinar si un archivo local existe
+bool existeArchivo(char *filename){
+
+    FILE *archivo = fopen(filename, "rb");
+
+    if(!archivo){
+    	return false;
+    }else{
+        fclose(archivo);
+    	return true;
+    }
 }

@@ -76,6 +76,7 @@
 /* ---------------------------------------- */
 
 	bool persistirDatos(Instruccion* datosInstruccion, char* algoritmoAlmacenamiento);
+	void cargarTablaEntradas(t_list *tablaEntradas,Instruccion* estructuraInstruccion);
 
 /* ---------------------------------------- */
 #endif

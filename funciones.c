@@ -424,3 +424,24 @@ bool existeArchivo(char *filename){
     	return true;
     }
 }
+
+//funcion para carga de entradas
+void cargarTablaEntradas(t_list *tablaEntradas,Instruccion* estructuraInstruccion){
+	t_entrada* nuevaEntrada = NULL;
+
+	int tamanioLista = list_size(tablaEntradas);
+
+	nuevaEntrada=malloc(sizeof(t_entrada));
+
+
+	nuevaEntrada->clave = estructuraInstruccion->key;
+
+	nuevaEntrada->valor = malloc(strlen(estructuraInstruccion->dato)+1);
+	strcpy(nuevaEntrada->valor,estructuraInstruccion->dato);
+	nuevaEntrada->valor[strlen(estructuraInstruccion->dato)] = '\0';
+
+	nuevaEntrada->numeroDeEntrada = tamanioLista+1;
+	nuevaEntrada->tamanioValorAlmacenado = strlen(estructuraInstruccion->dato);
+
+	list_add(tablaEntradas,nuevaEntrada);
+}

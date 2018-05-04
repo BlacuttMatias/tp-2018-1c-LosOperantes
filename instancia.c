@@ -28,30 +28,37 @@ int main(int argc, char* argv[]){
 
 	log_info(infoLogger, "Iniciando INSTANCIA" );
 	
-	//PRUEBA TABLA ENTRADAS IMPLEMENTACION CON LISTAS
+	//PRUEBA TABLA ENTRADAS IMPLEMENTACION CON LISTAS + nueva funcion cargarTablaEntradas
 	t_list* tablaEntradas = list_create(); //creo lista tabla de entradas
 
-	t_entrada* entrada1 = NULL; // entrada_create("FUTBOL","MESSI",1,sizeof("MESSI")-1); //ejemplo tipo de entrada Hardcodeada
-	entrada1 = malloc(sizeof(t_entrada));
+	Instruccion* nuevaInstruccion;
+	nuevaInstruccion->dato = "MESSI";
+	nuevaInstruccion->operacion = 1;
 
-	entrada1->clave = malloc(strlen("FUTBOL")+1);
-    strcpy( entrada1->clave ,"FUTBOL");
-    entrada1->clave[strlen("FUTBOL")] = '\0';
+	cargarTablaEntradas(tablaEntradas,nuevaInstruccion);
+	t_entrada* primerElemento;
+	primerElemento = list_get(tablaEntradas,0);
 
-	entrada1->valor = malloc(strlen("MESSI")+1);
-    strcpy( entrada1->valor ,"MESSI");
-    entrada1->valor[strlen("MESSI")] = '\0';
+  	printf("Clave:%s - Valor:%s - Numero:%d - Tamanio:%d \n",primerElemento->clave,primerElemento->valor,primerElemento->numeroDeEntrada,primerElemento->tamanioValorAlmacenado); //prueba imprimir por pantalla el elemento obtenido
 
-	entrada1->numeroDeEntrada = 1;
-	entrada1->tamanioValorAlmacenado = strlen("MESSI");
 
-	list_add(tablaEntradas,entrada1); //aniadir entrada1 (con val. cargador) a ultima posicion de la tabla de entradas)
+//	t_entrada* entrada1 = NULL; // entrada_create("FUTBOL","MESSI",1,sizeof("MESSI")-1); //ejemplo tipo de entrada Hardcodeada
+//	entrada1 = malloc(sizeof(t_entrada));
 
-    	t_entrada* primerElemento;
+//    entrada1->clave = "FUTBOL";
 
-    	primerElemento = list_get(tablaEntradas,0);  //obtener primer elemento de la tabla de entradas
+//	entrada1->valor = malloc(strlen("MESSI")+1);
+//    strcpy( entrada1->valor ,"MESSI");
+//    entrada1->valor[strlen("MESSI")] = '\0';
 
-    	printf("Clave:%s - Valor:%s - Numero:%d - Tamanio:%d \n",primerElemento->clave,primerElemento->valor,primerElemento->numeroDeEntrada,primerElemento->tamanioValorAlmacenado); //prueba imprimir por pantalla el elemento obtenido
+//	entrada1->numeroDeEntrada = 1;
+//	entrada1->tamanioValorAlmacenado = strlen("MESSI");
+
+//	list_add(tablaEntradas,entrada1); //aniadir entrada1 (con val. cargador) a ultima posicion de la tabla de entradas)
+
+//    	t_entrada* primerElemento;
+
+//    	primerElemento = list_get(tablaEntradas,0);  //obtener primer elemento de la tabla de entradas
 
 	printf("Iniciando INSTANCIA\n");
 

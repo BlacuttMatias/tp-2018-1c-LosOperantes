@@ -200,6 +200,20 @@ int main(int argc, char* argv[]){
 
                                 case RESPUESTA_EJECUTAR_INSTRUCCION:
                                     log_info(infoLogger,"Respuesta sobre la Ejecución de Instruccion recibida del Coordinador.");
+
+
+                                    // Armo el Paquete del Resultado de la Ejecucion de la Instruccion
+                                    paquete = crearHeader('E', RESPUESTA_EJECUTAR_INSTRUCCION, 1);
+
+                                    // Envio el Paquetea al Planificador
+                                    if(send(planificador_fd,paquete.buffer,paquete.tam_buffer,0) != -1){
+
+                                        free(paquete.buffer);
+                                        log_info(infoLogger, "Se le respondio al PLANIFICADOR el resultado de la ejecucion de la Instruccion");
+                                    }else{
+                                        log_error(infoLogger, "No se pudo enviar mensaje al PLANIFICADOR sobre el resultado de la ejecucion de la Instruccion");
+                                    }
+
                                     break;
     						}
                         }
@@ -210,7 +224,25 @@ int main(int argc, char* argv[]){
                             switch(encabezado.cod_operacion){
 
                                 case EJECUTAR_INSTRUCCION:
+
                                     log_info(infoLogger,"Pedido de Ejecución de Instruccion recibido del Planificador.");
+
+                                    // TODO
+
+                                    // Armo el Paquete de Ejecucion de la Proxima Instruccion
+                                    paquete = crearHeader('E', EJECUTAR_INSTRUCCION, 1);
+
+                                    // Envio el Paquetea al Planificador
+                                    if(send(coordinador_fd,paquete.buffer,paquete.tam_buffer,0) != -1){
+
+                                        free(paquete.buffer);
+                                        log_info(infoLogger, "Se le envio al COORDINADOR la proxima Instruccion a ejecutar");
+                                    }else{
+                                        log_error(infoLogger, "No se pudo enviar al COORDINADOR la proxima Instruccion a ejecutar");
+                                    }
+
+
+
                                     break;
                             }
                         }

@@ -182,6 +182,20 @@ void servidorCoordinador(void* puerto){
 
 
 
+                                    // Armo el Paquete del Resultado de la Ejecucion de la Instruccion
+                                    paquete = crearHeader('C', RESPUESTA_EJECUTAR_INSTRUCCION, 1);
+
+                                    // Envio el Paquetea a ESI
+                                    if(send(i,paquete.buffer,paquete.tam_buffer,0) != -1){
+
+                                        free(paquete.buffer);
+                                        log_info(infoLogger, "Se le respondio al ESI el resultado de la ejecucion de la Instruccion");
+                                    }else{
+                                        log_error(infoLogger, "No se pudo enviar mensaje al ESI sobre el resultado de la ejecucion de la Instruccion");
+                                    }
+
+
+
                                     // Si la operacion es SET o STORE,
 
 

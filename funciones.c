@@ -450,6 +450,9 @@ void showContenidocolaReady(t_queue* colaReady){
 	}
 }
 
+// Coordina la Planificacion de Todos los Procesos
+void planificarProcesos(t_list* listaReady, char* algoritmoPlanificacion){
+}
 
 //**************************************************************************//
 // Ordena la ColaReady y la devuelve segun el Planificador

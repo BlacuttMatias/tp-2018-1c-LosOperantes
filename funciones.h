@@ -63,6 +63,7 @@
 
 	void showContenidolistaReady(t_list* listaReady);
 	void showContenidocolaReady(t_queue* colaReady);
+	void planificarProcesos(t_list* listaReady, char* algoritmoPlanificacion);
 	t_queue* planificarReady(t_list* listaReady, char* algoritmoPlanificacion);
 
 /* ---------------------------------------- */

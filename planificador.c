@@ -33,7 +33,7 @@
     t_list* listaReady;
 
     bool planificadorPausado = false;
-
+    char* algoritmoPlanificacion = NULL;
 
 /* ---------------------------------------- */
 /*  Consola interactiva                     */
@@ -260,12 +260,28 @@ void servidorPlanificador(void* puerto){
 
                                     // Muestro por pantalla el contenido de la listaReady
                                     showContenidolistaReady(listaReady);
+
+
+                                    // Armo el Paquete de la orden de Ejectuar la proxima Instruccion
+                                    paquete = crearHeader('P', EJECUTAR_INSTRUCCION, 1);
+
+                                    // Envio el Paquetea a ESI
+                                    if(send(i,paquete.buffer,paquete.tam_buffer,0) != -1){
+
+                                        free(paquete.buffer);
+                                        log_info(infoLogger, "Se le pidio al ESI que ejecute la proxima Instruccion");
+                                    }else{
+                                        log_error(infoLogger, "No se pudo enviar al ESI la orden de ejecucion de la proxima Instruccion");
+                                    }
                                     break;
 
                                 case RESPUESTA_EJECUTAR_INSTRUCCION:
 
-                                    // TODO
                                     log_info(infoLogger,"Respuesta sobre la Ejecución de Instruccion recibida del ESI.");
+
+                                    // TODO
+                                    planificarProcesos(listaReady, algoritmoPlanificacion);
+
                                     break;
 
                             }
@@ -329,6 +345,10 @@ int main(int argc, char* argv[]){
     // Creo la Lista de Claves Bloqueadas
     listaClavesBloqueadas = list_create();
 
+    // Carlo el Algoritmo de Planificacion del Sistema
+    algoritmoPlanificacion = string_new();
+    string_append(&algoritmoPlanificacion,config_get_string_value(cfg,"ALGORITMO_PLANIFICACION"));
+    
 
     // Creo conexión con el Coordinador
     int coordinador_fd = conectarseAservidor(config_get_string_value(cfg,"COORDINADOR_IP"),config_get_int_value(cfg,"COORDINADOR_PUERTO"));
@@ -369,6 +389,8 @@ int main(int argc, char* argv[]){
     queue_destroy(colaTerminados);
     list_destroy(listaClavesBloqueadas);
     list_destroy(listaReady);
+
+    free(algoritmoPlanificacion);
 
     return EXIT_SUCCESS;
 }

@@ -290,14 +290,17 @@ int obtenerTamanoProximaInstruccion(t_list* listaInstrucciones){
 //**************************************************************************//
 void inicializarEstructurasAdministrativas(){
 
+// TODO
 }
 
 //**************************************************************************//
 // Registrar las Instrucciones en el Log de Operaciones
 //**************************************************************************//
-bool registrarLogOperaciones(Instruccion* datosInstruccion, char* nombreProceso){
+void registrarLogOperaciones(Instruccion* datosInstruccion, char* nombreProceso){
 
-	return true;
+// TODO
+
+	return;
 }
 
 //**************************************************************************//
@@ -305,6 +308,7 @@ bool registrarLogOperaciones(Instruccion* datosInstruccion, char* nombreProceso)
 //**************************************************************************//
 char* procesarSolicitudEjecucion(Instruccion* datosInstruccion, char* algoritmoDistribucion){
 
+// TODO
 	return "INSTANCIA1";
 }
 

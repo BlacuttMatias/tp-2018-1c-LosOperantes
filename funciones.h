@@ -67,7 +67,7 @@
 /* ---------------------------------------- */
 
 	void inicializarEstructurasAdministrativas();
-	bool registrarLogOperaciones(Instruccion* datosInstruccion, char* nombreProceso);
+	void registrarLogOperaciones(Instruccion* datosInstruccion, char* nombreProceso);
 	char* procesarSolicitudEjecucion(Instruccion* datosInstruccion, char* algoritmoDistribucion);
 
 

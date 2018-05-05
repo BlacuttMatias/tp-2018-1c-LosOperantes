@@ -261,6 +261,38 @@ void servidorPlanificador(void* puerto){
                                     // Muestro por pantalla el contenido de la listaReady
                                     showContenidolistaReady(listaReady);
                                     break;
+
+                                case RESPUESTA_EJECUTAR_INSTRUCCION:
+
+                                    // TODO
+                                    log_info(infoLogger,"Respuesta sobre la Ejecución de Instruccion recibida del ESI.");
+                                    break;
+
+                            }
+                        }
+
+                        // Si el mensaje proviene del COORDINADOR
+                        if(encabezado.proceso == 'C'){
+                            switch(encabezado.cod_operacion){
+
+                                case NOTIFICAR_USO_RECURSO:
+                                    // TODO
+
+                                    log_info(infoLogger,"Respuesta sobre el uso de un Recurso por un Proceso recibida del COORDINADOR.");
+                                    break;
+
+                                case RECURSO_TOMADO:
+                                    // TODO
+                                    // Encolar el Proceso en cola de bloqueados
+
+                                    log_info(infoLogger,"El Proceso no pudo ejecutarse porque el Recurso estaba tomado por otro Proceso.");
+                                    break;
+
+                                case INSTANCIA_INEXISTENTE:
+                                    // TODO
+                                    log_info(infoLogger,"Respuesta sobre la una Instancia que no existe recibida del COORDINADOR.");
+                                    break;
+                                    
                             }
                         }
 

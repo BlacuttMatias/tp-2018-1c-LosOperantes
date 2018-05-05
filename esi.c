@@ -176,13 +176,28 @@ int main(int argc, char* argv[]){
 						 FD_CLR(i, &master); // eliminar del conjunto maestro
 					} else {
 
-						switch(encabezado.cod_operacion){
+                        // Si el mensaje proviene de COORDINADOR
+                        if(encabezado.proceso == 'C'){
 
-							case EJECUTAR_INSTRUCCION:
-								log_info(infoLogger,"Pedido de Ejecución de Instruccion.");
-								break;
+    						switch(encabezado.cod_operacion){
 
-						}
+                                case RESPUESTA_EJECUTAR_INSTRUCCION:
+                                    log_info(infoLogger,"Respuesta sobre la Ejecución de Instruccion recibida del Coordinador.");
+                                    break;
+    						}
+                        }
+
+                        // Si el mensaje proviene del PLANIFICADOR
+                        if(encabezado.proceso == 'P'){
+
+                            switch(encabezado.cod_operacion){
+
+                                case EJECUTAR_INSTRUCCION:
+                                    log_info(infoLogger,"Pedido de Ejecución de Instruccion recibido del Planificador.");
+                                    break;
+                            }
+                        }
+
 					}
                 }
             }

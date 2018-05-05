@@ -174,7 +174,10 @@ int main(int argc, char* argv[]){
 						switch(encabezado.cod_operacion){
 
 							case EJECUTAR_INSTRUCCION:
-								log_info(infoLogger,"Pedido de Ejecución de Instruccion.");
+                            
+                                // TODO
+
+								log_info(infoLogger,"Pedido de Ejecución de Instruccion recibido del Coordinador.");
 								break;
 
 						}

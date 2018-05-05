@@ -38,6 +38,9 @@
 	Paquete srlz_datosProceso(char proceso, int codigoOperacion, char* nombreProceso, int rafagaAnterior, int rafagaActual);
 	Proceso dsrlz_datosProceso(void* buffer);
 
+	Instruccion dsrlz_instruccion (void* buffer);
+	Paquete srlz_instruccion (char proceso, int codigoOperacion,Instruccion instruccion);
+
 /* ---------------------------------------- */
 /*  Funciones de ESI 						*/
 /* ---------------------------------------- */

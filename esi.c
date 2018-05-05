@@ -25,7 +25,100 @@ t_list* listaInstrucciones;
 
 /* ---------------------------------------- */
 
+
+
+Paquete srlz_instruccion (char proceso, int codigoOperacion,Instruccion instruccion){
+
+	const int get=1;
+	const int set=2;		//se trabaja suponiendo que los codigos de operacion de las instrucciones son estos (1 para get, 2 para set y 3 para store)
+	const int store=3;
+
+	int posicion = 0;//int para ir guiando desde donde se copia
+	int sizeBuffer = 0;
+	int tamClave = 0;
+	int tamPayload = 0;
+	int tamDato = 0;
+	Paquete paquete;
+
+	tamClave = strlen(instruccion.key);
+
+	//dependiendo de si se hace un get/store o un set, el tamaño del buffer sera uno u otro, porque en el set se agrega tambien el valor asociado a la key
+	if(instruccion.operacion == get || instruccion.operacion == store){
+		sizeBuffer = sizeof(int)*4 + sizeof(char) + tamClave;
+	}
+	else{
+		tamDato = strlen(instruccion.dato);
+		sizeBuffer = sizeof(int)*5 + sizeof(char) + tamClave + tamDato;	//agrego el tamaño del valor y el valor(el dato de la instruccion)
+	}
+	paquete.tam_buffer = sizeBuffer;
+	paquete.buffer = malloc( sizeBuffer );
+	tamPayload = sizeBuffer - (sizeof(int)*2) - sizeof(char);
+
+	memcpy(paquete.buffer									,&(proceso)                     ,sizeof(char));
+	memcpy(paquete.buffer + (posicion=sizeof(char))			,&(codigoOperacion)				,sizeof(int));
+	memcpy(paquete.buffer + (posicion += sizeof(int))		,&(tamPayload)					,sizeof(int));
+
+	memcpy(paquete.buffer + (posicion+=sizeof(int))			,&(instruccion.operacion)		,sizeof(int));
+
+	memcpy(paquete.buffer + (posicion += sizeof(int))		,&(tamClave)					,sizeof(int));
+	memcpy(paquete.buffer + (posicion += sizeof(int))		,instruccion.key				,tamClave);
+
+	if(instruccion.operacion==set){	//en caso ser un set, pongo en el buffer el tamaño del dato y el dato, en get y store no hace falta porque el dato no existe
+		memcpy(paquete.buffer + (posicion += tamClave)			,&(tamDato)						,sizeof(int));
+		memcpy(paquete.buffer + (posicion += sizeof(int))		,instruccion.dato				,tamDato);
+	}
+	return paquete;
+
+}
+
+
+Instruccion dsrlz_instruccion (void* buffer){
+
+	const int get=1;
+	const int set=2;		//se trabaja suponiendo que los codigos de operacion de las instrucciones son estos (1 para get, 2 para set y 3 para store)
+	const int store=3;
+
+	int posicion = 0; //int para ir guiando desde donde se copia
+	int tamClave = 0;
+	Instruccion instruccion;
+
+	memcpy(&instruccion.operacion			,buffer + posicion										,sizeof(int));
+	memcpy(&tamClave						,buffer + (posicion+=sizeof(int))						,sizeof(int));
+	memcpy(instruccion.key					,buffer + (posicion+=sizeof(int))						,tamClave);
+	instruccion.key[tamClave] = '\0';
+
+	if(instruccion.operacion==set){	//si es un set significa que tengo que seguir leyendo del buffer el valor asociado a la key(el dato)
+
+		int tamDato = 0;
+		memcpy(&tamDato							,buffer + (posicion+=tamClave)							,sizeof(int));
+		instruccion.dato = malloc(tamDato);
+		memcpy(instruccion.dato					,buffer + (posicion+=sizeof(int))						,tamDato);
+		instruccion.dato[tamDato] = '\0';
+
+	}
+	else instruccion.dato = NULL;
+
+	return instruccion;
+}
+
+
 int main(int argc, char* argv[]){
+
+
+	/* 	//codigo para probar la serializacion y descerializacion de una instruccion
+
+	Instruccion ins2;	//instruccion de prueba con valores cualquiera
+	ins2.operacion = 1;
+	strcpy(ins2.key,"key");
+	ins2.dato = "valor";
+	Paquete pac;
+	pac = srlz_instruccion('p',1,ins2);
+	Instruccion ins = dsrlz_instruccion(pac.buffer+sizeof(char)+8);
+	printf("%s\n",ins.key);
+	mostrarInstruccion(&ins);
+
+	exit(0);
+	*/
 
     char* nombreProceso = string_new();
     char* pathScript = string_new();
@@ -76,9 +169,9 @@ int main(int argc, char* argv[]){
 
     if(planificador_fd == -1){
         printf("Error de conexion con el Planificador\n");
-        return EXIT_FAILURE;        
+        return EXIT_FAILURE;
     }else{
-        log_info(infoLogger, "Conexion establecida con el Planificador");        
+        log_info(infoLogger, "Conexion establecida con el Planificador");
     }
 
     // Creo conexión con el Coordinador
@@ -86,20 +179,20 @@ int main(int argc, char* argv[]){
 
     if(coordinador_fd == -1){
         printf("Error de conexion con el Coordinador\n");
-        return EXIT_FAILURE;        
+        return EXIT_FAILURE;
     }else{
-        log_info(infoLogger, "Conexion establecida con el Coordinador");        
+        log_info(infoLogger, "Conexion establecida con el Coordinador");
     }
 
     FD_SET(planificador_fd, &master);
-    FD_SET(coordinador_fd, &master);    
-    fd_maximo = coordinador_fd;   
+    FD_SET(coordinador_fd, &master);
+    fd_maximo = coordinador_fd;
 
 // -----------------------------------------------------------------------
 //    Prueba de funciones
 // -----------------------------------------------------------------------
     // Si se pudieron cargar todas las instrucciones en la Lista
-    if(procesarScript(pathScript, listaInstrucciones)){ 
+    if(procesarScript(pathScript, listaInstrucciones)){
 
         // Serializado el Proceso
         paquete = srlz_datosProceso('E', HANDSHAKE, nombreProceso, ESI, 0);
@@ -113,7 +206,7 @@ int main(int argc, char* argv[]){
 
 
     }else{ // Si fallo el proceso
-        
+
     }
 
     free(pathScript);
@@ -144,16 +237,16 @@ int main(int argc, char* argv[]){
     		exit (1);
     	}
     	for(i = 0; i <= fd_maximo; i++) {
-            if (FD_ISSET(i, &temporales)) { // ¡¡tenemos datos!!
+            if (FD_ISSET(i, &temporales)) { // ¡¡tenemos datos!!
                 if (i == escucha_master) {
-                    // gestionar nuevas conexiones
+                    // gestionar nuevas conexiones
                     size = sizeof(master_addr);
                     if ((nuevo_fd = accept(escucha_master, (struct sockaddr *)&master_addr,
                                                              &size)) == -1) {
                         perror("accept");
                     } else {
-                        FD_SET(nuevo_fd, &master); // añadir al conjunto maestro
-                        if (nuevo_fd > fd_maximo) {    // actualizar el máximo
+                        FD_SET(nuevo_fd, &master); // añadir al conjunto maestro
+                        if (nuevo_fd > fd_maximo) {    // actualizar el máximo
                             fd_maximo = nuevo_fd;
                         }
 						log_info(infoLogger, "Conexion nueva recibida" );
@@ -200,3 +293,4 @@ int main(int argc, char* argv[]){
 
     return EXIT_SUCCESS;
 }
+

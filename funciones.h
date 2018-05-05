@@ -39,7 +39,7 @@
 	Proceso dsrlz_datosProceso(void* buffer);
 
 	Instruccion dsrlz_instruccion (void* buffer);
-	Paquete srlz_instruccion (char proceso, int codigoOperacion,Instruccion instruccion);
+	Paquete srlz_instruccion (char proceso, int codigoOperacion, Instruccion instruccion);
 
 /* ---------------------------------------- */
 /*  Funciones de ESI 						*/
@@ -54,7 +54,7 @@
 	void mostrarInstruccion(Instruccion* instruccion);
 	bool existeArchivo(char *filename);
 
-	Paquete srlz_datosInstruccion(Instruccion instruccion);
+	Paquete srlz_datosInstruccion(char proceso, int codigoOperacion,Instruccion instruccion);
 	Instruccion dsrlz_datosInstruccion(void* buffer);
 
 /* ---------------------------------------- */

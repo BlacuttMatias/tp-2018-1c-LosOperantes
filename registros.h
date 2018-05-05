@@ -10,9 +10,11 @@
 // Defino los Codigo de Operaciones
 enum cod_operacion {
 	EJECUTAR_INSTRUCCION = 1,
-	SOLICITUD_EJECUCION_INSTRUCCION = 2,
+	RESPUESTA_EJECUTAR_INSTRUCCION = 2,
 	NOTIFICAR_USO_RECURSO = 3,
 	HANDSHAKE = 4,
+	INSTANCIA_INEXISTENTE = 5,
+	RECURSO_TOMADO = 6,
 };
 
 // Defino los Tipos de Procesos

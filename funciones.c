@@ -51,6 +51,80 @@ Proceso dsrlz_datosProceso(void* buffer)
 	return solicitud;
 }
 
+Paquete srlz_instruccion (char proceso, int codigoOperacion,Instruccion instruccion){
+
+	const int get=1;
+	const int set=2;		//se trabaja suponiendo que los codigos de operacion de las instrucciones son estos (1 para get, 2 para set y 3 para store)
+	const int store=3;
+
+	int posicion = 0;//int para ir guiando desde donde se copia
+	int sizeBuffer = 0;
+	int tamClave = 0;
+	int tamPayload = 0;
+	int tamDato = 0;
+	Paquete paquete;
+
+	tamClave = strlen(instruccion.key);
+
+	//dependiendo de si se hace un get/store o un set, el tamaño del buffer sera uno u otro, porque en el set se agrega tambien el valor asociado a la key
+	if(instruccion.operacion == get || instruccion.operacion == store){
+		sizeBuffer = sizeof(int)*4 + sizeof(char) + tamClave;
+	}
+	else{
+		tamDato = strlen(instruccion.dato);
+		sizeBuffer = sizeof(int)*5 + sizeof(char) + tamClave + tamDato;	//agrego el tamaño del valor y el valor(el dato de la instruccion)
+	}
+	paquete.tam_buffer = sizeBuffer;
+	paquete.buffer = malloc( sizeBuffer );
+	tamPayload = sizeBuffer - (sizeof(int)*2) - sizeof(char);
+
+	memcpy(paquete.buffer									,&(proceso)                     ,sizeof(char));
+	memcpy(paquete.buffer + (posicion=sizeof(char))			,&(codigoOperacion)				,sizeof(int));
+	memcpy(paquete.buffer + (posicion += sizeof(int))		,&(tamPayload)					,sizeof(int));
+
+	memcpy(paquete.buffer + (posicion+=sizeof(int))			,&(instruccion.operacion)		,sizeof(int));
+
+	memcpy(paquete.buffer + (posicion += sizeof(int))		,&(tamClave)					,sizeof(int));
+	memcpy(paquete.buffer + (posicion += sizeof(int))		,instruccion.key				,tamClave);
+
+	if(instruccion.operacion==set){	//en caso ser un set, pongo en el buffer el tamaño del dato y el dato, en get y store no hace falta porque el dato no existe
+		memcpy(paquete.buffer + (posicion += tamClave)			,&(tamDato)						,sizeof(int));
+		memcpy(paquete.buffer + (posicion += sizeof(int))		,instruccion.dato				,tamDato);
+	}
+	return paquete;
+
+}
+
+
+Instruccion dsrlz_instruccion (void* buffer){
+
+	const int get=1;
+	const int set=2;		//se trabaja suponiendo que los codigos de operacion de las instrucciones son estos (1 para get, 2 para set y 3 para store)
+	const int store=3;
+
+	int posicion = 0; //int para ir guiando desde donde se copia
+	int tamClave = 0;
+	Instruccion instruccion;
+
+	memcpy(&instruccion.operacion			,buffer + posicion										,sizeof(int));
+	memcpy(&tamClave						,buffer + (posicion+=sizeof(int))						,sizeof(int));
+	memcpy(instruccion.key					,buffer + (posicion+=sizeof(int))						,tamClave);
+	instruccion.key[tamClave] = '\0';
+
+	if(instruccion.operacion==set){	//si es un set significa que tengo que seguir leyendo del buffer el valor asociado a la key(el dato)
+
+		int tamDato = 0;
+		memcpy(&tamDato							,buffer + (posicion+=tamClave)							,sizeof(int));
+		instruccion.dato = malloc(tamDato);
+		memcpy(instruccion.dato					,buffer + (posicion+=sizeof(int))						,tamDato);
+		instruccion.dato[tamDato] = '\0';
+
+	}
+	else instruccion.dato = NULL;
+
+	return instruccion;
+}
+
 
 //**************************************************************************//
 // Creacion del Encabezado Fijo del Paquete 								
@@ -106,17 +180,15 @@ Paquete srlz_datosInstruccion(char proceso, int codigoOperacion, Instruccion ins
 //**************************************************************************//
 
 //(todavia falta probar)
-Instruccion* sacarSiguienteInstruccion(t_list* listaInstruccion) {
+	Instruccion* sacarSiguienteInstruccion(t_list* listaInstruccion) {
 	t_list* listaAuxiliar;
 	Instruccion* instruccionAux=NULL;
 	if(list_size(listaInstruccion)>0){
 		instruccionAux =	list_remove(listaInstruccion,0);
 
-
 	}
 	return instruccionAux;
 }
-
 //**************************************************************************//
 // Persistir Datos en el Coordinador
 //**************************************************************************//
@@ -279,14 +351,17 @@ int obtenerTamanoProximaInstruccion(t_list* listaInstrucciones){
 //**************************************************************************//
 void inicializarEstructurasAdministrativas(){
 
+// TODO
 }
 
 //**************************************************************************//
 // Registrar las Instrucciones en el Log de Operaciones
 //**************************************************************************//
-bool registrarLogOperaciones(Instruccion* datosInstruccion, char* nombreProceso){
+void registrarLogOperaciones(Instruccion* datosInstruccion, char* nombreProceso){
 
-	return true;
+// TODO
+
+	return;
 }
 
 //**************************************************************************//
@@ -294,6 +369,7 @@ bool registrarLogOperaciones(Instruccion* datosInstruccion, char* nombreProceso)
 //**************************************************************************//
 char* procesarSolicitudEjecucion(Instruccion* datosInstruccion, char* algoritmoDistribucion){
 
+// TODO
 	return "INSTANCIA1";
 }
 
@@ -361,6 +437,9 @@ void showContenidocolaReady(t_queue* colaReady){
 	}
 }
 
+// Coordina la Planificacion de Todos los Procesos
+void planificarProcesos(t_list* listaReady, char* algoritmoPlanificacion){
+}
 
 //**************************************************************************//
 // Ordena la ColaReady y la devuelve segun el Planificador
@@ -412,4 +491,25 @@ bool existeArchivo(char *filename){
         fclose(archivo);
     	return true;
     }
+}
+
+//funcion para carga de entradas
+void cargarTablaEntradas(t_list *tablaEntradas,Instruccion* estructuraInstruccion){
+	t_entrada* nuevaEntrada = NULL;
+
+	int tamanioLista = list_size(tablaEntradas);
+
+	nuevaEntrada=malloc(sizeof(t_entrada));
+
+
+	nuevaEntrada->clave = estructuraInstruccion->key;
+
+	nuevaEntrada->valor = malloc(strlen(estructuraInstruccion->dato)+1);
+	strcpy(nuevaEntrada->valor,estructuraInstruccion->dato);
+	nuevaEntrada->valor[strlen(estructuraInstruccion->dato)] = '\0';
+
+	nuevaEntrada->numeroDeEntrada = tamanioLista+1;
+	nuevaEntrada->tamanioValorAlmacenado = strlen(estructuraInstruccion->dato);
+
+	list_add(tablaEntradas,nuevaEntrada);
 }

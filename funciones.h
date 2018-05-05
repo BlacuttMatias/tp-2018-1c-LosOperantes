@@ -38,6 +38,9 @@
 	Paquete srlz_datosProceso(char proceso, int codigoOperacion, char* nombreProceso, int rafagaAnterior, int rafagaActual);
 	Proceso dsrlz_datosProceso(void* buffer);
 
+	Instruccion dsrlz_instruccion (void* buffer);
+	Paquete srlz_instruccion (char proceso, int codigoOperacion,Instruccion instruccion);
+
 /* ---------------------------------------- */
 /*  Funciones de ESI 						*/
 /* ---------------------------------------- */
@@ -60,6 +63,7 @@
 
 	void showContenidolistaReady(t_list* listaReady);
 	void showContenidocolaReady(t_queue* colaReady);
+	void planificarProcesos(t_list* listaReady, char* algoritmoPlanificacion);
 	t_queue* planificarReady(t_list* listaReady, char* algoritmoPlanificacion);
 
 /* ---------------------------------------- */
@@ -67,7 +71,7 @@
 /* ---------------------------------------- */
 
 	void inicializarEstructurasAdministrativas();
-	bool registrarLogOperaciones(Instruccion* datosInstruccion, char* nombreProceso);
+	void registrarLogOperaciones(Instruccion* datosInstruccion, char* nombreProceso);
 	char* procesarSolicitudEjecucion(Instruccion* datosInstruccion, char* algoritmoDistribucion);
 
 
@@ -76,6 +80,7 @@
 /* ---------------------------------------- */
 
 	bool persistirDatos(Instruccion* datosInstruccion, char* algoritmoAlmacenamiento);
+	void cargarTablaEntradas(t_list *tablaEntradas,Instruccion* estructuraInstruccion);
 
 /* ---------------------------------------- */
 #endif

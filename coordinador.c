@@ -103,6 +103,15 @@ void servidorCoordinador(void* puerto){
                                     // Recibo de Planificador el nombre del Proceso
                                     log_info(infoLogger,"Proceso Planificador conectado.");
                                     break;
+
+                                case RECURSO_TOMADO:
+
+                                    // TODO
+                                    // Cuando el Planificador notifica que el recurso ya estaba tomado por otro recurso
+
+                                    log_info(infoLogger,"Proceso Planificador conectado.");
+                                    break;
+
                             }
                         }
 
@@ -119,6 +128,14 @@ void servidorCoordinador(void* puerto){
                                     // Recibo de Instancia el nombre del Proceso
                                     log_info(infoLogger,"Proceso Instancia %s conectado.", registroProceso.nombreProceso);
                                     break;
+
+                                case RESPUESTA_EJECUTAR_INSTRUCCION:
+
+                                    // TODO
+
+                                    log_info(infoLogger,"Respuesta sobre la Ejecución de Instruccion recibida de la Instancia.");
+                                    break;
+
                             }
                         }
 
@@ -153,6 +170,48 @@ void servidorCoordinador(void* puerto){
                                     // Muestro por pantalla el contenido de la listaReady
                                     //showContenidolistaReady(listaReady);
                                     break;
+
+                                case EJECUTAR_INSTRUCCION:
+                                    log_info(infoLogger,"Pedido de Ejecución de Instruccion recibida del ESI.");        
+                                    
+                                    // TODO
+                                    //registrarLogOperaciones(datosInstruccion, "PROCESO1");
+
+                                    // Si la operacion es GET, notificar al Planificador de la toma del recurso y la Instancia no participa
+
+
+
+
+                                    // Armo el Paquete del Resultado de la Ejecucion de la Instruccion
+                                    paquete = crearHeader('C', RESPUESTA_EJECUTAR_INSTRUCCION, 1);
+
+                                    // Envio el Paquetea a ESI
+                                    if(send(i,paquete.buffer,paquete.tam_buffer,0) != -1){
+
+                                        free(paquete.buffer);
+                                        log_info(infoLogger, "Se le respondio al ESI el resultado de la ejecucion de la Instruccion");
+                                    }else{
+                                        log_error(infoLogger, "No se pudo enviar mensaje al ESI sobre el resultado de la ejecucion de la Instruccion");
+                                    }
+
+
+
+                                    // Si la operacion es SET o STORE,
+
+
+                                    // Defino el Algoritmo de Distribucion a utlizar
+                                    char* algoritmoDistribucion = string_new();
+                                    string_append(&algoritmoDistribucion,"CIRCULAR");
+                                    char* instanciaElegida = string_new();
+
+                                    //instanciaElegida = procesarSolicitudEjecucion(datosInstruccion, algoritmoDistribucion);
+
+                                    free(algoritmoDistribucion);
+                                    free(instanciaElegida);
+
+
+                                    break;
+
                             }
                         }
 
@@ -179,34 +238,11 @@ int main(int argc, char* argv[]){
     // Creo las Listas de los Procesos Conectados al Planificador
     listaProcesosConectados = list_create();
 
-// -----------------------------------------------------------------------
-//    Prueba de funciones
-// -----------------------------------------------------------------------
 
-/*
     inicializarEstructurasAdministrativas();
 
 
-    Instruccion* datosInstruccion;
 
-    datosInstruccion->operacion = STORE;
-    strcpy(datosInstruccion->key, "clave\0");
-    datosInstruccion->dato=NULL;
-
-    if(registrarLogOperaciones(datosInstruccion, "PROCESO1")){
-
-    }
-
-    // Defino el Algoritmo de Distribucion a utlizar
-    char* algoritmoDistribucion = string_new();
-    string_append(&algoritmoDistribucion,"CIRCULAR");
-    char* instanciaElegida = string_new();
-
-    instanciaElegida = procesarSolicitudEjecucion(datosInstruccion, algoritmoDistribucion);
-
-    free(algoritmoDistribucion);
-    free(instanciaElegida);
-*/
 // -----------------------------------------------------------------------
 
     pthread_t hiloServidor;

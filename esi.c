@@ -25,7 +25,24 @@ t_list* listaInstrucciones;
 
 /* ---------------------------------------- */
 
+
 int main(int argc, char* argv[]){
+
+
+	/* 	//codigo para probar la serializacion y descerializacion de una instruccion
+
+	Instruccion ins2;	//instruccion de prueba con valores cualquiera
+	ins2.operacion = 1;
+	strcpy(ins2.key,"key");
+	ins2.dato = "valor";
+	Paquete pac;
+	pac = srlz_instruccion('p',1,ins2);
+	Instruccion ins = dsrlz_instruccion(pac.buffer+sizeof(char)+8);
+	printf("%s\n",ins.key);
+	mostrarInstruccion(&ins);
+
+	exit(0);
+	*/
 
     char* nombreProceso = string_new();
     char* pathScript = string_new();
@@ -76,9 +93,9 @@ int main(int argc, char* argv[]){
 
     if(planificador_fd == -1){
         printf("Error de conexion con el Planificador\n");
-        return EXIT_FAILURE;        
+        return EXIT_FAILURE;
     }else{
-        log_info(infoLogger, "Conexion establecida con el Planificador");        
+        log_info(infoLogger, "Conexion establecida con el Planificador");
     }
 
     // Creo conexión con el Coordinador
@@ -86,20 +103,20 @@ int main(int argc, char* argv[]){
 
     if(coordinador_fd == -1){
         printf("Error de conexion con el Coordinador\n");
-        return EXIT_FAILURE;        
+        return EXIT_FAILURE;
     }else{
-        log_info(infoLogger, "Conexion establecida con el Coordinador");        
+        log_info(infoLogger, "Conexion establecida con el Coordinador");
     }
 
     FD_SET(planificador_fd, &master);
-    FD_SET(coordinador_fd, &master);    
-    fd_maximo = coordinador_fd;   
+    FD_SET(coordinador_fd, &master);
+    fd_maximo = coordinador_fd;
 
 // -----------------------------------------------------------------------
 //    Prueba de funciones
 // -----------------------------------------------------------------------
     // Si se pudieron cargar todas las instrucciones en la Lista
-    if(procesarScript(pathScript, listaInstrucciones)){ 
+    if(procesarScript(pathScript, listaInstrucciones)){
 
         // Serializado el Proceso
         paquete = srlz_datosProceso('E', HANDSHAKE, nombreProceso, ESI, 0);
@@ -113,7 +130,7 @@ int main(int argc, char* argv[]){
 
 
     }else{ // Si fallo el proceso
-        
+
     }
 
     free(pathScript);
@@ -141,16 +158,16 @@ int main(int argc, char* argv[]){
     		exit (1);
     	}
     	for(i = 0; i <= fd_maximo; i++) {
-            if (FD_ISSET(i, &temporales)) { // ¡¡tenemos datos!!
+            if (FD_ISSET(i, &temporales)) { // ¡¡tenemos datos!!
                 if (i == escucha_master) {
-                    // gestionar nuevas conexiones
+                    // gestionar nuevas conexiones
                     size = sizeof(master_addr);
                     if ((nuevo_fd = accept(escucha_master, (struct sockaddr *)&master_addr,
                                                              &size)) == -1) {
                         perror("accept");
                     } else {
-                        FD_SET(nuevo_fd, &master); // añadir al conjunto maestro
-                        if (nuevo_fd > fd_maximo) {    // actualizar el máximo
+                        FD_SET(nuevo_fd, &master); // añadir al conjunto maestro
+                        if (nuevo_fd > fd_maximo) {    // actualizar el máximo
                             fd_maximo = nuevo_fd;
                         }
 						log_info(infoLogger, "Conexion nueva recibida" );
@@ -173,13 +190,60 @@ int main(int argc, char* argv[]){
 						 FD_CLR(i, &master); // eliminar del conjunto maestro
 					} else {
 
-						switch(encabezado.cod_operacion){
+                        // Si el mensaje proviene de COORDINADOR
+                        if(encabezado.proceso == 'C'){
 
-							case EJECUTAR_INSTRUCCION:
-								log_info(infoLogger,"Pedido de Ejecución de Instruccion.");
-								break;
+    						switch(encabezado.cod_operacion){
 
-						}
+                                case RESPUESTA_EJECUTAR_INSTRUCCION:
+                                    log_info(infoLogger,"Respuesta sobre la Ejecución de Instruccion recibida del Coordinador.");
+
+
+                                    // Armo el Paquete del Resultado de la Ejecucion de la Instruccion
+                                    paquete = crearHeader('E', RESPUESTA_EJECUTAR_INSTRUCCION, 1);
+
+                                    // Envio el Paquetea al Planificador
+                                    if(send(planificador_fd,paquete.buffer,paquete.tam_buffer,0) != -1){
+
+                                        free(paquete.buffer);
+                                        log_info(infoLogger, "Se le respondio al PLANIFICADOR el resultado de la ejecucion de la Instruccion");
+                                    }else{
+                                        log_error(infoLogger, "No se pudo enviar mensaje al PLANIFICADOR sobre el resultado de la ejecucion de la Instruccion");
+                                    }
+
+                                    break;
+    						}
+                        }
+
+                        // Si el mensaje proviene del PLANIFICADOR
+                        if(encabezado.proceso == 'P'){
+
+                            switch(encabezado.cod_operacion){
+
+                                case EJECUTAR_INSTRUCCION:
+
+                                    log_info(infoLogger,"Pedido de Ejecución de Instruccion recibido del Planificador.");
+
+                                    // TODO
+
+                                    // Armo el Paquete de Ejecucion de la Proxima Instruccion
+                                    paquete = crearHeader('E', EJECUTAR_INSTRUCCION, 1);
+
+                                    // Envio el Paquetea al Planificador
+                                    if(send(coordinador_fd,paquete.buffer,paquete.tam_buffer,0) != -1){
+
+                                        free(paquete.buffer);
+                                        log_info(infoLogger, "Se le envio al COORDINADOR la proxima Instruccion a ejecutar");
+                                    }else{
+                                        log_error(infoLogger, "No se pudo enviar al COORDINADOR la proxima Instruccion a ejecutar");
+                                    }
+
+
+
+                                    break;
+                            }
+                        }
+
 					}
                 }
             }
@@ -197,3 +261,4 @@ int main(int argc, char* argv[]){
 
     return EXIT_SUCCESS;
 }
+

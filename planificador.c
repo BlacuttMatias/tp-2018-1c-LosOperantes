@@ -106,7 +106,7 @@ void hiloConsolaInteractiva(void * unused) {
                 if(string_starts_with(comandoConsola,"PLANIFICAR")){
                     comandoAceptado = true;
 
-                    colaReady =  planificarReady(listaReady, config_get_string_value(cfg,"ALGORITMO_PLANIFICACION"));
+                    //colaReady =  planificarReady(listaReady, config_get_string_value(cfg,"ALGORITMO_PLANIFICACION"));
                     showContenidocolaReady(colaReady);
 
                 }
@@ -284,20 +284,13 @@ void servidorPlanificador(void* puerto){
                                     log_info(infoLogger,"Notificacion sobre la finalizacion del Proceso ESI %s.", obtenerNombreProceso(listaESIconectados, i));
 
 
-showContenidolistaProcesosConectados(listaESIconectados);
-showContenidolistaReady(listaReady);
-showContenidocolaReady(colaReady);
                                     // Elimino el Proceso ESI de las estrucutras Administrativas
                                     eliminarProcesoLista(listaESIconectados, i);
                                     eliminarProcesoLista(listaReady, i);
                                     eliminarProcesoCola(colaReady, i);
 
-showContenidolistaProcesosConectados(listaESIconectados);
-showContenidolistaReady(listaReady);
-showContenidocolaReady(colaReady);
-
                                     // Activo la Planificacion de los Procesos
-                                    //planificarProcesos = true;
+                                    planificarProcesos = true;
                                     break;                                
                             }
                         }
@@ -337,22 +330,23 @@ showContenidocolaReady(colaReady);
                     // Desactivo la Planificacion de los Procesos
                     planificarProcesos = false;                                    
 
-                    // TODO
-                    procesoSeleccionado = obtenerProximoProcesoPlanificado(listaESIconectados, listaReady, algoritmoPlanificacion);
+                    // Obtengo el Proximo Proceso a planificar
+                    procesoSeleccionado = obtenerProximoProcesoPlanificado(listaESIconectados, listaReady, colaReady, algoritmoPlanificacion);
 
+                    // Si existe un Proceso para planificar
+                    if(procesoSeleccionado != NULL){
+                        // Armo el Paquete de la orden de Ejectuar la proxima Instruccion
+                        paquete = crearHeader('P', EJECUTAR_INSTRUCCION, 1);
 
-                    // Armo el Paquete de la orden de Ejectuar la proxima Instruccion
-                    paquete = crearHeader('P', EJECUTAR_INSTRUCCION, 1);
+                        // Envio el Paquetea a ESI
+                        if(send(procesoSeleccionado->socketProceso,paquete.buffer,paquete.tam_buffer,0) != -1){
 
-                    // Envio el Paquetea a ESI
-                    if(send(procesoSeleccionado->socketProceso,paquete.buffer,paquete.tam_buffer,0) != -1){
-
-                        free(paquete.buffer);
-                        log_info(infoLogger, "Se le pidio al ESI %s que ejecute la proxima Instruccion", procesoSeleccionado->nombreProceso);
-                    }else{
-                        log_error(infoLogger, "No se pudo enviar al ESI %s la orden de ejecucion de la proxima Instruccion", procesoSeleccionado->nombreProceso);
+                            free(paquete.buffer);
+                            log_info(infoLogger, "Se le pidio al ESI %s que ejecute la proxima Instruccion", procesoSeleccionado->nombreProceso);
+                        }else{
+                            log_error(infoLogger, "No se pudo enviar al ESI %s la orden de ejecucion de la proxima Instruccion", procesoSeleccionado->nombreProceso);
+                        }
                     }
-
                 }
 
 

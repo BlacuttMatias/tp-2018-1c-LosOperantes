@@ -508,7 +508,7 @@ void showContenidocolaReady(t_queue* colaReady){
 }
 
 // Coordina la Planificacion de Todos los Procesos
-Proceso* obtenerProximoProcesoPlanificado(t_list* listaESIconectados, t_list* listaReady, char* algoritmoPlanificacion){
+Proceso* obtenerProximoProcesoPlanificado(t_list* listaESIconectados, t_list* listaReady, t_queue* colaReady, char* algoritmoPlanificacion){
 	
 	// TODO
 

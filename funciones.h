@@ -62,7 +62,7 @@
 
 	void showContenidolistaReady(t_list* listaReady);
 	void showContenidocolaReady(t_queue* colaReady);
-	Proceso* obtenerProximoProcesoPlanificado(t_list* listaESIconectados, t_list* listaReady, char* algoritmoPlanificacion);
+	Proceso* obtenerProximoProcesoPlanificado(t_list* listaESIconectados, t_list* listaReady, t_queue* colaReady, char* algoritmoPlanificacion);
 	t_queue* planificarReady(t_list* listaReady, char* algoritmoPlanificacion);
 	char* obtenerNombreProceso(t_list* listaProcesosConectados, int socketProcesoConsultar);
 	void eliminarProcesoLista(t_list* listaProcesosConectados, int socketProcesoEliminar);

@@ -215,15 +215,21 @@ void servidorCoordinador(void* puerto){
                                     paquete=recibir_payload(&i,&encabezado.tam_payload);
                                     registroInstruccion=dsrlz_instruccion(paquete.buffer);
                                     free(paquete.buffer);
-                                    mostrarInstruccion(&registroInstruccion);
+                                    //mostrarInstruccion(&registroInstruccion);
 
                                     // Genero el Log de Operaciones
                                     registrarLogOperaciones(listaProcesosConectados, &registroInstruccion, i);
                                     log_info(infoLogger,"Operacion guardada en el Log de Operaciones:  %s %i %s %s", obtenerNombreProceso(listaProcesosConectados, i), registroInstruccion.operacion, registroInstruccion.key, registroInstruccion.dato);
 
+                                    // Aplico Retardo de Ejecucion segun Archivo de Configuracion
+                                    usleep(config_get_int_value(cfg,"RETARDO"));
 
                                     // Si la operacion es GET, notificar al Planificador de la toma del recurso y la Instancia no participa
                                     // TODO
+
+
+
+
 
 
                                     // Armo el Paquete del Resultado de la Ejecucion de la Instruccion

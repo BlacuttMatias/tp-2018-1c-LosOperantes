@@ -31,8 +31,10 @@
     t_queue* colaTerminados;
     t_list* listaClavesBloqueadas;
     t_list* listaReady;
+    t_list* listaESIconectados;
 
     bool planificadorPausado = false;
+    bool planificarProcesos = false;
     char* algoritmoPlanificacion = NULL;
 
 /* ---------------------------------------- */
@@ -187,6 +189,7 @@ void servidorPlanificador(void* puerto){
 
 
     Proceso registroProceso;
+    Proceso* procesoSeleccionado;
     int indice = 0;
 
     while(1){
@@ -250,7 +253,7 @@ void servidorPlanificador(void* puerto){
 
                                     // Cargo el Registro del Proceso
                                     registroProcesoAux->tipoProceso = registroProceso.tipoProceso;
-                                    registroProcesoAux->socketProceso = registroProceso.socketProceso;
+                                    registroProcesoAux->socketProceso = i;
                                     registroProcesoAux->nombreProceso = malloc(strlen(registroProceso.nombreProceso)+1);
                                     strcpy( registroProcesoAux->nombreProceso ,registroProceso.nombreProceso);
                                     registroProcesoAux->nombreProceso[strlen(registroProceso.nombreProceso)] = '\0';
@@ -258,32 +261,28 @@ void servidorPlanificador(void* puerto){
                                     // Cargo el Proceso en la listaReady
                                     list_add(listaReady, registroProcesoAux);
 
+                                    // Cargo los ESIs conectados en la Lista de ESIs conectados al Planificador
+                                    cargarListaProcesosConectados(listaESIconectados, registroProcesoAux);
+
+
                                     // Muestro por pantalla el contenido de la listaReady
                                     showContenidolistaReady(listaReady);
 
-
-                                    // Armo el Paquete de la orden de Ejectuar la proxima Instruccion
-                                    paquete = crearHeader('P', EJECUTAR_INSTRUCCION, 1);
-
-                                    // Envio el Paquetea a ESI
-                                    if(send(i,paquete.buffer,paquete.tam_buffer,0) != -1){
-
-                                        free(paquete.buffer);
-                                        log_info(infoLogger, "Se le pidio al ESI que ejecute la proxima Instruccion");
-                                    }else{
-                                        log_error(infoLogger, "No se pudo enviar al ESI la orden de ejecucion de la proxima Instruccion");
-                                    }
+                                    // Activo la Planificacion de los Procesos
+                                    planificarProcesos = true;
                                     break;
 
                                 case RESPUESTA_EJECUTAR_INSTRUCCION:
 
                                     log_info(infoLogger,"Respuesta sobre la Ejecución de Instruccion recibida del ESI.");
 
-                                    // TODO
-                                    planificarProcesos(listaReady, algoritmoPlanificacion);
-
+                                    // Activo la Planificacion de los Procesos
+                                    planificarProcesos = true;                                    
                                     break;
 
+                                case FINALIZACION_EJECUCION_ESI:
+                                    log_info(infoLogger,"Notificacion sobre la finalizacion de un proceso ESI.");
+                                    break;                                
                             }
                         }
 
@@ -314,6 +313,33 @@ void servidorPlanificador(void* puerto){
 
                     }
                 }
+
+                // Planifica los Procesos de la ColaReady
+                if(!planificadorPausado && planificarProcesos){
+
+
+                    // Desactivo la Planificacion de los Procesos
+                    planificarProcesos = false;                                    
+
+                    // TODO
+                    procesoSeleccionado = obtenerProximoProcesoPlanificado(listaESIconectados, listaReady, algoritmoPlanificacion);
+
+
+                    // Armo el Paquete de la orden de Ejectuar la proxima Instruccion
+                    paquete = crearHeader('P', EJECUTAR_INSTRUCCION, 1);
+
+                    // Envio el Paquetea a ESI
+                    if(send(procesoSeleccionado->socketProceso,paquete.buffer,paquete.tam_buffer,0) != -1){
+
+                        free(paquete.buffer);
+                        log_info(infoLogger, "Se le pidio al ESI %s que ejecute la proxima Instruccion", procesoSeleccionado->nombreProceso);
+                    }else{
+                        log_error(infoLogger, "No se pudo enviar al ESI %s la orden de ejecucion de la proxima Instruccion", procesoSeleccionado->nombreProceso);
+                    }
+
+                }
+
+
             }
         }
     }
@@ -344,6 +370,9 @@ int main(int argc, char* argv[]){
 
     // Creo la Lista de Claves Bloqueadas
     listaClavesBloqueadas = list_create();
+
+    // Creo la lista de Todos los ESIs conectados al Planificador
+    listaESIconectados = list_create();
 
     // Carlo el Algoritmo de Planificacion del Sistema
     algoritmoPlanificacion = string_new();
@@ -389,6 +418,7 @@ int main(int argc, char* argv[]){
     queue_destroy(colaTerminados);
     list_destroy(listaClavesBloqueadas);
     list_destroy(listaReady);
+    list_destroy(listaESIconectados);    
 
     free(algoritmoPlanificacion);
 

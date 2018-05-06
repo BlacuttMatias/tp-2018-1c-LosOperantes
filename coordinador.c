@@ -103,6 +103,24 @@ void servidorCoordinador(void* puerto){
 
                                     // Recibo de Planificador el nombre del Proceso
                                     log_info(infoLogger,"Proceso Planificador conectado.");
+
+                                    // Cargo el Registro del Proceso
+                                    Proceso* registroProcesoAux = NULL;
+                                    registroProcesoAux = malloc(sizeof(Proceso));
+
+                                    // Cargo el Registro del Proceso
+                                    registroProcesoAux->tipoProceso = registroProceso.tipoProceso;
+                                    registroProcesoAux->socketProceso = i;
+                                    registroProcesoAux->nombreProceso = malloc(strlen(registroProceso.nombreProceso)+1);
+                                    strcpy( registroProcesoAux->nombreProceso ,registroProceso.nombreProceso);
+                                    registroProcesoAux->nombreProceso[strlen(registroProceso.nombreProceso)] = '\0';
+
+
+                                    // Cargo el Proceso en la Lista de Procesos conectados al Planificador
+                                    cargarListaProcesosConectados(listaProcesosConectados, registroProcesoAux);
+
+                                    // Muestro por pantalla el contenido de listaProcesosConectados
+                                    showContenidolistaProcesosConectados(listaProcesosConectados);
                                     break;
 
                                 case RECURSO_TOMADO:
@@ -121,6 +139,7 @@ void servidorCoordinador(void* puerto){
                             switch(encabezado.cod_operacion){
 
                                 case HANDSHAKE:
+
                                     // Recibo los datos del Proceso
                                     paquete = recibir_payload(&i,&encabezado.tam_payload);
                                     registroProceso = dsrlz_datosProceso(paquete.buffer);
@@ -128,6 +147,24 @@ void servidorCoordinador(void* puerto){
 
                                     // Recibo de Instancia el nombre del Proceso
                                     log_info(infoLogger,"Proceso Instancia %s conectado.", registroProceso.nombreProceso);
+
+                                    // Cargo el Registro del Proceso
+                                    Proceso* registroProcesoAux = NULL;
+                                    registroProcesoAux = malloc(sizeof(Proceso));
+
+                                    // Cargo el Registro del Proceso
+                                    registroProcesoAux->tipoProceso = registroProceso.tipoProceso;
+                                    registroProcesoAux->socketProceso = i;
+                                    registroProcesoAux->nombreProceso = malloc(strlen(registroProceso.nombreProceso)+1);
+                                    strcpy( registroProcesoAux->nombreProceso ,registroProceso.nombreProceso);
+                                    registroProcesoAux->nombreProceso[strlen(registroProceso.nombreProceso)] = '\0';
+
+
+                                    // Cargo el Proceso en la Lista de Procesos conectados al Planificador
+                                    cargarListaProcesosConectados(listaProcesosConectados, registroProcesoAux);
+
+                                    // Muestro por pantalla el contenido de listaProcesosConectados
+                                    showContenidolistaProcesosConectados(listaProcesosConectados);
                                     break;
 
                                 case RESPUESTA_EJECUTAR_INSTRUCCION:
@@ -136,7 +173,6 @@ void servidorCoordinador(void* puerto){
 
                                     log_info(infoLogger,"Respuesta sobre la Ejecución de Instruccion recibida de la Instancia.");
                                     break;
-
                             }
                         }
 
@@ -160,16 +196,17 @@ void servidorCoordinador(void* puerto){
 
                                     // Cargo el Registro del Proceso
                                     registroProcesoAux->tipoProceso = registroProceso.tipoProceso;
-                                    registroProcesoAux->socketProceso = registroProceso.socketProceso;
+                                    registroProcesoAux->socketProceso = i;
                                     registroProcesoAux->nombreProceso = malloc(strlen(registroProceso.nombreProceso)+1);
                                     strcpy( registroProcesoAux->nombreProceso ,registroProceso.nombreProceso);
                                     registroProcesoAux->nombreProceso[strlen(registroProceso.nombreProceso)] = '\0';
 
-                                    // Cargo el Proceso en la listaReady
-                                    //list_add(listaReady, registroProcesoAux);
 
-                                    // Muestro por pantalla el contenido de la listaReady
-                                    //showContenidolistaReady(listaReady);
+                                    // Cargo el Proceso en la Lista de Procesos conectados al Planificador
+                                    cargarListaProcesosConectados(listaProcesosConectados, registroProcesoAux);
+
+                                    // Muestro por pantalla el contenido de listaProcesosConectados
+                                    showContenidolistaProcesosConectados(listaProcesosConectados);
                                     break;
 
                                 case EJECUTAR_INSTRUCCION:
@@ -177,10 +214,12 @@ void servidorCoordinador(void* puerto){
                                     paquete=recibir_payload(&i,&encabezado.tam_payload);
                                     registroInstruccion=dsrlz_instruccion(paquete.buffer);
                                     mostrarInstruccion(&registroInstruccion);
-                                    // TODO
-                                    //registrarLogOperaciones(datosInstruccion, "PROCESO1");
+
+                                    // Genero el Log de Operaciones
+                                    registrarLogOperaciones(listaProcesosConectados, registroInstruccion, i);
 
                                     // Si la operacion es GET, notificar al Planificador de la toma del recurso y la Instancia no participa
+                                    // TODO
 
 
 
@@ -238,9 +277,8 @@ int main(int argc, char* argv[]){
 	log_info(infoLogger, "Iniciando COORDINADOR" );
     printf("Iniciando COORDINADOR\n");
 
-    // Creo las Listas de los Procesos Conectados al Planificador
+    // Creo la lista de Todos los Procesos conectados al Coordinador
     listaProcesosConectados = list_create();
-
 
     inicializarEstructurasAdministrativas();
 

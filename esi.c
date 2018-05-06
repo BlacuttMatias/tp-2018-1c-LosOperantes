@@ -112,9 +112,7 @@ int main(int argc, char* argv[]){
     FD_SET(coordinador_fd, &master);
     fd_maximo = coordinador_fd;
 
-// -----------------------------------------------------------------------
-//    Prueba de funciones
-// -----------------------------------------------------------------------
+
     // Si se pudieron cargar todas las instrucciones en la Lista
     if(procesarScript(pathScript, listaInstrucciones)){
 
@@ -130,7 +128,7 @@ int main(int argc, char* argv[]){
 
 
     }else{ // Si fallo el proceso
-
+        return EXIT_FAILURE;
     }
 
     free(pathScript);
@@ -230,25 +228,41 @@ int main(int argc, char* argv[]){
 
                                     // TODO
                                     Instruccion* aux= sacarSiguienteInstruccion(listaInstrucciones);
-                                    Instruccion proximaInstruccion;
-                                    proximaInstruccion=pasarAEstructura(aux);
-                                    // Armo el Paquete de Ejecucion de la Proxima Instruccion
-                                    //paquete = crearHeader('E', EJECUTAR_INSTRUCCION, 1);  asi era lo anterior, la proxima lo que puse yo--martin
-                                    puts("\n instruccion a serealizar");
-                                    printf("\n\n codigo %d    key  %s    dato %s  \n\n",proximaInstruccion.operacion,proximaInstruccion.key,proximaInstruccion.dato);
-                                    paquete = srlz_instruccion('E', EJECUTAR_INSTRUCCION,proximaInstruccion);
-                                    puts("\n serialicé proxima instruccion");
-                                    // Envio el Paquetea al Planificador
-                                    if(send(coordinador_fd,paquete.buffer,paquete.tam_buffer,0) != -1){
 
-                                        free(paquete.buffer);
-                                        log_info(infoLogger, "Se le envio al COORDINADOR la proxima Instruccion a ejecutar");
+                                    // Si se obtuvo una Proxima Instrucion
+                                    if(NULL != aux){
+
+                                        Instruccion proximaInstruccion;
+                                        proximaInstruccion=pasarAEstructura(aux);
+                                        // Armo el Paquete de Ejecucion de la Proxima Instruccion
+                                        //paquete = crearHeader('E', EJECUTAR_INSTRUCCION, 1);  asi era lo anterior, la proxima lo que puse yo--martin
+                                        puts("\n instruccion a serealizar");
+                                        printf("\n\n codigo %d    key  %s    dato %s  \n\n",proximaInstruccion.operacion,proximaInstruccion.key,proximaInstruccion.dato);
+                                        paquete = srlz_instruccion('E', EJECUTAR_INSTRUCCION,proximaInstruccion);
+                                        puts("\n serialicé proxima instruccion");
+                                        // Envio el Paquetea al Planificador
+                                        if(send(coordinador_fd,paquete.buffer,paquete.tam_buffer,0) != -1){
+
+                                            free(paquete.buffer);
+                                            log_info(infoLogger, "Se le envio al COORDINADOR la proxima Instruccion a ejecutar");
+                                        }else{
+                                            log_error(infoLogger, "No se pudo enviar al COORDINADOR la proxima Instruccion a ejecutar");
+                                        }
                                     }else{
-                                        log_error(infoLogger, "No se pudo enviar al COORDINADOR la proxima Instruccion a ejecutar");
+                                        log_info(infoLogger, "El ESI %s ya no posee mas Instrucciones ha ejecutar.", nombreProceso);
+
+                                        // Armo el Paquete de Finalizacion de Ejecucion del Proceso ESI
+                                        paquete = crearHeader('E', FINALIZACION_EJECUCION_ESI, 1);
+
+                                        // Notifico al Planificador que voy a finalizar
+                                        if(send(planificador_fd,paquete.buffer,paquete.tam_buffer,0) != -1){
+
+                                            free(paquete.buffer);
+                                            log_info(infoLogger, "Se le notifico al PLANIFICADOR que el ESI %s finalizo", nombreProceso);
+                                        }else{
+                                            log_error(infoLogger, "No se pudo enviar al PLANIFICADOR la notificacion de finalizacion del ESI %s", nombreProceso);
+                                        }
                                     }
-
-
-
                                     break;
                             }
                         }

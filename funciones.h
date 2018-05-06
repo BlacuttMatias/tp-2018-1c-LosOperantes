@@ -62,7 +62,7 @@
 
 	void showContenidolistaReady(t_list* listaReady);
 	void showContenidocolaReady(t_queue* colaReady);
-	void planificarProcesos(t_list* listaReady, char* algoritmoPlanificacion);
+	Proceso* obtenerProximoProcesoPlanificado(t_list* listaESIconectados, t_list* listaReady, char* algoritmoPlanificacion);
 	t_queue* planificarReady(t_list* listaReady, char* algoritmoPlanificacion);
 
 /* ---------------------------------------- */
@@ -70,8 +70,10 @@
 /* ---------------------------------------- */
 
 	void inicializarEstructurasAdministrativas();
-	void registrarLogOperaciones(Instruccion* datosInstruccion, char* nombreProceso);
+	void registrarLogOperaciones(t_list* listaProcesosConectados, Instruccion datosInstruccion, int socketProceso);
 	char* procesarSolicitudEjecucion(Instruccion* datosInstruccion, char* algoritmoDistribucion);
+	void cargarListaProcesosConectados(t_list *listaProcesosConectados, Proceso* nuevoProceso);
+	void showContenidolistaProcesosConectados(t_list* listaProcesosConectados);
 
 
 /* ---------------------------------------- */

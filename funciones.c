@@ -146,9 +146,7 @@ Paquete crearHeader(char proceso, int cod_operacion, int tamPayload){
 //**************************************************************************//
 //Sacar Siguiente instruccion de la lista
 //**************************************************************************//
-
-//(todavia falta probar)
-	Instruccion* sacarSiguienteInstruccion(t_list* listaInstruccion) {
+Instruccion* sacarSiguienteInstruccion(t_list* listaInstruccion) {
 	t_list* listaAuxiliar;
 	Instruccion* instruccionAux=NULL;
 	if(list_size(listaInstruccion)>0){
@@ -158,13 +156,16 @@ Paquete crearHeader(char proceso, int cod_operacion, int tamPayload){
 	return instruccionAux;
 }
 
-	Instruccion pasarAEstructura(Instruccion* puntero) {
+//**************************************************************************//
+// Se carga un Registro de Instruccion
+//**************************************************************************//
+Instruccion pasarAEstructura(Instruccion* puntero) {
 	Instruccion instruccion;
 	instruccion.operacion= (puntero->operacion);
 	strcpy(instruccion.key,puntero->key);
 	instruccion.dato= puntero->dato;
 	return instruccion;
-	}
+}
 //**************************************************************************//
 // Persistir Datos en el Coordinador
 //**************************************************************************//
@@ -333,9 +334,34 @@ void inicializarEstructurasAdministrativas(){
 //**************************************************************************//
 // Registrar las Instrucciones en el Log de Operaciones
 //**************************************************************************//
-void registrarLogOperaciones(Instruccion* datosInstruccion, char* nombreProceso){
+void registrarLogOperaciones(t_list* listaProcesosConectados, Instruccion datosInstruccion, int socketProcesoConsultar){
 
-// TODO
+	// Obtengo el nombre del Proceso segun su Socket
+	char* nombreProceso = string_new();
+	char* registroLogOperaciones = string_new();
+
+    void _each_elemento_(Proceso* registroProcesoAux)
+	{
+		if(registroProcesoAux->socketProceso == socketProcesoConsultar){
+			string_append_with_format(&nombreProceso, "%s", registroProcesoAux->nombreProceso);			
+		}
+	}
+    list_iterate(listaProcesosConectados, (void*)_each_elemento_);
+
+
+	// Defino el archivo de Operaciones
+    FILE *logOperaciones = fopen("log/operaciones.log", "a");
+
+
+	if(logOperaciones == NULL){
+		printf("No se pudo crear el Log de Operaciones.\n");
+		fclose(logOperaciones); 
+		return;
+	}else{
+		string_append_with_format(&registroLogOperaciones, "%s %i %s %s\n", nombreProceso, datosInstruccion.operacion, datosInstruccion.key, datosInstruccion.dato);
+		fwrite(registroLogOperaciones, strlen(registroLogOperaciones), sizeof(char), logOperaciones);
+	}
+	fclose(logOperaciones); 
 
 	return;
 }
@@ -349,6 +375,34 @@ char* procesarSolicitudEjecucion(Instruccion* datosInstruccion, char* algoritmoD
 	return "INSTANCIA1";
 }
 
+
+//**************************************************************************//
+// Mostrar el contenido de la Lista de Procesos Conectados
+//**************************************************************************//
+void showContenidolistaProcesosConectados(t_list* listaProcesosConectados){
+
+	int indice = 0;
+
+	if(list_size(listaProcesosConectados) > 0){
+
+	    void _each_elemento_(Proceso* registroProcesoAux)
+		{
+			indice = indice + 1;
+
+			// Muestro el encabezaado
+			if(indice == 1) {
+				printf("\nLISTA PROCESOS CONECTADOS\n");
+				printf("Proceso \t Tipo de Proceso \t Socket\n");
+				printf("------\n");
+
+			}
+
+			printf("%s\t %d\t %d\n", registroProcesoAux->nombreProceso,registroProcesoAux->tipoProceso,registroProcesoAux->socketProceso);
+
+		}
+	    list_iterate(listaProcesosConectados, (void*)_each_elemento_);
+	}
+}
 
 //**************************************************************************//
 // Mostrar el contenido de la Lista Ready
@@ -414,7 +468,17 @@ void showContenidocolaReady(t_queue* colaReady){
 }
 
 // Coordina la Planificacion de Todos los Procesos
-void planificarProcesos(t_list* listaReady, char* algoritmoPlanificacion){
+Proceso* obtenerProximoProcesoPlanificado(t_list* listaESIconectados, t_list* listaReady, char* algoritmoPlanificacion){
+	
+	// TODO
+
+	Proceso* proximoProcesoPlanificado = NULL;
+	proximoProcesoPlanificado = malloc(sizeof(Proceso));
+	
+	proximoProcesoPlanificado = list_get(listaESIconectados, 0);
+
+	return proximoProcesoPlanificado;
+
 }
 
 //**************************************************************************//
@@ -488,4 +552,10 @@ void cargarTablaEntradas(t_list *tablaEntradas,Instruccion* estructuraInstruccio
 	nuevaEntrada->tamanioValorAlmacenado = strlen(estructuraInstruccion->dato);
 
 	list_add(tablaEntradas,nuevaEntrada);
+}
+
+// Cargo la Lista de Procesos Conectados en el Coordinador
+void cargarListaProcesosConectados(t_list *listaProcesosConectados, Proceso* nuevoProceso){
+
+	list_add(listaProcesosConectados, nuevoProceso);
 }

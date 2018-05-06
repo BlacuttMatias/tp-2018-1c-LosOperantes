@@ -15,6 +15,7 @@ enum cod_operacion {
 	HANDSHAKE = 4,
 	INSTANCIA_INEXISTENTE = 5,
 	RECURSO_TOMADO = 6,
+	FINALIZACION_EJECUCION_ESI = 7,
 };
 
 // Defino los Tipos de Procesos

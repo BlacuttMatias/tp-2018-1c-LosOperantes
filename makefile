@@ -6,8 +6,8 @@ all:
 	$(COMPILER) -o planificador planificador.c sockets.o funciones.o  -lcommons -lpthread -lreadline -lparsi
 	$(COMPILER) -o instancia instancia.c sockets.o funciones.o  -lcommons -lparsi
 	$(COMPILER) -o coordinador coordinador.c sockets.o funciones.o  -lcommons -lpthread -lparsi
-	
 	$(COMPILER) -o esi esi.c sockets.o funciones.o  -lcommons -lparsi
+	$(COMPILER) -o tests tests.c sockets.o funciones.o -lcommons -lparsi -lcunit
 
 clean:
 	rm -rf bin
@@ -29,4 +29,7 @@ coordinador:
 
 esi:
 	$(COMPILER) -o esi esi.c sockets.o funciones.o  -lcommons -lparsi
+
+tests:
+	$(COMPILER)	-o tests tests.c sockets.o funciones.o -lcommons -lparsi -lcunit
 	

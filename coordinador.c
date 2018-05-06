@@ -210,18 +210,20 @@ void servidorCoordinador(void* puerto){
                                     break;
 
                                 case EJECUTAR_INSTRUCCION:
-                                    log_info(infoLogger,"Pedido de Ejecución de Instruccion recibida del ESI.");        
+                                    log_info(infoLogger,"Pedido de Ejecución de una Instruccion recibida del Proceso ESI %s.", obtenerNombreProceso(listaProcesosConectados, i));
+
                                     paquete=recibir_payload(&i,&encabezado.tam_payload);
                                     registroInstruccion=dsrlz_instruccion(paquete.buffer);
+                                    free(paquete.buffer);
                                     mostrarInstruccion(&registroInstruccion);
 
                                     // Genero el Log de Operaciones
-                                    registrarLogOperaciones(listaProcesosConectados, registroInstruccion, i);
+                                    registrarLogOperaciones(listaProcesosConectados, &registroInstruccion, i);
+                                    log_info(infoLogger,"Operacion guardada en el Log de Operaciones:  %s %i %s %s", obtenerNombreProceso(listaProcesosConectados, i), registroInstruccion.operacion, registroInstruccion.key, registroInstruccion.dato);
+
 
                                     // Si la operacion es GET, notificar al Planificador de la toma del recurso y la Instancia no participa
                                     // TODO
-
-
 
 
                                     // Armo el Paquete del Resultado de la Ejecucion de la Instruccion
@@ -231,9 +233,9 @@ void servidorCoordinador(void* puerto){
                                     if(send(i,paquete.buffer,paquete.tam_buffer,0) != -1){
 
                                         free(paquete.buffer);
-                                        log_info(infoLogger, "Se le respondio al ESI el resultado de la ejecucion de la Instruccion");
+                                        log_info(infoLogger, "Se le respondio al Proceso ESI %s el resultado de la ejecucion de la Instruccion", obtenerNombreProceso(listaProcesosConectados, i));
                                     }else{
-                                        log_error(infoLogger, "No se pudo enviar mensaje al ESI sobre el resultado de la ejecucion de la Instruccion");
+                                        log_error(infoLogger, "No se pudo enviar mensaje al Proceso ESI %s sobre el resultado de la ejecucion de la Instruccion", obtenerNombreProceso(listaProcesosConectados, i));
                                     }
 
 
@@ -254,6 +256,16 @@ void servidorCoordinador(void* puerto){
 
                                     break;
 
+                                case FINALIZACION_EJECUCION_ESI:
+                                    log_info(infoLogger,"Notificacion sobre la finalizacion del Proceso ESI %s.", obtenerNombreProceso(listaProcesosConectados, i));
+
+showContenidolistaProcesosConectados(listaProcesosConectados);
+
+                                    // Elimino el Proceso ESI de la listaProcesosConectados
+                                    eliminarProcesoLista(listaProcesosConectados, i);
+
+showContenidolistaProcesosConectados(listaProcesosConectados);
+                                    break;                                
                             }
                         }
 
@@ -279,8 +291,6 @@ int main(int argc, char* argv[]){
 
     // Creo la lista de Todos los Procesos conectados al Coordinador
     listaProcesosConectados = list_create();
-
-    inicializarEstructurasAdministrativas();
 
 
 

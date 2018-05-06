@@ -274,14 +274,30 @@ void servidorPlanificador(void* puerto){
 
                                 case RESPUESTA_EJECUTAR_INSTRUCCION:
 
-                                    log_info(infoLogger,"Respuesta sobre la Ejecución de Instruccion recibida del ESI.");
+                                    log_info(infoLogger,"Respuesta sobre la Ejecución de Instruccion recibida del Proceso ESI %s.", obtenerNombreProceso(listaESIconectados, i));
 
                                     // Activo la Planificacion de los Procesos
-                                    planificarProcesos = true;                                    
+                                    planificarProcesos = true;
                                     break;
 
                                 case FINALIZACION_EJECUCION_ESI:
-                                    log_info(infoLogger,"Notificacion sobre la finalizacion de un proceso ESI.");
+                                    log_info(infoLogger,"Notificacion sobre la finalizacion del Proceso ESI %s.", obtenerNombreProceso(listaESIconectados, i));
+
+
+showContenidolistaProcesosConectados(listaESIconectados);
+showContenidolistaReady(listaReady);
+showContenidocolaReady(colaReady);
+                                    // Elimino el Proceso ESI de las estrucutras Administrativas
+                                    eliminarProcesoLista(listaESIconectados, i);
+                                    eliminarProcesoLista(listaReady, i);
+                                    eliminarProcesoCola(colaReady, i);
+
+showContenidolistaProcesosConectados(listaESIconectados);
+showContenidolistaReady(listaReady);
+showContenidocolaReady(colaReady);
+
+                                    // Activo la Planificacion de los Procesos
+                                    //planificarProcesos = true;
                                     break;                                
                             }
                         }

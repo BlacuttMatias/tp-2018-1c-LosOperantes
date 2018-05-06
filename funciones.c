@@ -110,12 +110,13 @@ Instruccion dsrlz_instruccion (void* buffer){
 
 		int tamDato = 0;
 		memcpy(&tamDato							,buffer + (posicion+=tamClave)							,sizeof(int));
-		instruccion.dato = malloc(tamDato);
+		instruccion.dato = malloc(tamDato+1);
 		memcpy(instruccion.dato					,buffer + (posicion+=sizeof(int))						,tamDato);
 		instruccion.dato[tamDato] = '\0';
 
+	} else {
+		instruccion.dato = NULL;
 	}
-	else instruccion.dato = NULL;
 
 	return instruccion;
 }
@@ -187,7 +188,6 @@ bool procesarScript(char* pathScript, t_list* listaInstrucciones){
 	char *unaInstruccion = string_new();
 	int numeroLinea=0;
 
-	puts("abro archivo");
 	// Si se pudo posicionar dentro del archivo
 	if(fseek( archivo, 0, SEEK_SET ) == 0){
 		//puts("fseek");
@@ -202,9 +202,8 @@ bool procesarScript(char* pathScript, t_list* listaInstrucciones){
 				//chequeo error de parseo
 				t_esi_operacion parsed= parse(unaInstruccion);
 				Instruccion* registroInstruccion = NULL;
-				//puts("alloco un registroInstruccion");
 				registroInstruccion = malloc(sizeof(Instruccion));
-				//puts("alloqué el registro");
+
 				if(!parsed.valido){
 					printf("instruccion %s invalida en posicion %d \n",unaInstruccion,numeroLinea);
 				//	log_info(infoLogger,"instruccion %s invalida en posicion %d \n",unaInstruccion,numeroLinea);
@@ -231,12 +230,6 @@ bool procesarScript(char* pathScript, t_list* listaInstrucciones){
 					}
 				}
 
-
-        		// Cargo el Registro de la instruccion
-        		//registroInstruccion->texto_instruccion = malloc(strlen(unaInstruccion)+1);
-        		//strcpy( registroInstruccion->texto_instruccion ,unaInstruccion);
-        		//registroInstruccion->texto_instruccion[strlen(unaInstruccion)] = '\0';
-
         		// Agrego la instruccion a la lista
 				list_add(listaInstrucciones,registroInstruccion);
 
@@ -252,47 +245,30 @@ bool procesarScript(char* pathScript, t_list* listaInstrucciones){
 	fclose(archivo);
 
 
-	// Muestro por pantalla el contenido de la Lista
-	int indice = 0;
-
 	if(list_size(listaInstrucciones) > 0){
-
-	    void _each_elemento_(Instruccion* registroInstruccionAux)
-		{
-			indice = indice + 1;
-
-			// Muestro el encabezaado
-			if(indice == 1) {
-				printf("\nLISTA DE INSTRUCCIONES\n");
-				printf("--------------\n");
-			}
-
-			mostrarInstruccion(registroInstruccionAux);
-			//printf("%s\n", registroInstruccionAux->texto_instruccion);
-
-		}
-	    list_iterate(listaInstrucciones, (void*)_each_elemento_);
+		return true;
 	}else{		
 		return false;
 	}
-
-	return true;
 }
 
 //*************************//
 //Llenar el registro instruccion al parsear
 //*************************//
 void cargarInstruccion(Instruccion* registro, int codigo, char key[40], char* valor){
-	//puts("cargando instruccion\n");
+
 	registro->operacion= codigo;
-	//puts("cargue operacion");
 	strcpy(registro->key, key);
-	//puts("cargue key");
+	registro->key[strlen(key)] = '\0';
+
 	if(valor != NULL){
 		registro->dato=malloc(strlen(valor)+1);
-		strcpy(registro->dato, valor);}
-	else {registro->dato=NULL;}
-		//puts("cargue instruccion");
+		strcpy(registro->dato, valor);
+		registro->dato[strlen(valor)] = '\0';
+
+	} else {
+		registro->dato=NULL;
+	}
 }
 
 void mostrarInstruccion(Instruccion* registro){
@@ -323,22 +299,52 @@ int obtenerTamanoProximaInstruccion(t_list* listaInstrucciones){
 
 
 
-//**************************************************************************//
-// Generar las Estructuras Administrativas del Coordinador
-//**************************************************************************//
-void inicializarEstructurasAdministrativas(){
 
-// TODO
+// Dado un Socket de un Proceso, lo elimino de la Lista
+void eliminarProcesoLista(t_list* listaProcesosConectados, int socketProcesoEliminar){
+
+
+	bool _find_socket_(Proceso* registroProcesoAux)
+	{
+		return (registroProcesoAux->socketProceso == socketProcesoEliminar);
+	}
+
+	list_remove_by_condition(listaProcesosConectados,(void*)_find_socket_);
+
+	return;
 }
 
+// Dado un Socket de un Proceso, lo elimino de la Cola
+void eliminarProcesoCola(t_queue* colaReady, int socketProcesoEliminar){
+
+	Proceso* registroProcesoAux;
+	int indice;
+
+	if(queue_size(colaReady) > 0){
+
+		for (indice = 0; indice  < queue_size(colaReady); indice=indice+1 ) {
+
+			// Extraigo un elemento
+			registroProcesoAux = queue_pop(colaReady);
+
+			if(registroProcesoAux->socketProceso != socketProcesoEliminar){
+				// Lo vuelvo a agregar a la cola
+				queue_push(colaReady, registroProcesoAux);
+			}
+		}
+	}
+
+	return;
+}
+
+
 //**************************************************************************//
-// Registrar las Instrucciones en el Log de Operaciones
+// Obtener el Prceso segun su Socket
 //**************************************************************************//
-void registrarLogOperaciones(t_list* listaProcesosConectados, Instruccion datosInstruccion, int socketProcesoConsultar){
+char* obtenerNombreProceso(t_list* listaProcesosConectados, int socketProcesoConsultar){
 
 	// Obtengo el nombre del Proceso segun su Socket
 	char* nombreProceso = string_new();
-	char* registroLogOperaciones = string_new();
 
     void _each_elemento_(Proceso* registroProcesoAux)
 	{
@@ -348,6 +354,20 @@ void registrarLogOperaciones(t_list* listaProcesosConectados, Instruccion datosI
 	}
     list_iterate(listaProcesosConectados, (void*)_each_elemento_);
 
+    return nombreProceso;
+}
+
+//**************************************************************************//
+// Registrar las Instrucciones en el Log de Operaciones
+//**************************************************************************//
+void registrarLogOperaciones(t_list* listaProcesosConectados, Instruccion* datosInstruccion, int socketProcesoConsultar){
+
+	// Obtengo el nombre del Proceso segun su Socket
+	char* nombreProceso = string_new();
+	string_append_with_format(&nombreProceso, "%s", obtenerNombreProceso(listaProcesosConectados, socketProcesoConsultar));
+
+	char* registroLogOperaciones = string_new();
+	char* tipoOperacion = string_new();
 
 	// Defino el archivo de Operaciones
     FILE *logOperaciones = fopen("log/operaciones.log", "a");
@@ -358,10 +378,27 @@ void registrarLogOperaciones(t_list* listaProcesosConectados, Instruccion datosI
 		fclose(logOperaciones); 
 		return;
 	}else{
-		string_append_with_format(&registroLogOperaciones, "%s %i %s %s\n", nombreProceso, datosInstruccion.operacion, datosInstruccion.key, datosInstruccion.dato);
+
+		switch(datosInstruccion->operacion){
+			case GET:
+				string_append_with_format(&tipoOperacion, "GET");
+				break;
+			case SET:
+				string_append_with_format(&tipoOperacion, "SET");
+				break;
+			case STORE:
+				string_append_with_format(&tipoOperacion, "STORE");
+				break;
+			default:
+				string_append_with_format(&tipoOperacion, "ERROR");
+				break;			
+		}
+		string_append_with_format(&registroLogOperaciones, "%s %s %s %s\n", nombreProceso, tipoOperacion, datosInstruccion->key, datosInstruccion->dato);
 		fwrite(registroLogOperaciones, strlen(registroLogOperaciones), sizeof(char), logOperaciones);
 	}
 	fclose(logOperaciones); 
+	free(nombreProceso);
+	free(tipoOperacion);
 
 	return;
 }
@@ -401,6 +438,8 @@ void showContenidolistaProcesosConectados(t_list* listaProcesosConectados){
 
 		}
 	    list_iterate(listaProcesosConectados, (void*)_each_elemento_);
+	}else{
+		printf("Lista vacia\n");
 	}
 }
 
@@ -428,6 +467,8 @@ void showContenidolistaReady(t_list* listaReady){
 
 		}
 	    list_iterate(listaReady, (void*)_each_elemento_);
+	}else{
+		printf("Lista vacia\n");
 	}
 }
 
@@ -461,9 +502,8 @@ void showContenidocolaReady(t_queue* colaReady){
 			// Lo vuelvo a agregar a la cola
 			queue_push(colaReady, registroProcesoAux);
 		}
-
-
-
+	}else{
+		printf("Cola vacia\n");
 	}
 }
 
@@ -474,7 +514,7 @@ Proceso* obtenerProximoProcesoPlanificado(t_list* listaESIconectados, t_list* li
 
 	Proceso* proximoProcesoPlanificado = NULL;
 	proximoProcesoPlanificado = malloc(sizeof(Proceso));
-	
+
 	proximoProcesoPlanificado = list_get(listaESIconectados, 0);
 
 	return proximoProcesoPlanificado;

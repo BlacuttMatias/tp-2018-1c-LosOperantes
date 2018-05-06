@@ -257,12 +257,29 @@ int main(int argc, char* argv[]){
                                         // Notifico al Planificador que voy a finalizar
                                         if(send(planificador_fd,paquete.buffer,paquete.tam_buffer,0) != -1){
 
-                                            free(paquete.buffer);
                                             log_info(infoLogger, "Se le notifico al PLANIFICADOR que el ESI %s finalizo", nombreProceso);
 
-                                            return EXIT_SUCCESS;
+
+                                            // Notifico al Coordinador que voy a finalizar
+                                            if(send(coordinador_fd,paquete.buffer,paquete.tam_buffer,0) != -1){
+
+                                                free(paquete.buffer);
+                                                log_info(infoLogger, "Se le notifico al COORDINADOR que el ESI %s finalizo", nombreProceso);
+
+                                                printf("Proceso %s finalizado.\n", nombreProceso);
+                                                return EXIT_SUCCESS;
+
+                                            }else{
+                                                log_error(infoLogger, "No se pudo enviar al COORDINADOR la notificacion de finalizacion del ESI %s", nombreProceso);
+                                            }
+
+                                            printf("Proceso %s finalizado con ERROR.\n", nombreProceso);
+                                            return EXIT_FAILURE;
                                         }else{
                                             log_error(infoLogger, "No se pudo enviar al PLANIFICADOR la notificacion de finalizacion del ESI %s", nombreProceso);
+
+                                            printf("Proceso %s finalizado con ERROR.\n", nombreProceso);
+                                            return EXIT_FAILURE;
                                         }
                                     }
                                     break;

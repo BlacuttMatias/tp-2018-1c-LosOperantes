@@ -64,13 +64,15 @@
 	void showContenidocolaReady(t_queue* colaReady);
 	Proceso* obtenerProximoProcesoPlanificado(t_list* listaESIconectados, t_list* listaReady, char* algoritmoPlanificacion);
 	t_queue* planificarReady(t_list* listaReady, char* algoritmoPlanificacion);
+	char* obtenerNombreProceso(t_list* listaProcesosConectados, int socketProcesoConsultar);
+	void eliminarProcesoLista(t_list* listaProcesosConectados, int socketProcesoEliminar);
+	void eliminarProcesoCola(t_queue* colaReady, int socketProcesoEliminar);
 
 /* ---------------------------------------- */
 /*  Funciones de Coordinador 				*/
 /* ---------------------------------------- */
 
-	void inicializarEstructurasAdministrativas();
-	void registrarLogOperaciones(t_list* listaProcesosConectados, Instruccion datosInstruccion, int socketProceso);
+	void registrarLogOperaciones(t_list* listaProcesosConectados, Instruccion* datosInstruccion, int socketProceso);
 	char* procesarSolicitudEjecucion(Instruccion* datosInstruccion, char* algoritmoDistribucion);
 	void cargarListaProcesosConectados(t_list *listaProcesosConectados, Proceso* nuevoProceso);
 	void showContenidolistaProcesosConectados(t_list* listaProcesosConectados);

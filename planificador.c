@@ -310,18 +310,23 @@ void servidorPlanificador(void* puerto){
 
                                     // TODO
 
-                                    // Recibo los datos del Nodo
+                                    // Recibo los datos del Key y Proceso
                                     paquete = recibir_payload(&i,&encabezado.tam_payload);
-
-
                                     registroKeyBloqueada = dsrlz_datosKeyBloqueada(paquete.buffer);
                                     free(paquete.buffer);
 
+                                    bool recursoOcupado = false;
 
                                     // Si el Recurso esta bloqueado por otro Proceso
                                     if(dictionary_has_key(listaClavesBloqueadas, registroKeyBloqueada.key) ){
 
-                                        // TODO
+                                        log_info(infoLogger,"El Recurso %s ya se encuentra tomado por otro Proceso ESI.");
+
+                                        // Serializado el Proceso y la Key
+                                        paquete = srlz_datosKeyBloqueada('P', RECURSO_OCUPADO, registroKeyBloqueada.nombreProceso, registroKeyBloqueada.key);
+
+                                        recursoOcupado = true;
+
 
                                     }else{ // Si el Recurso no esta bloqueado
 
@@ -329,17 +334,28 @@ void servidorPlanificador(void* puerto){
                                         dictionary_put(listaClavesBloqueadas, registroKeyBloqueada.key, &registroKeyBloqueada);
 
                                         log_info(infoLogger,"Se agrego el Recurso %s en la Lista de Claves Bloqueadas que lo tomo el Proceso ESI %s.", registroKeyBloqueada.key, registroKeyBloqueada.nombreProceso);
+
+                                        // Serializado el Proceso y la Key
+                                        paquete = srlz_datosKeyBloqueada('P', RECURSO_LIBRE, registroKeyBloqueada.nombreProceso, registroKeyBloqueada.key);
                                     }
 
+                                    // Envio el Paquete al Coordinador con la notificacion
+                                    if(send(i,paquete.buffer,paquete.tam_buffer,0) != -1){
+
+                                        free(paquete.buffer);
+
+                                        if(recursoOcupado){
+                                            log_info(infoLogger, "Se le notifica al COORDINADOR que el Recurso %s ya estaba tomado por otro Proceso.", registroKeyBloqueada.key);    
+                                        }else{
+                                            log_info(infoLogger, "Se le notifica al COORDINADOR que el Recurso %s estaba libre y ahora quedo tomado por el Proceso ESI %s.", registroKeyBloqueada.nombreProceso);    
+                                        }
+                                        
+                                    }else{
+                                        log_error(infoLogger, "No se pudo enviar la notificacion al COORDINADOR sobre el estado de  uso del Recurso %s.", registroKeyBloqueada.key);
+                                    }
 
                                     break;
 
-                                case RECURSO_TOMADO:
-                                    // TODO
-                                    // Encolar el Proceso en cola de bloqueados
-
-                                    log_info(infoLogger,"El Proceso no pudo ejecutarse porque el Recurso estaba tomado por otro Proceso.");
-                                    break;
 
                                 case INSTANCIA_INEXISTENTE:
                                     // TODO

@@ -43,7 +43,7 @@
 
 	Paquete srlz_datosKeyBloqueada(char proceso, int codigoOperacion, char* nombreProceso, char key[40]);
 	KeyBloqueada dsrlz_datosKeyBloqueada(void* buffer);
-	
+
 /* ---------------------------------------- */
 /*  Funciones de ESI 						*/
 /* ---------------------------------------- */
@@ -68,6 +68,7 @@
 	Proceso* obtenerProximoProcesoPlanificado(t_list* listaESIconectados, t_list* listaReady, t_queue* colaReady, char* algoritmoPlanificacion);
 	t_queue* planificarReady(t_list* listaReady, char* algoritmoPlanificacion);
 	char* obtenerNombreProceso(t_list* listaProcesosConectados, int socketProcesoConsultar);
+	int obtenerSocketProceso(t_list* listaProcesosConectados, char* nombreProcesoBuscado);
 	Proceso* obtenerRegistroProceso(t_list* listaProcesosConectados, int socketProcesoConsultar);
 	void eliminarProcesoLista(t_list* listaProcesosConectados, int socketProcesoEliminar);
 	void eliminarProcesoCola(t_queue* colaReady, int socketProcesoEliminar);

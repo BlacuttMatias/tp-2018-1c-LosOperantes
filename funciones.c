@@ -428,6 +428,24 @@ char* obtenerNombreProceso(t_list* listaProcesosConectados, int socketProcesoCon
 }
 
 //**************************************************************************//
+// Obtener el Socket dado el Nombre del Proceso
+//**************************************************************************//
+int obtenerSocketProceso(t_list* listaProcesosConectados, char* nombreProcesoBuscado){
+
+	int socketBuscado = 0;
+
+    void _each_elemento_(Proceso* registroProcesoAux)
+	{
+		if(strcmp(registroProcesoAux->nombreProceso, nombreProcesoBuscado) == 0){
+			socketBuscado =	registroProcesoAux->socketProceso;
+		}
+	}
+    list_iterate(listaProcesosConectados, (void*)_each_elemento_);
+
+    return socketBuscado;
+}
+
+//**************************************************************************//
 // Registrar las Instrucciones en el Log de Operaciones
 //**************************************************************************//
 void registrarLogOperaciones(t_list* listaProcesosConectados, Instruccion* datosInstruccion, int socketProcesoConsultar){

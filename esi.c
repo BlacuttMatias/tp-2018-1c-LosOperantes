@@ -133,24 +133,8 @@ int main(int argc, char* argv[]){
 
     free(pathScript);
 
-    //Probando la fc sacarSiguienteInstruccion
-/*
-    Instruccion* pproximaInstruccion;
-    Instruccion pruebaPasarStruct;
-    puts(" \n ");
-    pproximaInstruccion=sacarSiguienteInstruccion(listaInstrucciones);
-   mostrarInstruccion(pproximaInstruccion);
-   pproximaInstruccion=sacarSiguienteInstruccion(listaInstrucciones);
-     mostrarInstruccion(pproximaInstruccion);
-    pruebaPasarStruct= pasarAEstructura(pproximaInstruccion);
-   mostrarInstruccion(&pruebaPasarStruct);
-   */
-// TODO
 
-   /**/
-// -----------------------------------------------------------------------
-
-
+    int resultadoEjecucion = 0;
 
     while(1){
     	temporales=master;
@@ -198,11 +182,22 @@ int main(int argc, char* argv[]){
     						switch(encabezado.cod_operacion){
 
                                 case RESPUESTA_EJECUTAR_INSTRUCCION:
-                                    log_info(infoLogger,"Respuesta sobre la Ejecución de Instruccion recibida del Coordinador.");
+
+                                    resultadoEjecucion = encabezado.tam_payload;
+
+                                    // Si la ejecucion de la instruccion fallo
+                                    if(resultadoEjecucion == 0){
+                                        log_info(infoLogger,"Respuesta sobre la Ejecución FALLIDA de la Instruccion recibida por el Coordinador.");
+
+                                    }else{ // Si la ejecucion de la instruccion no fallo
+
+                                        log_info(infoLogger,"Respuesta sobre la Ejecución EXITOSA de la Instruccion recibida por el Coordinador.");
+
+                                    }
 
 
                                     // Armo el Paquete del Resultado de la Ejecucion de la Instruccion
-                                    paquete = crearHeader('E', RESPUESTA_EJECUTAR_INSTRUCCION, 1);
+                                    paquete = crearHeader('E', RESPUESTA_EJECUTAR_INSTRUCCION, resultadoEjecucion);
 
                                     // Envio el Paquetea al Planificador
                                     if(send(planificador_fd,paquete.buffer,paquete.tam_buffer,0) != -1){

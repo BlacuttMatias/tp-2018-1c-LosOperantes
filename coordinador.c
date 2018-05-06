@@ -49,7 +49,9 @@ void servidorCoordinador(void* puerto){
 
     Proceso registroProceso;
     Instruccion registroInstruccion;
+    KeyBloqueada registroKeyBloqueada;
     int indice = 0;
+    int socketESI = 0;
 
     while(1){
 
@@ -128,14 +130,52 @@ void servidorCoordinador(void* puerto){
                                     fd_planificador = i;
                                     break;
 
-                                case RECURSO_TOMADO:
+                                case RECURSO_LIBRE:
+                                    log_info(infoLogger,"El PLANIFICADOR notifica que el Recurso no estaba ocupado.");
 
-                                    // TODO
-                                    // Cuando el Planificador notifica que el recurso ya estaba tomado por otro recurso
+                                    // Recibo los datos del Key y Proceso
+                                    paquete = recibir_payload(&i,&encabezado.tam_payload);
+                                    registroKeyBloqueada = dsrlz_datosKeyBloqueada(paquete.buffer);
+                                    free(paquete.buffer);
 
-                                    log_info(infoLogger,"Proceso Planificador conectado.");
+                                    // Averiguo el Socket del Proceso ESI para notificarle que fallo la Ejecucion de la Instruccion
+                                    socketESI = obtenerSocketProceso(listaProcesosConectados, registroKeyBloqueada.nombreProceso);
+
+                                    // Armo el Paquete del Resultado de la Ejecucion de la Instruccion
+                                    paquete = crearHeader('C', RESPUESTA_EJECUTAR_INSTRUCCION, 1);
+
+                                    // Envio el Paquete a ESI
+                                    if(send(socketESI,paquete.buffer,paquete.tam_buffer,0) != -1){
+
+                                        free(paquete.buffer);
+                                    }else{
+
+                                    }
                                     break;
 
+                                case RECURSO_OCUPADO:
+                                    log_info(infoLogger,"El PLANIFICADOR notifica que el Recurso esta tomado por otro Proceso.");
+
+                                    // Recibo los datos del Key y Proceso
+                                    paquete = recibir_payload(&i,&encabezado.tam_payload);
+                                    registroKeyBloqueada = dsrlz_datosKeyBloqueada(paquete.buffer);
+                                    free(paquete.buffer);
+
+                                    // Averiguo el Socket del Proceso ESI para notificarle que fallo la Ejecucion de la Instruccion
+                                    socketESI = obtenerSocketProceso(listaProcesosConectados, registroKeyBloqueada.nombreProceso);
+
+                                    // Armo el Paquete del Resultado de la Ejecucion de la Instruccion
+                                    paquete = crearHeader('C', RESPUESTA_EJECUTAR_INSTRUCCION, 0);
+
+                                    // Envio el Paquetea a ESI
+                                    if(send(socketESI,paquete.buffer,paquete.tam_buffer,0) != -1){
+
+                                        free(paquete.buffer);
+                                        log_info(infoLogger, "Se le notifico al ESI %s que el Recurso %s estaba tomado por otro Proceso ESI", obtenerNombreProceso(listaProcesosConectados, socketESI), registroKeyBloqueada.key);
+                                    }else{
+                                        log_error(infoLogger, "No se pudo notificar al ESI %s que el Recurso %s estaba tomado por otro Proceso ESI", obtenerNombreProceso(listaProcesosConectados, socketESI), registroKeyBloqueada.key);
+                                    }
+                                    break;
                             }
                         }
 
@@ -252,19 +292,17 @@ void servidorCoordinador(void* puerto){
 
                                         // TODO
 
-                                    }
 
+                                        // Armo el Paquete del Resultado de la Ejecucion de la Instruccion
+                                        paquete = crearHeader('C', RESPUESTA_EJECUTAR_INSTRUCCION, 1);
 
-                                    // Armo el Paquete del Resultado de la Ejecucion de la Instruccion
-                                    paquete = crearHeader('C', RESPUESTA_EJECUTAR_INSTRUCCION, 1);
+                                        // Envio el Paquetea a ESI
+                                        if(send(i,paquete.buffer,paquete.tam_buffer,0) != -1){
 
-                                    // Envio el Paquetea a ESI
-                                    if(send(i,paquete.buffer,paquete.tam_buffer,0) != -1){
+                                            free(paquete.buffer);
+                                        }else{
+                                        }                                        
 
-                                        free(paquete.buffer);
-                                        log_info(infoLogger, "Se le respondio al Proceso ESI %s el resultado de la ejecucion de la Instruccion", obtenerNombreProceso(listaProcesosConectados, i));
-                                    }else{
-                                        log_error(infoLogger, "No se pudo enviar mensaje al Proceso ESI %s sobre el resultado de la ejecucion de la Instruccion", obtenerNombreProceso(listaProcesosConectados, i));
                                     }
 
 

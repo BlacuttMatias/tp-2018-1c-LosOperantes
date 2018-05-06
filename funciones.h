@@ -1,9 +1,11 @@
 #ifndef __FUNCIONES_H__
 #define __FUNCIONES_H__
 
+#include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <stdbool.h>
 #include <sys/select.h>
 #include <sys/types.h>
 #include <sys/stat.h>

@@ -26,6 +26,12 @@ enum tipo_proceso {
 	INSTANCIA = 3,
 	COORDINADOR = 4,
 };
+//Defino los algoritmos de distribucion
+enum algoritmo_distribucion{
+	LSU=1,
+	EL=2,
+	KE=3,
+};
 
 
 

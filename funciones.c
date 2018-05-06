@@ -20,6 +20,7 @@ Paquete srlz_datosKeyBloqueada(char proceso, int codigoOperacion, char* nombrePr
 	paquete.buffer = malloc( sizeBuffer );
 	tamPayload = sizeBuffer - (sizeof(int)*2) - sizeof(char);
 
+
 	memcpy(paquete.buffer                                                   ,&(proceso)                     ,sizeof(char));
 	memcpy(paquete.buffer + (posicion=sizeof(char))							,&(codigoOperacion)				,sizeof(int));
 	memcpy(paquete.buffer + (posicion += sizeof(int))						,&(tamPayload)					,sizeof(int));
@@ -514,8 +515,65 @@ void cargarProcesoCola(t_list* listaUtilizar, t_queue* colaUtilizar, int socketP
 // El Coordinador procesa la instruccion y elige la Instancia que lo va a ejecutar
 //**************************************************************************//
 Instancia* obtenerInstanciaAsignada(t_list* listaInstanciasConectadas, Instruccion* datosInstruccion, char* algoritmoDistribucion){
-
+	int algoritmo;
+	int ultimaPosicion;						//para algoritmo EL
+	int cantidadElem,dividendo,resto;						//para algoritmo EK
+	char key;
 	Instancia* instanciaElegida = NULL;
+
+	bool comparacion(Instancia* instancia1, Instancia* instancia2){
+		if (instancia1->entradasLibres > instancia2->entradasLibres){return true;}
+		else {return false;}
+	}
+
+	if(strcmp(algoritmoDistribucion,"LSU")){
+		algoritmo=LSU;
+	}	else{
+		if(strcmp(algoritmoDistribucion,"KE")){
+			algoritmo=KE;
+		}
+		else{algoritmo=EL;}}
+
+	switch(algoritmo){
+
+		case EL:
+
+			ultimaPosicion = listaInstanciasConectadas->elements_count;
+			ultimaPosicion = ultimaPosicion - 1;
+			instanciaElegida = list_remove(listaInstanciasConectadas, ultimaPosicion);
+			list_add_in_index(listaInstanciasConectadas,0,instanciaElegida);
+
+			break;
+
+		case LSU:
+
+			list_sort(listaInstanciasConectadas, (void*)(bool)comparacion);
+			instanciaElegida = list_get(listaInstanciasConectadas,0);
+
+			// hasta aca elige por espacio de sobra. en caso de que empaten, FALTA APLICAR ALGORITMO DE EL. Lo aplicare
+			//una ves que vea que funcione como se supone hasta ahora.
+
+			break;
+
+		case KE:
+			cantidadElem= listaInstanciasConectadas->elements_count;
+			key= datosInstruccion->key[0];
+			key= tolower(key);
+			dividendo= ('z'- 'a')/ cantidadElem;
+			resto= ('z'-'a')%cantidadElem;
+			if(resto!=0){dividendo = dividendo+1;}
+			instanciaElegida = list_get(listaInstanciasConectadas, (key-'a')/dividendo);
+
+
+
+			break;
+
+		default:
+			log_info (infoLogger,"algoritmo de distribucion no reconocido");
+
+	}
+
+
 
 
 // TODO

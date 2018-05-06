@@ -46,6 +46,7 @@
 /* ---------------------------------------- */
 
 	Instruccion* sacarSiguienteInstruccion(t_list* listaInstrucciones);
+	Instruccion pasarAEstructura(Instruccion* puntero);
 	bool procesarScript(char* pathScript, t_list* listaInstrucciones);
 
 	char* obtenerProximaInstruccion(t_list* listaInstrucciones);
@@ -54,8 +55,6 @@
 	void mostrarInstruccion(Instruccion* instruccion);
 	bool existeArchivo(char *filename);
 
-	Paquete srlz_datosInstruccion(char proceso, int codigoOperacion,Instruccion instruccion);
-	Instruccion dsrlz_datosInstruccion(void* buffer);
 
 /* ---------------------------------------- */
 /*  Funciones de Planificador 				*/

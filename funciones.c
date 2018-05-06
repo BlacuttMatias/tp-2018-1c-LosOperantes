@@ -146,34 +146,7 @@ Paquete crearHeader(char proceso, int cod_operacion, int tamPayload){
 	return paquete;
 }
 
-//**************************************************************************//
-//Serealizar instrucciones en esi para enviar
-//**************************************************************************//
 
-Paquete srlz_datosInstruccion(char proceso, int codigoOperacion, Instruccion instruccion){
-	int posicion;
-	int sizeBuffer;
-	int tamanioPuntero;
-		if(instruccion.dato==NULL){
-			tamanioPuntero=0;
-		}
-		else{tamanioPuntero=strlen(instruccion.dato);}
-
-	Paquete paquete;
-	//				tam puntero		cod.op			key					contenido data
-	sizeBuffer= 	sizeof(int) + 	sizeof(int) + 	sizeof(char[40]) + tamanioPuntero;
-	paquete.tam_buffer=sizeBuffer;
-	memcpy(paquete.buffer								,&(tamanioPuntero)					,sizeof(int));
-	memcpy(paquete.buffer + (posicion = sizeof(int))	,&(instruccion.operacion)			,sizeof(int));
-	memcpy(paquete.buffer + (posicion +=sizeof(int))	,&(instruccion.key[0])				,(sizeof(char))*40);
-	if(tamanioPuntero != 0){
-	memcpy(paquete.buffer + (posicion += (sizeof(char))*40),instruccion.dato			,tamanioPuntero);
-	}
-
-
-	return paquete;
-
-}
 
 //**************************************************************************//
 //Sacar Siguiente instruccion de la lista
@@ -189,6 +162,16 @@ Paquete srlz_datosInstruccion(char proceso, int codigoOperacion, Instruccion ins
 	}
 	return instruccionAux;
 }
+
+	Instruccion pasarAEstructura(Instruccion* puntero) {
+	Instruccion instruccion;
+	instruccion.operacion= (puntero->operacion);
+	strcpy(instruccion.key,puntero->key);
+	puts("hice strcpy");
+	instruccion.dato= puntero->dato;
+	puts("pase el dato");
+	return instruccion;
+	}
 //**************************************************************************//
 // Persistir Datos en el Coordinador
 //**************************************************************************//

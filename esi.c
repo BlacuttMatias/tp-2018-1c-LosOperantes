@@ -137,12 +137,15 @@ int main(int argc, char* argv[]){
 
     //Probando la fc sacarSiguienteInstruccion
 
-    Instruccion* proximaInstruccion;
-
-    proximaInstruccion=sacarSiguienteInstruccion(listaInstrucciones);
-   mostrarInstruccion(proximaInstruccion);
-   proximaInstruccion=sacarSiguienteInstruccion(listaInstrucciones);
-     mostrarInstruccion(proximaInstruccion);
+    Instruccion* pproximaInstruccion;
+    Instruccion pruebaPasarStruct;
+    puts(" \n ");
+    pproximaInstruccion=sacarSiguienteInstruccion(listaInstrucciones);
+   mostrarInstruccion(pproximaInstruccion);
+   pproximaInstruccion=sacarSiguienteInstruccion(listaInstrucciones);
+     mostrarInstruccion(pproximaInstruccion);
+    pruebaPasarStruct= pasarAEstructura(pproximaInstruccion);
+    printf("\n\n codigo %d    key  %s    dato %s  \n\n",pruebaPasarStruct.operacion,pruebaPasarStruct.key,pruebaPasarStruct.dato);
 // TODO
 
    /**/
@@ -225,10 +228,14 @@ int main(int argc, char* argv[]){
                                     log_info(infoLogger,"Pedido de Ejecución de Instruccion recibido del Planificador.");
 
                                     // TODO
-
+                                    Instruccion* aux= sacarSiguienteInstruccion(listaInstrucciones);
+                                    Instruccion proximaInstruccion;
+                                    proximaInstruccion=pasarAEstructura(aux);
                                     // Armo el Paquete de Ejecucion de la Proxima Instruccion
-                                    paquete = crearHeader('E', EJECUTAR_INSTRUCCION, 1);
-
+                                    //paquete = crearHeader('E', EJECUTAR_INSTRUCCION, 1);  asi era lo anterior, la proxima lo que puse yo--martin
+                                    puts("\n serializo proxima instruccion");
+                                    paquete = srlz_instruccion('E', EJECUTAR_INSTRUCCION,proximaInstruccion);
+                                    puts("\n serialicé proxima instruccion");
                                     // Envio el Paquetea al Planificador
                                     if(send(coordinador_fd,paquete.buffer,paquete.tam_buffer,0) != -1){
 

@@ -53,10 +53,7 @@ Proceso dsrlz_datosProceso(void* buffer)
 
 Paquete srlz_instruccion (char proceso, int codigoOperacion,Instruccion instruccion){
 
-	const int get=1;
-	const int set=2;		//se trabaja suponiendo que los codigos de operacion de las instrucciones son estos (1 para get, 2 para set y 3 para store)
-	const int store=3;
-
+	
 	int posicion = 0;//int para ir guiando desde donde se copia
 	int sizeBuffer = 0;
 	int tamClave = 0;
@@ -67,7 +64,7 @@ Paquete srlz_instruccion (char proceso, int codigoOperacion,Instruccion instrucc
 	tamClave = strlen(instruccion.key);
 
 	//dependiendo de si se hace un get/store o un set, el tamaño del buffer sera uno u otro, porque en el set se agrega tambien el valor asociado a la key
-	if(instruccion.operacion == get || instruccion.operacion == store){
+	if(instruccion.operacion == GET || instruccion.operacion == STORE){
 		sizeBuffer = sizeof(int)*4 + sizeof(char) + tamClave;
 	}
 	else{
@@ -78,6 +75,7 @@ Paquete srlz_instruccion (char proceso, int codigoOperacion,Instruccion instrucc
 	paquete.buffer = malloc( sizeBuffer );
 	tamPayload = sizeBuffer - (sizeof(int)*2) - sizeof(char);
 
+
 	memcpy(paquete.buffer									,&(proceso)                     ,sizeof(char));
 	memcpy(paquete.buffer + (posicion=sizeof(char))			,&(codigoOperacion)				,sizeof(int));
 	memcpy(paquete.buffer + (posicion += sizeof(int))		,&(tamPayload)					,sizeof(int));
@@ -87,7 +85,7 @@ Paquete srlz_instruccion (char proceso, int codigoOperacion,Instruccion instrucc
 	memcpy(paquete.buffer + (posicion += sizeof(int))		,&(tamClave)					,sizeof(int));
 	memcpy(paquete.buffer + (posicion += sizeof(int))		,instruccion.key				,tamClave);
 
-	if(instruccion.operacion==set){	//en caso ser un set, pongo en el buffer el tamaño del dato y el dato, en get y store no hace falta porque el dato no existe
+	if(instruccion.operacion==SET){	//en caso ser un set, pongo en el buffer el tamaño del dato y el dato, en get y store no hace falta porque el dato no existe
 		memcpy(paquete.buffer + (posicion += tamClave)			,&(tamDato)						,sizeof(int));
 		memcpy(paquete.buffer + (posicion += sizeof(int))		,instruccion.dato				,tamDato);
 	}
@@ -98,10 +96,7 @@ Paquete srlz_instruccion (char proceso, int codigoOperacion,Instruccion instrucc
 
 Instruccion dsrlz_instruccion (void* buffer){
 
-	const int get=1;
-	const int set=2;		//se trabaja suponiendo que los codigos de operacion de las instrucciones son estos (1 para get, 2 para set y 3 para store)
-	const int store=3;
-
+	
 	int posicion = 0; //int para ir guiando desde donde se copia
 	int tamClave = 0;
 	Instruccion instruccion;
@@ -111,7 +106,7 @@ Instruccion dsrlz_instruccion (void* buffer){
 	memcpy(instruccion.key					,buffer + (posicion+=sizeof(int))						,tamClave);
 	instruccion.key[tamClave] = '\0';
 
-	if(instruccion.operacion==set){	//si es un set significa que tengo que seguir leyendo del buffer el valor asociado a la key(el dato)
+	if(instruccion.operacion==SET){	//si es un set significa que tengo que seguir leyendo del buffer el valor asociado a la key(el dato)
 
 		int tamDato = 0;
 		memcpy(&tamDato							,buffer + (posicion+=tamClave)							,sizeof(int));
@@ -167,9 +162,7 @@ Paquete crearHeader(char proceso, int cod_operacion, int tamPayload){
 	Instruccion instruccion;
 	instruccion.operacion= (puntero->operacion);
 	strcpy(instruccion.key,puntero->key);
-	puts("hice strcpy");
 	instruccion.dato= puntero->dato;
-	puts("pase el dato");
 	return instruccion;
 	}
 //**************************************************************************//

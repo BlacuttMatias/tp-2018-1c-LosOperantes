@@ -29,8 +29,8 @@ t_list* listaInstrucciones;
 int main(int argc, char* argv[]){
 
 
-	/* 	//codigo para probar la serializacion y descerializacion de una instruccion
-
+	 	//codigo para probar la serializacion y descerializacion de una instruccion
+/*
 	Instruccion ins2;	//instruccion de prueba con valores cualquiera
 	ins2.operacion = 1;
 	strcpy(ins2.key,"key");
@@ -38,11 +38,11 @@ int main(int argc, char* argv[]){
 	Paquete pac;
 	pac = srlz_instruccion('p',1,ins2);
 	Instruccion ins = dsrlz_instruccion(pac.buffer+sizeof(char)+8);
-	printf("%s\n",ins.key);
+	//printf("%s\n",ins.key);
 	mostrarInstruccion(&ins);
 
 	exit(0);
-	*/
+*/	
 
     char* nombreProceso = string_new();
     char* pathScript = string_new();
@@ -136,7 +136,7 @@ int main(int argc, char* argv[]){
     free(pathScript);
 
     //Probando la fc sacarSiguienteInstruccion
-
+/*
     Instruccion* pproximaInstruccion;
     Instruccion pruebaPasarStruct;
     puts(" \n ");
@@ -145,7 +145,8 @@ int main(int argc, char* argv[]){
    pproximaInstruccion=sacarSiguienteInstruccion(listaInstrucciones);
      mostrarInstruccion(pproximaInstruccion);
     pruebaPasarStruct= pasarAEstructura(pproximaInstruccion);
-    printf("\n\n codigo %d    key  %s    dato %s  \n\n",pruebaPasarStruct.operacion,pruebaPasarStruct.key,pruebaPasarStruct.dato);
+   mostrarInstruccion(&pruebaPasarStruct);
+   */
 // TODO
 
    /**/
@@ -233,7 +234,8 @@ int main(int argc, char* argv[]){
                                     proximaInstruccion=pasarAEstructura(aux);
                                     // Armo el Paquete de Ejecucion de la Proxima Instruccion
                                     //paquete = crearHeader('E', EJECUTAR_INSTRUCCION, 1);  asi era lo anterior, la proxima lo que puse yo--martin
-                                    puts("\n serializo proxima instruccion");
+                                    puts("\n instruccion a serealizar");
+                                    printf("\n\n codigo %d    key  %s    dato %s  \n\n",proximaInstruccion.operacion,proximaInstruccion.key,proximaInstruccion.dato);
                                     paquete = srlz_instruccion('E', EJECUTAR_INSTRUCCION,proximaInstruccion);
                                     puts("\n serialicé proxima instruccion");
                                     // Envio el Paquetea al Planificador

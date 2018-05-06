@@ -65,6 +65,7 @@ int main(int argc, char* argv[]){
      * Si no existe el archivo del Script, cierro el proceso
      *
      ************************************************/
+
     if (!existeArchivo(pathScript)){
         printf("El Script %s no existe\n", pathScript);
         return EXIT_FAILURE;
@@ -194,6 +195,7 @@ int main(int argc, char* argv[]){
                                         log_info(infoLogger,"Respuesta sobre la Ejecución EXITOSA de la Instruccion recibida por el Coordinador.");
 
                                         // TODO : Aca habria que sacar la Instruccion de la Lista
+
                                     }
 
                                     // Armo el Paquete del Resultado de la Ejecucion de la Instruccion
@@ -221,7 +223,7 @@ int main(int argc, char* argv[]){
                                     log_info(infoLogger,"Pedido de Ejecución de Instruccion recibido del Planificador.");
 
                                     // TODO
-                                    Instruccion* aux= sacarSiguienteInstruccion(listaInstrucciones);
+                                    Instruccion* aux= obtenerSiguienteInstruccion(listaInstrucciones);
 
                                     // Si se obtuvo una Proxima Instrucion
                                     if(NULL != aux){

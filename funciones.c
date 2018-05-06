@@ -331,13 +331,17 @@ void mostrarInstruccion(Instruccion* registro){
 }
 
 
+
 //**************************************************************************//
 // Obtener la Proxima Instruccion a Ejecutar de un ESI
 //**************************************************************************//
-char* obtenerProximaInstruccion(t_list* listaInstrucciones){
+Instruccion* obtenerSiguienteInstruccion(t_list* listaInstrucciones){
 
-	char* proximaInstruccion = string_new();
-	return proximaInstruccion;
+	Instruccion* instruccionAux = NULL;
+	if(list_size(listaInstrucciones)>0){
+		instruccionAux =	list_get(listaInstrucciones,0);
+	}
+	return instruccionAux;
 }
 
 //**************************************************************************//

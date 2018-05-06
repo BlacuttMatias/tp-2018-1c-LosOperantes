@@ -50,11 +50,12 @@
 /*  Funciones de ESI 						*/
 /* ---------------------------------------- */
 
+
 	Instruccion* sacarSiguienteInstruccion(t_list* listaInstrucciones);
 	Instruccion pasarAEstructura(Instruccion* puntero);
 	bool procesarScript(char* pathScript, t_list* listaInstrucciones);
 
-	char* obtenerProximaInstruccion(t_list* listaInstrucciones);
+	Instruccion* obtenerSiguienteInstruccion(t_list* listaInstrucciones);
 	int obtenerTamanoProximaInstruccion(t_list* listaInstrucciones);
 	void cargarInstruccion(Instruccion* registro,int codigo,char* key, char* valor);
 	void mostrarInstruccion(Instruccion* instruccion);

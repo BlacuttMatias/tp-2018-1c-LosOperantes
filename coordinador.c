@@ -46,6 +46,7 @@ void servidorCoordinador(void* puerto){
 
 
     Proceso registroProceso;
+    Instruccion registroInstruccion;
     int indice = 0;
 
     while(1){
@@ -173,7 +174,9 @@ void servidorCoordinador(void* puerto){
 
                                 case EJECUTAR_INSTRUCCION:
                                     log_info(infoLogger,"Pedido de Ejecución de Instruccion recibida del ESI.");        
-                                    
+                                    paquete=recibir_payload(&i,&encabezado.tam_payload);
+                                    registroInstruccion=dsrlz_instruccion(paquete.buffer);
+                                    mostrarInstruccion(&registroInstruccion);
                                     // TODO
                                     //registrarLogOperaciones(datosInstruccion, "PROCESO1");
 

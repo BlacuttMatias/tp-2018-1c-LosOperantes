@@ -193,8 +193,8 @@ int main(int argc, char* argv[]){
 
                                         log_info(infoLogger,"Respuesta sobre la Ejecución EXITOSA de la Instruccion recibida por el Coordinador.");
 
+                                        // TODO : Aca habria que sacar la Instruccion de la Lista
                                     }
-
 
                                     // Armo el Paquete del Resultado de la Ejecucion de la Instruccion
                                     paquete = crearHeader('E', RESPUESTA_EJECUTAR_INSTRUCCION, resultadoEjecucion);
@@ -207,7 +207,6 @@ int main(int argc, char* argv[]){
                                     }else{
                                         log_error(infoLogger, "No se pudo enviar mensaje al PLANIFICADOR sobre el resultado de la ejecucion de la Instruccion");
                                     }
-
                                     break;
     						}
                         }

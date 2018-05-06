@@ -538,9 +538,13 @@ Instancia* obtenerInstanciaAsignada(t_list* listaInstanciasConectadas, Instrucci
 
 		case EL:
 
+			//consigo la ultima posicion de la lista (asumo que los primeros elementos en la lista
+			//fueron los mas recientemente usados. y al final los menos usados
 			ultimaPosicion = listaInstanciasConectadas->elements_count;
 			ultimaPosicion = ultimaPosicion - 1;
+			//saco la instancia en posicion ultima, que es la menos usada o mas recientemente agregada
 			instanciaElegida = list_remove(listaInstanciasConectadas, ultimaPosicion);
+			//ahora que se acaba de usar, la pongo primera en la lista
 			list_add_in_index(listaInstanciasConectadas,0,instanciaElegida);
 
 			break;
@@ -552,15 +556,21 @@ Instancia* obtenerInstanciaAsignada(t_list* listaInstanciasConectadas, Instrucci
 
 			// hasta aca elige por espacio de sobra. en caso de que empaten, FALTA APLICAR ALGORITMO DE EL. Lo aplicare
 			//una ves que vea que funcione como se supone hasta ahora.
+			//debería cambiar la estructura de Instancia para al no tener la lista ordenada por uso, aú asi
+			//poder calcular cual fue la ultima usada
 
 			break;
 
 		case KE:
+		//calculo elementos de la lista
 			cantidadElem= listaInstanciasConectadas->elements_count;
 			key= datosInstruccion->key[0];
 			key= tolower(key);
-			dividendo= ('z'- 'a')/ cantidadElem;
-			resto= ('z'-'a')%cantidadElem;
+			//divido cantidad de letras del abecedario por cantidad de instancias
+			// sumo 1 porque si por ejemplo: tuviera abecedario de una sola letra, 'a'-'a' daria cero cuando 
+			//enrealidad tengo una letra, asi que sumo uno
+			dividendo= ('z'- 'a' + 1)/ cantidadElem;
+			resto= ('z'-'a' + 1)%cantidadElem;
 			if(resto!=0){dividendo = dividendo+1;}
 			instanciaElegida = list_get(listaInstanciasConectadas, (key-'a')/dividendo);
 

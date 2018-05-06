@@ -347,7 +347,7 @@ void servidorPlanificador(void* puerto){
                                         if(recursoOcupado){
                                             log_info(infoLogger, "Se le notifica al COORDINADOR que el Recurso %s ya estaba tomado por otro Proceso.", registroKeyBloqueada.key);    
                                         }else{
-                                            log_info(infoLogger, "Se le notifica al COORDINADOR que el Recurso %s estaba libre y ahora quedo tomado por el Proceso ESI %s.", registroKeyBloqueada.nombreProceso);    
+                                            log_info(infoLogger, "Se le notifica al COORDINADOR que el Recurso %s estaba libre y ahora quedo tomado por el Proceso ESI %s.",registroKeyBloqueada.key, registroKeyBloqueada.nombreProceso);    
                                         }
                                         
                                     }else{

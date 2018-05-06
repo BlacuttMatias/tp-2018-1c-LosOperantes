@@ -51,8 +51,9 @@ void test2(){
 	puts("algo2    ");
 	Instruccion aux;
 	puts("algo3    ");
-	aux = dsrlz_instruccion( ((paquete.buffer)+(sizeof(int)*3)) );
+	aux = dsrlz_instruccion( &paquete + sizeof(Encabezado) + sizeof(int) );
 	puts("algo4    ");
+	printf("serializó %d    y desserealizo  %d",instruccion.operacion,aux.operacion);
 	CU_ASSERT_EQUAL(instruccion.operacion,aux.operacion);
 	//CU_ASSERT_EQUAL(instruccion.operacion,aux.operacion);
 	//CU_ASSERT_EQUAL(instruccion.operacion,aux.operacion);

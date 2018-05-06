@@ -339,7 +339,6 @@ Instruccion* obtenerSiguienteInstruccion(t_list* listaInstrucciones){
 	Instruccion* instruccionAux = NULL;
 	if(list_size(listaInstrucciones)>0){
 		instruccionAux =	list_get(listaInstrucciones,0);
-
 	}
 	return instruccionAux;
 }

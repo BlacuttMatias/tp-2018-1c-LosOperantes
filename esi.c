@@ -65,6 +65,7 @@ int main(int argc, char* argv[]){
      * Si no existe el archivo del Script, cierro el proceso
      *
      ************************************************/
+
     if (!existeArchivo(pathScript)){
         printf("El Script %s no existe\n", pathScript);
         return EXIT_FAILURE;

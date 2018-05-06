@@ -48,6 +48,7 @@
 /*  Funciones de ESI 						*/
 /* ---------------------------------------- */
 
+
 	Instruccion* sacarSiguienteInstruccion(t_list* listaInstrucciones);
 	Instruccion pasarAEstructura(Instruccion* puntero);
 	bool procesarScript(char* pathScript, t_list* listaInstrucciones);

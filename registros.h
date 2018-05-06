@@ -56,6 +56,15 @@ typedef struct
 	int socketProceso;	
 }Proceso;
 
+typedef struct
+{
+	char* nombreProceso;
+	int socketProceso;
+	int entradasLibres;
+
+}Instancia;
+
+
 //Instancia
 typedef struct{ //tipo entrada
 	char* clave;

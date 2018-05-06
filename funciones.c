@@ -406,10 +406,15 @@ void registrarLogOperaciones(t_list* listaProcesosConectados, Instruccion* datos
 //**************************************************************************//
 // El Coordinador procesa la instruccion y elige la Instancia que lo va a ejecutar
 //**************************************************************************//
-char* procesarSolicitudEjecucion(Instruccion* datosInstruccion, char* algoritmoDistribucion){
+Instancia* obtenerInstanciaAsignada(t_list* listaProcesosConectados, Instruccion* datosInstruccion, char* algoritmoDistribucion){
 
+	Instancia* instanciaElegida = NULL;
+
+	
 // TODO
-	return "INSTANCIA1";
+
+
+	return instanciaElegida;
 }
 
 

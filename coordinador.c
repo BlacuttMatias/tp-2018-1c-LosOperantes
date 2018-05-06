@@ -23,6 +23,7 @@
 /* ---------------------------------------- */
 
     t_list* listaProcesosConectados;
+    t_list* listaInstanciasConectadas;
 
 /* ---------------------------------------- */
 
@@ -298,6 +299,9 @@ int main(int argc, char* argv[]){
     // Creo la lista de Todos los Procesos conectados al Coordinador
     listaProcesosConectados = list_create();
 
+    // Creo la lista de Todas las Instancias Conectadas y la Cantidad de Entradas Libres
+    listaInstanciasConectadas = list_create();
+
 
 
 // -----------------------------------------------------------------------
@@ -314,6 +318,7 @@ int main(int argc, char* argv[]){
     config_destroy(cfg);
 
     list_destroy(listaProcesosConectados);
+    list_destroy(listaInstanciasConectadas);
 
     return EXIT_SUCCESS;
 }

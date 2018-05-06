@@ -73,7 +73,7 @@
 /* ---------------------------------------- */
 
 	void registrarLogOperaciones(t_list* listaProcesosConectados, Instruccion* datosInstruccion, int socketProceso);
-	char* procesarSolicitudEjecucion(Instruccion* datosInstruccion, char* algoritmoDistribucion);
+	Instancia* obtenerInstanciaAsignada(t_list* listaProcesosConectados, Instruccion* datosInstruccion, char* algoritmoDistribucion);
 	void cargarListaProcesosConectados(t_list *listaProcesosConectados, Proceso* nuevoProceso);
 	void showContenidolistaProcesosConectados(t_list* listaProcesosConectados);
 

@@ -234,12 +234,12 @@ int main(int argc, char* argv[]){
 
                                         Instruccion proximaInstruccion;
                                         proximaInstruccion=pasarAEstructura(aux);
+
                                         // Armo el Paquete de Ejecucion de la Proxima Instruccion
-                                        //paquete = crearHeader('E', EJECUTAR_INSTRUCCION, 1);  asi era lo anterior, la proxima lo que puse yo--martin
-                                        puts("\n instruccion a serealizar");
-                                        printf("\n\n codigo %d    key  %s    dato %s  \n\n",proximaInstruccion.operacion,proximaInstruccion.key,proximaInstruccion.dato);
                                         paquete = srlz_instruccion('E', EJECUTAR_INSTRUCCION,proximaInstruccion);
-                                        puts("\n serialicé proxima instruccion");
+
+                                        //printf("\n\n codigo %d    key  %s    dato %s  \n\n",proximaInstruccion.operacion,proximaInstruccion.key,proximaInstruccion.dato);
+
                                         // Envio el Paquetea al Planificador
                                         if(send(coordinador_fd,paquete.buffer,paquete.tam_buffer,0) != -1){
 
@@ -259,6 +259,8 @@ int main(int argc, char* argv[]){
 
                                             free(paquete.buffer);
                                             log_info(infoLogger, "Se le notifico al PLANIFICADOR que el ESI %s finalizo", nombreProceso);
+
+                                            return EXIT_SUCCESS;
                                         }else{
                                             log_error(infoLogger, "No se pudo enviar al PLANIFICADOR la notificacion de finalizacion del ESI %s", nombreProceso);
                                         }

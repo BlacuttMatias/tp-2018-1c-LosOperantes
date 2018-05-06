@@ -2,6 +2,58 @@
 
 //*********************** SERIALIZADO Y DESERIALIZADO ********************************//
 
+Paquete srlz_datosKeyBloqueada(char proceso, int codigoOperacion, char* nombreProceso, char key[40]){
+
+	int posicion = 0;//int para ir guiando desde donde se copia
+	int sizeBuffer = 0;
+	int tamString = 0;
+	int tamPayload = 0;
+	Paquete paquete;
+
+
+	sizeBuffer =sizeof(char)+
+			(sizeof(int)*4)
+			+ strlen(nombreProceso)
+			+ strlen(key);
+
+	paquete.tam_buffer = sizeBuffer;
+	paquete.buffer = malloc( sizeBuffer );
+	tamPayload = sizeBuffer - (sizeof(int)*2) - sizeof(char);
+
+	memcpy(paquete.buffer                                                   ,&(proceso)                     ,sizeof(char));
+	memcpy(paquete.buffer + (posicion=sizeof(char))							,&(codigoOperacion)				,sizeof(int));
+	memcpy(paquete.buffer + (posicion += sizeof(int))						,&(tamPayload)					,sizeof(int));
+
+	tamString = strlen(nombreProceso);
+	memcpy(paquete.buffer + (posicion += sizeof(tamPayload))				,&(tamString)					,sizeof(int) );
+	memcpy(paquete.buffer + (posicion += sizeof(int) )						,nombreProceso					,strlen(nombreProceso));
+
+	tamString = strlen(key);
+	memcpy(paquete.buffer + (posicion += strlen(nombreProceso))				,&(tamString)					,sizeof(int) );
+	memcpy(paquete.buffer + (posicion += sizeof(int) )						,key							,strlen(key)); 
+
+	return paquete;
+}
+
+KeyBloqueada dsrlz_datosKeyBloqueada(void* buffer){
+
+	int posicion = 0; //int para ir guiando desde donde se copia
+	int tamString = 0;
+	char* keyAux;
+	KeyBloqueada solicitud;
+
+	memcpy(&(tamString)					 	,buffer+posicion										,sizeof(int));
+	solicitud.nombreProceso = malloc(sizeof(char) * tamString+1);
+	memcpy(solicitud.nombreProceso			,buffer+(posicion+=sizeof(int))							,sizeof(char)*tamString);
+	solicitud.nombreProceso[tamString]='\0';
+
+	memcpy(&(tamString)					 	,buffer+(posicion+=sizeof(char)*tamString)				,sizeof(int));
+	memcpy(solicitud.key					,buffer+(posicion+=sizeof(int))							,sizeof(char)*tamString);	
+	solicitud.key[tamString] = '\0';
+
+	return solicitud;
+}
+
 Paquete srlz_datosProceso(char proceso, int codigoOperacion, char* nombreProceso, int tipoProceso, int socketProceso){
 
 	int posicion = 0;//int para ir guiando desde donde se copia
@@ -339,7 +391,25 @@ void eliminarProcesoCola(t_queue* colaReady, int socketProcesoEliminar){
 
 
 //**************************************************************************//
-// Obtener el Prceso segun su Socket
+// Obtener un Registro Proceso segun su Socket
+//**************************************************************************//
+Proceso* obtenerRegistroProceso(t_list* listaProcesosConectados, int socketProcesoConsultar){
+
+	Proceso* registroProcesoAux2 = NULL;
+
+	bool _find_socket_(Proceso* registroProcesoAux)
+	{
+		return (registroProcesoAux->socketProceso == socketProcesoConsultar);
+	}
+
+	registroProcesoAux2 = list_find(listaProcesosConectados,(void*)_find_socket_);
+
+	return registroProcesoAux2;
+}
+
+
+//**************************************************************************//
+// Obtener el Proceso segun su Socket
 //**************************************************************************//
 char* obtenerNombreProceso(t_list* listaProcesosConectados, int socketProcesoConsultar){
 
@@ -403,14 +473,33 @@ void registrarLogOperaciones(t_list* listaProcesosConectados, Instruccion* datos
 	return;
 }
 
+
+//**************************************************************************//
+// Carga un Registro en una Cola (el Registro lo extraigo de una Lista) 
+//**************************************************************************//
+void cargarProcesoCola(t_list* listaUtilizar, t_queue* colaUtilizar, int socketProcesoConsultar){
+
+	Proceso* registroProcesoAux2 = NULL;
+
+	bool _find_socket_(Proceso* registroProcesoAux)
+	{
+		return (registroProcesoAux->socketProceso == socketProcesoConsultar);
+	}
+
+	registroProcesoAux2 = list_find(listaUtilizar,(void*)_find_socket_);
+
+	// Agrego el elemento en la Cola
+	queue_push(colaUtilizar, registroProcesoAux2);
+}
+
 //**************************************************************************//
 // El Coordinador procesa la instruccion y elige la Instancia que lo va a ejecutar
 //**************************************************************************//
-Instancia* obtenerInstanciaAsignada(t_list* listaProcesosConectados, Instruccion* datosInstruccion, char* algoritmoDistribucion){
+Instancia* obtenerInstanciaAsignada(t_list* listaInstanciasConectadas, Instruccion* datosInstruccion, char* algoritmoDistribucion){
 
 	Instancia* instanciaElegida = NULL;
 
-	
+
 // TODO
 
 
@@ -444,7 +533,7 @@ void showContenidolistaProcesosConectados(t_list* listaProcesosConectados){
 		}
 	    list_iterate(listaProcesosConectados, (void*)_each_elemento_);
 	}else{
-		printf("Lista vacia\n");
+		printf("Lista ProcesosConectados vacia\n");
 	}
 }
 
@@ -473,7 +562,7 @@ void showContenidolistaReady(t_list* listaReady){
 		}
 	    list_iterate(listaReady, (void*)_each_elemento_);
 	}else{
-		printf("Lista vacia\n");
+		printf("Lista Ready vacia\n");
 	}
 }
 
@@ -508,7 +597,7 @@ void showContenidocolaReady(t_queue* colaReady){
 			queue_push(colaReady, registroProcesoAux);
 		}
 	}else{
-		printf("Cola vacia\n");
+		printf("Cola Ready vacia\n");
 	}
 }
 

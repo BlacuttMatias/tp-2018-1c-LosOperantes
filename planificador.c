@@ -1,5 +1,6 @@
 #include <arpa/inet.h>
 #include <commons/collections/list.h>
+#include <commons/collections/dictionary.h>
 #include <commons/config.h>
 #include <commons/log.h>
 #include <commons/string.h>
@@ -29,13 +30,14 @@
     t_queue* colaEjecucion;
     t_queue* colaBloqueados;
     t_queue* colaTerminados;
-    t_list* listaClavesBloqueadas;
+    t_dictionary * listaClavesBloqueadas;
     t_list* listaReady;
     t_list* listaESIconectados;
 
     bool planificadorPausado = false;
     bool planificarProcesos = false;
     char* algoritmoPlanificacion = NULL;
+    int coordinador_fd;
 
 /* ---------------------------------------- */
 /*  Consola interactiva                     */
@@ -103,12 +105,14 @@ void hiloConsolaInteractiva(void * unused) {
 
 
 
-                if(string_starts_with(comandoConsola,"PLANIFICAR")){
+                // Comando interno para conocer el estado de las Estructuras Administrativas
+                if(string_starts_with(comandoConsola,"INFO")){
                     comandoAceptado = true;
 
-                    //colaReady =  planificarReady(listaReady, config_get_string_value(cfg,"ALGORITMO_PLANIFICACION"));
+                    // Muestro por pantalla el contenido de las Listas y Colas
+                    showContenidolistaProcesosConectados(listaESIconectados);
+                    showContenidolistaReady(listaReady);
                     showContenidocolaReady(colaReady);
-
                 }
 
 
@@ -184,11 +188,13 @@ void servidorPlanificador(void* puerto){
     servidor=crearServidor((int)puerto);
     log_trace(infoLogger, "Escuchando conexiones" );
 
+    FD_SET(coordinador_fd, &master);
     FD_SET(servidor, &master);
     fd_maximo = servidor;   
 
 
     Proceso registroProceso;
+    KeyBloqueada registroKeyBloqueada;
     Proceso* procesoSeleccionado;
     int indice = 0;
 
@@ -264,10 +270,6 @@ void servidorPlanificador(void* puerto){
                                     // Cargo los ESIs conectados en la Lista de ESIs conectados al Planificador
                                     cargarListaProcesosConectados(listaESIconectados, registroProcesoAux);
 
-
-                                    // Muestro por pantalla el contenido de la listaReady
-                                    showContenidolistaReady(listaReady);
-
                                     // Activo la Planificacion de los Procesos
                                     planificarProcesos = true;
                                     break;
@@ -282,6 +284,10 @@ void servidorPlanificador(void* puerto){
 
                                 case FINALIZACION_EJECUCION_ESI:
                                     log_info(infoLogger,"Notificacion sobre la finalizacion del Proceso ESI %s.", obtenerNombreProceso(listaESIconectados, i));
+
+
+                                    // Cargar el Proceso en la Cola de Terminados
+                                    cargarProcesoCola(listaESIconectados, colaTerminados, i);
 
 
                                     // Elimino el Proceso ESI de las estrucutras Administrativas
@@ -300,9 +306,32 @@ void servidorPlanificador(void* puerto){
                             switch(encabezado.cod_operacion){
 
                                 case NOTIFICAR_USO_RECURSO:
+                                    log_info(infoLogger,"Respuesta sobre el uso de un Recurso por un Proceso recibida del COORDINADOR.");
+
                                     // TODO
 
-                                    log_info(infoLogger,"Respuesta sobre el uso de un Recurso por un Proceso recibida del COORDINADOR.");
+                                    // Recibo los datos del Nodo
+                                    paquete = recibir_payload(&i,&encabezado.tam_payload);
+
+
+                                    registroKeyBloqueada = dsrlz_datosKeyBloqueada(paquete.buffer);
+                                    free(paquete.buffer);
+
+
+                                    // Si el Recurso esta bloqueado por otro Proceso
+                                    if(dictionary_has_key(listaClavesBloqueadas, registroKeyBloqueada.key) ){
+
+                                        // TODO
+
+                                    }else{ // Si el Recurso no esta bloqueado
+
+                                        // Bloqueo el Recurso y lo cargo en la Lista de Claves Bloqueadas
+                                        dictionary_put(listaClavesBloqueadas, registroKeyBloqueada.key, &registroKeyBloqueada);
+
+                                        log_info(infoLogger,"Se agrego el Recurso %s en la Lista de Claves Bloqueadas que lo tomo el Proceso ESI %s.", registroKeyBloqueada.key, registroKeyBloqueada.nombreProceso);
+                                    }
+
+
                                     break;
 
                                 case RECURSO_TOMADO:
@@ -379,7 +408,7 @@ int main(int argc, char* argv[]){
     listaReady = list_create();
 
     // Creo la Lista de Claves Bloqueadas
-    listaClavesBloqueadas = list_create();
+    listaClavesBloqueadas = dictionary_create();
 
     // Creo la lista de Todos los ESIs conectados al Planificador
     listaESIconectados = list_create();
@@ -390,7 +419,7 @@ int main(int argc, char* argv[]){
     
 
     // Creo conexión con el Coordinador
-    int coordinador_fd = conectarseAservidor(config_get_string_value(cfg,"COORDINADOR_IP"),config_get_int_value(cfg,"COORDINADOR_PUERTO"));
+    coordinador_fd = conectarseAservidor(config_get_string_value(cfg,"COORDINADOR_IP"),config_get_int_value(cfg,"COORDINADOR_PUERTO"));
 
     if(coordinador_fd == -1){
         printf("Error de conexion con el Coordinador\n");
@@ -426,7 +455,7 @@ int main(int argc, char* argv[]){
     queue_destroy(colaEjecucion);
     queue_destroy(colaBloqueados);
     queue_destroy(colaTerminados);
-    list_destroy(listaClavesBloqueadas);
+    dictionary_destroy(listaClavesBloqueadas);
     list_destroy(listaReady);
     list_destroy(listaESIconectados);    
 

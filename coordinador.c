@@ -24,6 +24,7 @@
 
     t_list* listaProcesosConectados;
     t_list* listaInstanciasConectadas;
+    int fd_planificador;
 
 /* ---------------------------------------- */
 
@@ -122,6 +123,9 @@ void servidorCoordinador(void* puerto){
 
                                     // Muestro por pantalla el contenido de listaProcesosConectados
                                     showContenidolistaProcesosConectados(listaProcesosConectados);
+
+                                    // Guardo el FD del Planificador para conexiones futuras
+                                    fd_planificador = i;
                                     break;
 
                                 case RECURSO_TOMADO:
@@ -226,11 +230,29 @@ void servidorCoordinador(void* puerto){
                                     usleep(config_get_int_value(cfg,"RETARDO"));
 
                                     // Si la operacion es GET, notificar al Planificador de la toma del recurso y la Instancia no participa
-                                    // TODO
+                                    if(registroInstruccion.operacion == GET){
+
+                                        // Obtengo los datos del Proceso que esta tomando el Recurso
+                                        Proceso* registroProcesoAux = obtenerRegistroProceso(listaProcesosConectados, i);
+
+                                        // Serializado el Proceso y la Key
+                                        paquete = srlz_datosKeyBloqueada('C', NOTIFICAR_USO_RECURSO, registroProcesoAux->nombreProceso, registroInstruccion.key);
+
+                                        // Envio el Paquetea al Planificador
+                                        if(send(fd_planificador,paquete.buffer,paquete.tam_buffer,0) != -1){
+
+                                            free(paquete.buffer);
+                                            log_info(infoLogger, "Se le notifica al PLANIFICADOR que el Proceso ESI %s hizo uso (GET) de un Recurso.", registroProcesoAux->nombreProceso);
+                                        }else{
+                                            log_error(infoLogger, "No se pudo enviar mensaje al PLANIFICADOR sobre el uso de un Recurso por el Proceso ESI %s.", registroProcesoAux->nombreProceso);
+                                        }
 
 
+                                    }else{ // Si la operacion es SET o STORE
 
+                                        // TODO
 
+                                    }
 
 
                                     // Armo el Paquete del Resultado de la Ejecucion de la Instruccion

@@ -52,6 +52,13 @@ typedef struct
 typedef struct
 {
 	char* nombreProceso;
+	char key[40];
+}KeyBloqueada;
+
+
+typedef struct
+{
+	char* nombreProceso;
 	int tipoProceso;
 	int socketProceso;	
 }Proceso;

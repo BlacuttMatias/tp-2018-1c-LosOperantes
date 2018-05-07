@@ -18,6 +18,26 @@
 #include "sockets.h"
 
 
+//prueba persistir una entrada
+void persistirEntrada(t_entrada* unaEntrada){
+
+	FILE* archivoTexto;
+
+	char *nombreEntrada;
+	strcpy(nombreEntrada,unaEntrada->clave);
+	char *nombre_formato_archivo = strcat(nombreEntrada,".txt"); //clave como nombre de archivo mas formato ".txt"
+
+	archivoTexto = fopen(nombre_formato_archivo,"w+"); //abrimos / creamos archivo en carpeta RAIZ (hay que cambiar esto)
+
+
+	char *valorIdentificado = unaEntrada->valor;
+
+	fputs(valorIdentificado, archivoTexto );
+
+	fclose ( archivoTexto );
+}
+
+
 /* ---------------------------------------- */
 
 int main(int argc, char* argv[]){
@@ -30,35 +50,20 @@ int main(int argc, char* argv[]){
 	
 	//PRUEBA TABLA ENTRADAS IMPLEMENTACION CON LISTAS + nueva funcion cargarTablaEntradas
 	t_list* tablaEntradas = list_create(); //creo lista tabla de entradas
-
+	
+	//hardcodeo una instruccion
 	Instruccion* nuevaInstruccion;
 	nuevaInstruccion->dato = "MESSI";
+	strcpy(nuevaInstruccion->key,"FUTBOL");
 	nuevaInstruccion->operacion = 1;
-
+	
+	//cargo tabla con entrada hardcodeada
 	cargarTablaEntradas(tablaEntradas,nuevaInstruccion);
 	t_entrada* primerElemento;
 	primerElemento = list_get(tablaEntradas,0);
-
+	
+	//muestro entrada hardcodeada
   	printf("Clave:%s - Valor:%s - Numero:%d - Tamanio:%d \n",primerElemento->clave,primerElemento->valor,primerElemento->numeroDeEntrada,primerElemento->tamanioValorAlmacenado); //prueba imprimir por pantalla el elemento obtenido
-
-
-//	t_entrada* entrada1 = NULL; // entrada_create("FUTBOL","MESSI",1,sizeof("MESSI")-1); //ejemplo tipo de entrada Hardcodeada
-//	entrada1 = malloc(sizeof(t_entrada));
-
-//    entrada1->clave = "FUTBOL";
-
-//	entrada1->valor = malloc(strlen("MESSI")+1);
-//    strcpy( entrada1->valor ,"MESSI");
-//    entrada1->valor[strlen("MESSI")] = '\0';
-
-//	entrada1->numeroDeEntrada = 1;
-//	entrada1->tamanioValorAlmacenado = strlen("MESSI");
-
-//	list_add(tablaEntradas,entrada1); //aniadir entrada1 (con val. cargador) a ultima posicion de la tabla de entradas)
-
-//    	t_entrada* primerElemento;
-
-//    	primerElemento = list_get(tablaEntradas,0);  //obtener primer elemento de la tabla de entradas
 
 	printf("Iniciando INSTANCIA\n");
 

@@ -26,6 +26,7 @@ enum tipo_proceso {
 	INSTANCIA = 3,
 	COORDINADOR = 4,
 };
+
 //Defino los algoritmos de distribucion
 enum algoritmo_distribucion{
 	LSU=1,
@@ -33,6 +34,11 @@ enum algoritmo_distribucion{
 	KE=3,
 };
 
+//Defino los Resultados de una Operacion
+enum resultado_operaciones{
+	EJECUCION_EXITOSA =1,
+	EJECUCION_FALLIDA=2,
+};
 
 
 typedef struct //Paquete

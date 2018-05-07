@@ -69,6 +69,7 @@
 
 	void showContenidolistaReady(t_list* listaReady);
 	void showContenidocolaReady(t_queue* colaReady);
+	void showContenidocolaBloqueados(t_queue* colaBloqueados);
 	Proceso* obtenerProximoProcesoPlanificado(t_list* listaReady, t_queue* colaReady, char* algoritmoPlanificacion);
 	char* obtenerNombreProceso(t_list* listaProcesosConectados, int socketProcesoConsultar);
 	int obtenerSocketProceso(t_list* listaProcesosConectados, char* nombreProcesoBuscado);
@@ -81,7 +82,7 @@
 /*  Funciones de Coordinador 				*/
 /* ---------------------------------------- */
 
-	void registrarLogOperaciones(t_list* listaProcesosConectados, Instruccion* datosInstruccion, int socketProceso);
+	void registrarLogOperaciones(t_list* listaProcesosConectados, int operacion, char key[40], char* dato, int socketProcesoConsultar);
 	Instancia* obtenerInstanciaAsignada(t_list* listaInstanciasConectadas, Instruccion* datosInstruccion, char* algoritmoDistribucion);
 	void cargarListaProcesosConectados(t_list *listaProcesosConectados, Proceso* nuevoProceso);
 	void showContenidolistaProcesosConectados(t_list* listaProcesosConectados);

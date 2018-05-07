@@ -464,13 +464,16 @@ char* obtenerNombreProceso(t_list* listaProcesosConectados, int socketProcesoCon
 	// Obtengo el nombre del Proceso segun su Socket
 	char* nombreProceso = string_new();
 
-    void _each_elemento_(Proceso* registroProcesoAux)
-	{
-		if(registroProcesoAux->socketProceso == socketProcesoConsultar){
-			string_append_with_format(&nombreProceso, "%s", registroProcesoAux->nombreProceso);			
+	if(list_size(listaProcesosConectados) > 0){
+
+	    void _each_elemento_(Proceso* registroProcesoAux)
+		{
+			if(registroProcesoAux->socketProceso == socketProcesoConsultar){
+				string_append_with_format(&nombreProceso, "%s", registroProcesoAux->nombreProceso);			
+			}
 		}
+	    list_iterate(listaProcesosConectados, (void*)_each_elemento_);
 	}
-    list_iterate(listaProcesosConectados, (void*)_each_elemento_);
 
     return nombreProceso;
 }
@@ -482,13 +485,16 @@ int obtenerSocketProceso(t_list* listaProcesosConectados, char* nombreProcesoBus
 
 	int socketBuscado = 0;
 
-    void _each_elemento_(Proceso* registroProcesoAux)
-	{
-		if(strcmp(registroProcesoAux->nombreProceso, nombreProcesoBuscado) == 0){
-			socketBuscado =	registroProcesoAux->socketProceso;
+	if(list_size(listaProcesosConectados) > 0){
+
+	    void _each_elemento_(Proceso* registroProcesoAux)
+		{
+			if(strcmp(registroProcesoAux->nombreProceso, nombreProcesoBuscado) == 0){
+				socketBuscado =	registroProcesoAux->socketProceso;
+			}
 		}
+	    list_iterate(listaProcesosConectados, (void*)_each_elemento_);
 	}
-    list_iterate(listaProcesosConectados, (void*)_each_elemento_);
 
     return socketBuscado;
 }
@@ -496,7 +502,7 @@ int obtenerSocketProceso(t_list* listaProcesosConectados, char* nombreProcesoBus
 //**************************************************************************//
 // Registrar las Instrucciones en el Log de Operaciones
 //**************************************************************************//
-void registrarLogOperaciones(t_list* listaProcesosConectados, Instruccion* datosInstruccion, int socketProcesoConsultar){
+void registrarLogOperaciones(t_list* listaProcesosConectados, int operacion, char key[40], char* dato, int socketProcesoConsultar){
 
 	// Obtengo el nombre del Proceso segun su Socket
 	char* nombreProceso = string_new();
@@ -508,14 +514,13 @@ void registrarLogOperaciones(t_list* listaProcesosConectados, Instruccion* datos
 	// Defino el archivo de Operaciones
     FILE *logOperaciones = fopen("log/operaciones.log", "a");
 
-
 	if(logOperaciones == NULL){
 		printf("No se pudo crear el Log de Operaciones.\n");
 		fclose(logOperaciones); 
 		return;
 	}else{
 
-		switch(datosInstruccion->operacion){
+		switch(operacion){
 			case GET:
 				string_append_with_format(&tipoOperacion, "GET");
 				break;
@@ -529,7 +534,7 @@ void registrarLogOperaciones(t_list* listaProcesosConectados, Instruccion* datos
 				string_append_with_format(&tipoOperacion, "ERROR");
 				break;			
 		}
-		string_append_with_format(&registroLogOperaciones, "%s %s %s %s\n", nombreProceso, tipoOperacion, datosInstruccion->key, datosInstruccion->dato);
+		string_append_with_format(&registroLogOperaciones, "%s %s %s %s\n", nombreProceso, tipoOperacion, key, dato);
 		fwrite(registroLogOperaciones, strlen(registroLogOperaciones), sizeof(char), logOperaciones);
 	}
 	fclose(logOperaciones); 
@@ -666,7 +671,7 @@ void showContenidolistaProcesosConectados(t_list* listaProcesosConectados){
 		}
 	    list_iterate(listaProcesosConectados, (void*)_each_elemento_);
 	}else{
-		printf("Lista ProcesosConectados vacia\n");
+		printf("\nLista ProcesosConectados vacia\n");
 	}
 }
 
@@ -686,7 +691,6 @@ void showContenidolistaReady(t_list* listaReady){
 			// Muestro el encabezaado
 			if(indice == 1) {
 				printf("\nLISTA READY\n");
-				printf("Proceso\n");
 				printf("------\n");
 			}
 
@@ -695,7 +699,7 @@ void showContenidolistaReady(t_list* listaReady){
 		}
 	    list_iterate(listaReady, (void*)_each_elemento_);
 	}else{
-		printf("Lista Ready vacia\n");
+		printf("\nLista Ready vacia\n");
 	}
 }
 
@@ -719,7 +723,6 @@ void showContenidocolaReady(t_queue* colaReady){
 			// Muestro el encabezaado
 			if(indice == 0) {
 				printf("\nCOLA READY\n");
-				printf("Proceso\n");
 				printf("------\n");
 			}
 
@@ -730,7 +733,41 @@ void showContenidocolaReady(t_queue* colaReady){
 			queue_push(colaReady, registroProcesoAux);
 		}
 	}else{
-		printf("Cola Ready vacia\n");
+		printf("\nCola Ready vacia\n");
+	}
+}
+
+//**************************************************************************//
+// Mostrar el contenido de la Cola Bloqueado
+//**************************************************************************//
+void showContenidocolaBloqueados(t_queue* colaBloqueados){ 
+
+	int indice = 0;
+	Proceso* registroProcesoAux = NULL;
+
+	if(queue_size(colaBloqueados) > 0){
+
+
+		for (indice = 0; indice  < queue_size(colaBloqueados); indice=indice+1 ) {
+
+			// Obtengo un elemento
+			registroProcesoAux = queue_pop(colaBloqueados);
+
+
+			// Muestro el encabezaado
+			if(indice == 0) {
+				printf("\nCOLA BLOQUEADOS\n");
+				printf("------\n");
+			}
+
+			printf("%s\n", registroProcesoAux->nombreProceso);
+
+
+			// Lo vuelvo a agregar a la cola
+			queue_push(colaBloqueados, registroProcesoAux);
+		}
+	}else{
+		printf("\nCola Bloqueados vacia\n");
 	}
 }
 

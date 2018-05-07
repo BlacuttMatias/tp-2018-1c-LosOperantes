@@ -173,16 +173,18 @@ int main(int argc, char* argv[]){
 
 printf("Resultado de Instruccion: %d\n", resultadoEjecucion);
 
-                                // Si la ejecucion de la instruccion fallo
-                                if(resultadoEjecucion == 0){
-                                    log_info(infoLogger,"Respuesta sobre la Ejecución FALLIDA de la Instruccion recibida por el Coordinador.");
+                                // Si la ejecucion de la instruccion no fallo
+                                if(resultadoEjecucion == EJECUCION_EXITOSA){
 
-                                }else{ // Si la ejecucion de la instruccion no fallo
 
                                     log_info(infoLogger,"Respuesta sobre la Ejecución EXITOSA de la Instruccion recibida por el Coordinador.");
 
                                     // Se elimina la Instruccion Ejecutada de la Lista
                                     eliminarUltimaInstruccion(listaInstrucciones);
+
+                                }else{ // Si la ejecucion de la instruccion fallo
+
+                                    log_info(infoLogger,"Respuesta sobre la Ejecución FALLIDA de la Instruccion recibida por el Coordinador.");
                                 }
 
                                 // Armo el Paquete del Resultado de la Ejecucion de la Instruccion

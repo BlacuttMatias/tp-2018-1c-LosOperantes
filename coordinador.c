@@ -131,41 +131,55 @@ void servidorCoordinador(void* puerto){
                                     break;
 
                                 case RECURSO_LIBRE:
-                                    log_info(infoLogger,"El PLANIFICADOR notifica que el Recurso no estaba ocupado.");
 
                                     // Recibo los datos del Key y Proceso
                                     paquete = recibir_payload(&i,&encabezado.tam_payload);
                                     registroKeyBloqueada = dsrlz_datosKeyBloqueada(paquete.buffer);
                                     free(paquete.buffer);
 
-                                    // Averiguo el Socket del Proceso ESI para notificarle que fallo la Ejecucion de la Instruccion
+                                    log_info(infoLogger,"El PLANIFICADOR notifica que el Recurso %s esta LIBRE.", registroKeyBloqueada.key);
+
+                                    // Averiguo el Socket del Proceso ESI para notificarle que no fallo la Ejecucion de la Instruccion
                                     socketESI = obtenerSocketProceso(listaProcesosConectados, registroKeyBloqueada.nombreProceso);
 
+                                    // Genero el Log de Operaciones
+                                    registrarLogOperaciones(listaProcesosConectados, registroKeyBloqueada.operacion, registroKeyBloqueada.key, registroKeyBloqueada.dato, socketESI);
+                                    log_info(infoLogger,"Operacion guardada en el Log de Operaciones:  %s %i %s %s", obtenerNombreProceso(listaProcesosConectados, socketESI), registroKeyBloqueada.operacion, registroKeyBloqueada.key, registroKeyBloqueada.dato);
+
+                                    // Aplico Retardo de Ejecucion segun Archivo de Configuracion
+                                    usleep(config_get_int_value(cfg,"RETARDO"));
+
                                     // Armo el Paquete del Resultado de la Ejecucion de la Instruccion
-                                    paquete = crearHeader('C', RESPUESTA_EJECUTAR_INSTRUCCION, 1);
+                                    paquete = crearHeader('C', RESPUESTA_EJECUTAR_INSTRUCCION, EJECUCION_EXITOSA);
 
                                     // Envio el Paquete a ESI
                                     if(send(socketESI,paquete.buffer,paquete.tam_buffer,0) != -1){
 
                                         free(paquete.buffer);
-                                    }else{
 
+                                        // TODO Enviar a la Instancia
+
+                                        log_info(infoLogger, "Se le notifico al ESI %s que el Recurso %s estaba LIBRE", obtenerNombreProceso(listaProcesosConectados, socketESI), registroKeyBloqueada.key);
+
+                                    }else{
+                                        log_error(infoLogger, "No se pudo notificar al ESI %s que el Recurso %s estaba LIBRE", obtenerNombreProceso(listaProcesosConectados, socketESI), registroKeyBloqueada.key);
                                     }
                                     break;
 
                                 case RECURSO_OCUPADO:
-                                    log_info(infoLogger,"El PLANIFICADOR notifica que el Recurso esta tomado por otro Proceso.");
 
                                     // Recibo los datos del Key y Proceso
                                     paquete = recibir_payload(&i,&encabezado.tam_payload);
                                     registroKeyBloqueada = dsrlz_datosKeyBloqueada(paquete.buffer);
                                     free(paquete.buffer);
 
+                                    log_info(infoLogger,"El PLANIFICADOR notifica que el Recurso %s esta tomado por otro Proceso.", registroKeyBloqueada.key);
+
                                     // Averiguo el Socket del Proceso ESI para notificarle que fallo la Ejecucion de la Instruccion
                                     socketESI = obtenerSocketProceso(listaProcesosConectados, registroKeyBloqueada.nombreProceso);
 
                                     // Armo el Paquete del Resultado de la Ejecucion de la Instruccion
-                                    paquete = crearHeader('C', RESPUESTA_EJECUTAR_INSTRUCCION, 0);
+                                    paquete = crearHeader('C', RESPUESTA_EJECUTAR_INSTRUCCION, EJECUCION_FALLIDA);
 
                                     // Envio el Paquetea a ESI
                                     if(send(socketESI,paquete.buffer,paquete.tam_buffer,0) != -1){
@@ -255,36 +269,26 @@ void servidorCoordinador(void* puerto){
                                     break;
 
                                 case EJECUTAR_INSTRUCCION:
-                                    log_info(infoLogger,"Pedido de Ejecución de una Instruccion recibida del Proceso ESI %s.", obtenerNombreProceso(listaProcesosConectados, i));
-
                                     paquete=recibir_payload(&i,&encabezado.tam_payload);
                                     registroInstruccion=dsrlz_instruccion(paquete.buffer);
                                     free(paquete.buffer);
-                                    //mostrarInstruccion(&registroInstruccion);
 
-                                    // Genero el Log de Operaciones
-                                    registrarLogOperaciones(listaProcesosConectados, &registroInstruccion, i);
-                                    log_info(infoLogger,"Operacion guardada en el Log de Operaciones:  %s %i %s %s", obtenerNombreProceso(listaProcesosConectados, i), registroInstruccion.operacion, registroInstruccion.key, registroInstruccion.dato);
+                                    log_info(infoLogger,"Pedido de Ejecución de una Instruccion recibida del Proceso ESI %s: %d %s %s", obtenerNombreProceso(listaProcesosConectados, i), registroInstruccion.operacion, registroInstruccion.key, registroInstruccion.dato);
 
-                                    // Aplico Retardo de Ejecucion segun Archivo de Configuracion
-                                    usleep(config_get_int_value(cfg,"RETARDO"));
 
                                     // Si la operacion es GET, notificar al Planificador de la toma del recurso y la Instancia no participa
                                     if(registroInstruccion.operacion == GET){
 
-                                        // Obtengo los datos del Proceso que esta tomando el Recurso
-                                        Proceso* registroProcesoAux = obtenerRegistroProceso(listaProcesosConectados, i);
-
                                         // Serializado el Proceso y la Key
-                                        paquete = srlz_datosKeyBloqueada('C', NOTIFICAR_USO_RECURSO, registroProcesoAux->nombreProceso, registroInstruccion.operacion, registroInstruccion.key, registroInstruccion.dato);
+                                        paquete = srlz_datosKeyBloqueada('C', NOTIFICAR_USO_RECURSO, obtenerNombreProceso(listaProcesosConectados, i), registroInstruccion.operacion, registroInstruccion.key, registroInstruccion.dato);
 
                                         // Envio el Paquetea al Planificador
                                         if(send(fd_planificador,paquete.buffer,paquete.tam_buffer,0) != -1){
 
                                             free(paquete.buffer);
-                                            log_info(infoLogger, "Se le notifica al PLANIFICADOR que el Proceso ESI %s hizo uso (GET) de un Recurso.", registroProcesoAux->nombreProceso);
+                                            log_info(infoLogger, "Se le notifica al PLANIFICADOR que el Proceso ESI %s quiere acceder al Recurso %s.", obtenerNombreProceso(listaProcesosConectados, i), registroInstruccion.key);
                                         }else{
-                                            log_error(infoLogger, "No se pudo enviar mensaje al PLANIFICADOR sobre el uso de un Recurso por el Proceso ESI %s.", registroProcesoAux->nombreProceso);
+                                            log_error(infoLogger, "No se pudo enviar mensaje al PLANIFICADOR sobre el uso de un Recurso por el Proceso ESI %s.", obtenerNombreProceso(listaProcesosConectados, i));
                                         }
 
 
@@ -293,45 +297,44 @@ void servidorCoordinador(void* puerto){
                                         // TODO
 
 
+                                        // Defino el Algoritmo de Distribucion a utlizar
+                                        char* algoritmoDistribucion = string_new();
+                                        string_append(&algoritmoDistribucion,"CIRCULAR");
+                                        char* instanciaElegida = string_new();
+
+                                        //instanciaElegida = procesarSolicitudEjecucion(datosInstruccion, algoritmoDistribucion);
+
+                                        free(algoritmoDistribucion);
+                                        free(instanciaElegida);
+
+
+
+
+                                        // Genero el Log de Operaciones
+                                        registrarLogOperaciones(listaProcesosConectados, registroInstruccion.operacion, registroInstruccion.key, registroInstruccion.dato, i);
+                                        log_info(infoLogger,"Operacion guardada en el Log de Operaciones:  %s %i %s %s", obtenerNombreProceso(listaProcesosConectados, i), registroInstruccion.operacion, registroInstruccion.key, registroInstruccion.dato);
+
+                                        // Aplico Retardo de Ejecucion segun Archivo de Configuracion
+                                        usleep(config_get_int_value(cfg,"RETARDO"));
+
                                         // Armo el Paquete del Resultado de la Ejecucion de la Instruccion
-                                        paquete = crearHeader('C', RESPUESTA_EJECUTAR_INSTRUCCION, 1);
+                                        paquete = crearHeader('C', RESPUESTA_EJECUTAR_INSTRUCCION, EJECUCION_EXITOSA);
 
                                         // Envio el Paquetea a ESI
                                         if(send(i,paquete.buffer,paquete.tam_buffer,0) != -1){
 
                                             free(paquete.buffer);
                                         }else{
-                                        }                                        
+                                        }
 
                                     }
-
-
-
-                                    // Si la operacion es SET o STORE,
-
-
-                                    // Defino el Algoritmo de Distribucion a utlizar
-                                    char* algoritmoDistribucion = string_new();
-                                    string_append(&algoritmoDistribucion,"CIRCULAR");
-                                    char* instanciaElegida = string_new();
-
-                                    //instanciaElegida = procesarSolicitudEjecucion(datosInstruccion, algoritmoDistribucion);
-
-                                    free(algoritmoDistribucion);
-                                    free(instanciaElegida);
-
-
                                     break;
 
                                 case FINALIZACION_EJECUCION_ESI:
                                     log_info(infoLogger,"Notificacion sobre la finalizacion del Proceso ESI %s.", obtenerNombreProceso(listaProcesosConectados, i));
 
-showContenidolistaProcesosConectados(listaProcesosConectados);
-
                                     // Elimino el Proceso ESI de la listaProcesosConectados
                                     eliminarProcesoLista(listaProcesosConectados, i);
-
-showContenidolistaProcesosConectados(listaProcesosConectados);
                                     break;                                
                             }
                         }

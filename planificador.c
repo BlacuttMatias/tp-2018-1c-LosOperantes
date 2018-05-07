@@ -113,6 +113,7 @@ void hiloConsolaInteractiva(void * unused) {
                     showContenidolistaProcesosConectados(listaESIconectados);
                     showContenidolistaReady(listaReady);
                     showContenidocolaReady(colaReady);
+                    showContenidocolaBloqueados(colaBloqueados);
                 }
 
                 if(string_starts_with(comandoConsola,"PAUSAR")){
@@ -234,7 +235,7 @@ void servidorPlanificador(void* puerto){
                          // error o conexión cerrada por el cliente
                          if (nbytes == 0) {
                             // conexión cerrada
-                            //printf("selectserver: socket %d se ha caído\n", i);
+                            printf("selectserver: socket %d se ha caído\n", i);
                          } else {
                             perror("recv");
                          }
@@ -284,8 +285,13 @@ void servidorPlanificador(void* puerto){
 
                                     resultadoEjecucion = encabezado.tam_payload;
 
-                                    // Si la ejecucion de la instruccion fallo
-                                    if(resultadoEjecucion == 0){
+                                    // Si la ejecucion de la instruccion no fallo
+                                    if(resultadoEjecucion == EJECUCION_EXITOSA){
+
+                                        log_info(infoLogger,"Respuesta sobre la Ejecución EXITOSA de la Instruccion recibida por el Proceso ESI.");
+
+                                    }else{ // Si la ejecucion de la instruccion no fallo
+
                                         log_info(infoLogger,"Respuesta sobre la Ejecución FALLIDA de la Instruccion recibida por el Proceso ESI.");
 
                                         // TODO
@@ -296,11 +302,7 @@ void servidorPlanificador(void* puerto){
                                         eliminarProcesoLista(listaReady, i);
                                         eliminarProcesoCola(colaReady, i);
 
-                                        log_info(infoLogger,"Actualizacion de las Estructuras Administrativas");                                        
-
-                                    }else{ // Si la ejecucion de la instruccion no fallo
-
-                                        log_info(infoLogger,"Respuesta sobre la Ejecución EXITOSA de la Instruccion recibida por el Proceso ESI.");
+                                        log_info(infoLogger,"Actualizacion de las Estructuras Administrativas");
                                     }
 
                                     // Activo la Planificacion de los Procesos
@@ -331,14 +333,13 @@ void servidorPlanificador(void* puerto){
                             switch(encabezado.cod_operacion){
 
                                 case NOTIFICAR_USO_RECURSO:
-                                    log_info(infoLogger,"Respuesta sobre el uso de un Recurso por un Proceso recibida del COORDINADOR.");
-
-                                    // TODO
 
                                     // Recibo los datos del Key y Proceso
                                     paquete = recibir_payload(&i,&encabezado.tam_payload);
                                     registroKeyBloqueada = dsrlz_datosKeyBloqueada(paquete.buffer);
                                     free(paquete.buffer);
+
+                                    log_info(infoLogger,"Notificacion del COORDINADOR que el Proceso ESI %s quiere acceder al Recurso %s.", registroKeyBloqueada.nombreProceso, registroKeyBloqueada.key);
 
                                     recursoOcupado = false;
 
@@ -363,6 +364,7 @@ void servidorPlanificador(void* puerto){
                                         // Serializado el Proceso y la Key
                                         paquete = srlz_datosKeyBloqueada('P', RECURSO_LIBRE, registroKeyBloqueada.nombreProceso, registroKeyBloqueada.operacion,registroKeyBloqueada.key,registroKeyBloqueada.dato);
                                     }
+
 
                                     // Envio el Paquete al Coordinador con la notificacion
                                     if(send(i,paquete.buffer,paquete.tam_buffer,0) != -1){
@@ -397,8 +399,6 @@ void servidorPlanificador(void* puerto){
             // Planifica los Procesos de la ColaReady
             if(!planificadorPausado && planificarProcesos){
 
-printf("Planificando\n");
-
                 // Desactivo la Planificacion de los Procesos
                 planificarProcesos = false;                                    
 
@@ -408,7 +408,7 @@ printf("Planificando\n");
                 // Si existe un Proceso para planificar
                 if(procesoSeleccionado != NULL){
 
-printf("Hay Procesos para Planificar - %s %d\n", procesoSeleccionado->nombreProceso, procesoSeleccionado->socketProceso);                    
+printf("Proximo Procesos a Planificar: Nombre: %s - Socket: %d\n", procesoSeleccionado->nombreProceso, procesoSeleccionado->socketProceso);                    
                     // Armo el Paquete de la orden de Ejectuar la proxima Instruccion
                     paquete = crearHeader('P', EJECUTAR_INSTRUCCION, 1);
 

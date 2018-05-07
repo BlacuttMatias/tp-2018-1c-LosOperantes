@@ -49,7 +49,6 @@ log/
 files/*.tmp
 *.tmp
 
-entradas/
 entradas/*.txt
 
 # excluyo los binarios

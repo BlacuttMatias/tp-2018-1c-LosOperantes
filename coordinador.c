@@ -294,8 +294,23 @@ void servidorCoordinador(void* puerto){
 
                                     }else{ // Si la operacion es SET o STORE
 
-                                        // TODO
+                                        // Le aviso al Planificador para que Libere el Recurso
+                                        if(registroInstruccion.operacion == STORE){
+                                            
+                                            // Serializado el Proceso y la Key
+                                            paquete = srlz_datosKeyBloqueada('C', NOTIFICAR_LIBERACION_RECURSO, obtenerNombreProceso(listaProcesosConectados, i), registroInstruccion.operacion, registroInstruccion.key, registroInstruccion.dato);
 
+                                            // Envio el Paquetea al Planificador
+                                            if(send(fd_planificador,paquete.buffer,paquete.tam_buffer,0) != -1){
+
+                                                free(paquete.buffer);
+                                                log_info(infoLogger, "Se le notifica al PLANIFICADOR que el Proceso ESI %s quiere acceder al Recurso %s.", obtenerNombreProceso(listaProcesosConectados, i), registroInstruccion.key);
+                                            }else{
+                                                log_error(infoLogger, "No se pudo enviar mensaje al PLANIFICADOR sobre el uso de un Recurso por el Proceso ESI %s.", obtenerNombreProceso(listaProcesosConectados, i));
+                                            }
+                                        }
+
+                                        // TODO
 
                                         // Defino el Algoritmo de Distribucion a utlizar
                                         char* algoritmoDistribucion = string_new();
@@ -306,7 +321,6 @@ void servidorCoordinador(void* puerto){
 
                                         free(algoritmoDistribucion);
                                         free(instanciaElegida);
-
 
 
 

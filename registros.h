@@ -17,6 +17,7 @@ enum cod_operacion {
 	RECURSO_LIBRE = 6,
 	RECURSO_OCUPADO = 7,	
 	FINALIZACION_EJECUCION_ESI = 8,
+	NOTIFICAR_LIBERACION_RECURSO = 9,	
 };
 
 // Defino los Tipos de Procesos

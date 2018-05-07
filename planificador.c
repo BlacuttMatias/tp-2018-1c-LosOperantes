@@ -332,6 +332,22 @@ void servidorPlanificador(void* puerto){
                         if(encabezado.proceso == 'C'){
                             switch(encabezado.cod_operacion){
 
+                                case NOTIFICAR_LIBERACION_RECURSO:
+
+                                    // Recibo los datos del Key y Proceso
+                                    paquete = recibir_payload(&i,&encabezado.tam_payload);
+                                    registroKeyBloqueada = dsrlz_datosKeyBloqueada(paquete.buffer);
+                                    free(paquete.buffer);
+
+                                    log_info(infoLogger,"Notificacion del COORDINADOR que el Proceso ESI %s libera el Recurso %s.", registroKeyBloqueada.nombreProceso, registroKeyBloqueada.key);
+
+                                    // Libero un Recurso de la Lista de Claves Bloqueadas
+                                    dictionary_remove(listaClavesBloqueadas, registroKeyBloqueada.key);
+
+                                    log_info(infoLogger,"Se libero el Recurso %s de la Lista de Claves Bloqueadas que lo tenia tomado el Proceso ESI %s.", registroKeyBloqueada.key, registroKeyBloqueada.nombreProceso);
+                                    break;
+
+
                                 case NOTIFICAR_USO_RECURSO:
 
                                     // Recibo los datos del Key y Proceso

@@ -171,8 +171,6 @@ int main(int argc, char* argv[]){
 
                                 resultadoEjecucion = encabezado.tam_payload;
 
-printf("Resultado de Instruccion: %d\n", resultadoEjecucion);
-
                                 // Si la ejecucion de la instruccion no fallo
                                 if(resultadoEjecucion == EJECUCION_EXITOSA){
 
@@ -283,6 +281,7 @@ printf("Resultado de Instruccion: %d\n", resultadoEjecucion);
     log_destroy(infoLogger);
     config_destroy(cfg);
     free(nombreProceso);
+    list_destroy(listaInstrucciones);
 
     close(servidor);
 

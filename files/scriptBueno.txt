@@ -3,4 +3,3 @@ GET deportes:futbol:messi
 GET deportes:basquet:ginobili
 SET deportes:basquet:ginobili Emanuel Ginobili
 STORE deportes:basquet:ginobili
-STORE deportes:futbol:messi

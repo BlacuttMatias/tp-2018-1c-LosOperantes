@@ -676,6 +676,96 @@ void showContenidolistaProcesosConectados(t_list* listaProcesosConectados){
 }
 
 //**************************************************************************//
+// Devuelve el Proceso que quiere usar un Recurso
+//**************************************************************************//
+void listarRecursosBloqueados(t_list* listaClavesBloqueadasRequeridas, char* key){ 
+
+	int indice = 0;
+
+	// Si el Recurso esta bloqueado por otro Proceso
+	if(list_size(listaClavesBloqueadasRequeridas) > 0){
+
+	    void _each_elemento_(KeyBloqueada* registroKeyBloqueada)
+		{
+			indice = indice + 1;
+
+			// Muestro el encabezaado
+			if(indice == 1) {
+				printf("\nPROCESOS\n");
+				printf("------\n");
+
+			}
+
+			if(strcmp(registroKeyBloqueada->key, key) == 0) {
+				printf("%s\n", registroKeyBloqueada->nombreProceso);
+			}
+		}
+	    list_iterate(listaClavesBloqueadasRequeridas, (void*)_each_elemento_);
+
+	}else{
+		printf("\nEl Recurso %s no se encuentra bloqueado\n", key);
+	}
+}
+
+
+//**************************************************************************//
+// Mostrar el contenido de un Dirtionary
+//**************************************************************************//
+void showContenidoDiccionario(t_dictionary * dictionario, char* nombreDiccionario){ 
+
+	int indice = 0;
+
+	if(dictionary_size(dictionario) > 0){
+
+	    void _each_elemento_(char* key, Proceso* registroProcesoAux)
+		{
+			indice = indice + 1;
+
+			// Muestro el encabezaado
+			if(indice == 1) {
+				printf("\nDICCIONARIO %s\n", nombreDiccionario);
+				printf("------\n");
+			}
+
+			printf("[%s]%s\n", key, registroProcesoAux->nombreProceso);
+
+		}
+	    dictionary_iterator(dictionario, (void*)_each_elemento_);
+	}else{
+		printf("\nDiccionario %s vacio\n", nombreDiccionario);
+	}
+}
+
+
+//**************************************************************************//
+// Mostrar el contenido de la Lista listaClavesBloqueadasRequeridas
+//**************************************************************************//
+void showContenidolistaClavesBloqueadasRequeridas(t_list* listaClavesBloqueadasRequeridas){ 
+
+	int indice = 0;
+
+	if(list_size(listaClavesBloqueadasRequeridas) > 0){
+
+	    void _each_elemento_(KeyBloqueada* registroKeyBloqueada)
+		{
+			indice = indice + 1;
+
+			// Muestro el encabezaado
+			if(indice == 1) {
+				printf("\nLISTA CLAVESBLOQUEADASREQUERIDAS\n");
+				printf("------\n");
+			}
+
+			printf("[%s]%s\n", registroKeyBloqueada->key, registroKeyBloqueada->nombreProceso);
+
+		}
+	    list_iterate(listaClavesBloqueadasRequeridas, (void*)_each_elemento_);
+	}else{
+		printf("\nLista ClavesBloqueadasRequeridas vacia\n");
+	}
+}
+
+//**************************************************************************//
 // Mostrar el contenido de la Lista Ready
 //**************************************************************************//
 void showContenidolistaReady(t_list* listaReady){ 
@@ -851,4 +941,18 @@ void cargarTablaEntradas(t_list *tablaEntradas,Instruccion* estructuraInstruccio
 void cargarListaProcesosConectados(t_list *listaProcesosConectados, Proceso* nuevoProceso){
 
 	list_add(listaProcesosConectados, nuevoProceso);
+}
+
+// Devuelve la cantidad de parametros que contiene un ingreso por consola
+int countParametrosConsola(char * string){ 
+	int cant_elementos = 0, i;
+
+	for(i=0; i<=strlen(string); i=i+1){
+		if(string[i] == ' ' ){
+			cant_elementos = cant_elementos + 1;
+		}
+	}
+
+	return cant_elementos;
+
 }

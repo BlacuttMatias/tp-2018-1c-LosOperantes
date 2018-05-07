@@ -70,6 +70,9 @@
 	void showContenidolistaReady(t_list* listaReady);
 	void showContenidocolaReady(t_queue* colaReady);
 	void showContenidocolaBloqueados(t_queue* colaBloqueados);
+	void showContenidoDiccionario(t_dictionary * dictionario, char* nombreDiccionario);
+	void showContenidolistaClavesBloqueadasRequeridas(t_list* listaClavesBloqueadasRequeridas);
+
 	Proceso* obtenerProximoProcesoPlanificado(t_list* listaReady, t_queue* colaReady, char* algoritmoPlanificacion);
 	char* obtenerNombreProceso(t_list* listaProcesosConectados, int socketProcesoConsultar);
 	int obtenerSocketProceso(t_list* listaProcesosConectados, char* nombreProcesoBuscado);
@@ -77,6 +80,9 @@
 	void eliminarProcesoLista(t_list* listaProcesosConectados, int socketProcesoEliminar);
 	void eliminarProcesoCola(t_queue* colaReady, int socketProcesoEliminar);
 	void cargarProcesoCola(t_list* listaUtilizar, t_queue* colaUtilizar, int socketProcesoConsultar);
+
+	int countParametrosConsola(char * string);
+	void listarRecursosBloqueados(t_list* listaClavesBloqueadasRequeridas, char* key);
 
 /* ---------------------------------------- */
 /*  Funciones de Coordinador 				*/

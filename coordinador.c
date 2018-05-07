@@ -147,7 +147,7 @@ void servidorCoordinador(void* puerto){
                                     log_info(infoLogger,"Operacion guardada en el Log de Operaciones:  %s %i %s %s", obtenerNombreProceso(listaProcesosConectados, socketESI), registroKeyBloqueada.operacion, registroKeyBloqueada.key, registroKeyBloqueada.dato);
 
                                     // Aplico Retardo de Ejecucion segun Archivo de Configuracion
-                                    usleep(config_get_int_value(cfg,"RETARDO"));
+                                    //usleep(config_get_int_value(cfg,"RETARDO"));
 
                                     // Armo el Paquete del Resultado de la Ejecucion de la Instruccion
                                     paquete = crearHeader('C', RESPUESTA_EJECUTAR_INSTRUCCION, EJECUCION_EXITOSA);
@@ -321,7 +321,6 @@ void servidorCoordinador(void* puerto){
 
                                         free(algoritmoDistribucion);
                                         free(instanciaElegida);
-
 
 
                                         // Genero el Log de Operaciones

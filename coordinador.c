@@ -366,6 +366,50 @@ void servidorCoordinador(void* puerto){
 
 int main(int argc, char* argv[]){
 
+	/*
+    //probando algoritmos de distribucion
+    Instancia* proximaInstancia;
+    listaInstanciasConectadas = list_create();
+    //hago lista de instancias
+    puts("inicio mallocs");
+    Instancia* instancia1= malloc(sizeof(Instancia));
+        instancia1->nombreProceso= "instancia1";
+        instancia1->socketProceso=1;
+        instancia1->entradasLibres=1;
+    Instancia* instancia2= malloc(sizeof(Instancia));
+        instancia2->nombreProceso= "instancia2";
+        instancia2->socketProceso=2;
+        instancia2->entradasLibres=2;
+    Instancia* instancia3= malloc(sizeof(Instancia));
+        instancia3->nombreProceso= "instancia3";
+        instancia3->socketProceso=3;
+        instancia3->entradasLibres=80;
+    Instancia* instancia4= malloc(sizeof(Instancia));
+        instancia4->nombreProceso= "instancia4";
+        instancia4->socketProceso=4;
+        instancia4->entradasLibres=0;
+    Instancia* instancia5= malloc(sizeof(Instancia));
+        instancia5->nombreProceso= "instancia5";
+        instancia5->socketProceso=5;
+        instancia5->entradasLibres=60;
+        puts("declare instancias");
+    list_add(listaInstanciasConectadas,instancia3);
+    list_add(listaInstanciasConectadas,instancia4);
+    list_add(listaInstanciasConectadas,instancia5);
+    list_add(listaInstanciasConectadas,instancia2);
+    list_add(listaInstanciasConectadas,instancia1);
+    puts("agrego a lista");
+    Instruccion aux;
+       aux.operacion=1;
+       strcpy(aux.key, "kbcd");
+       aux.dato="efgh";
+       puts("\n hago proximaInstancia \n");
+    char* algoritmo="KE";
+    proximaInstancia = obtenerInstanciaAsignada(listaInstanciasConectadas,&aux,algoritmo);
+    printf("debe ser instancia 5, se eligio %s ",proximaInstancia->nombreProceso);
+    
+   return 0;*/
+	
 	/* Creo la instancia del Archivo de Configuracion y del Log */
 	cfg = config_create("config/config.cfg");
 	infoLogger = log_create("log/coordinador.log", "Coordinador", false, LOG_LEVEL_INFO);

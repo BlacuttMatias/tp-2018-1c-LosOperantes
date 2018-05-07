@@ -2,7 +2,7 @@
 
 //*********************** SERIALIZADO Y DESERIALIZADO ********************************//
 
-Paquete srlz_datosKeyBloqueada(char proceso, int codigoOperacion, char* nombreProceso, char key[40]){
+Paquete srlz_datosKeyBloqueada(char proceso, int codigoOperacion, char* nombreProceso, int operacion, char key[40], char* dato){
 
 	int posicion = 0;//int para ir guiando desde donde se copia
 	int sizeBuffer = 0;
@@ -11,10 +11,18 @@ Paquete srlz_datosKeyBloqueada(char proceso, int codigoOperacion, char* nombrePr
 	Paquete paquete;
 
 
-	sizeBuffer =sizeof(char)+
-			(sizeof(int)*4)
-			+ strlen(nombreProceso)
-			+ strlen(key);
+	if(operacion == GET || operacion == STORE){
+		sizeBuffer =sizeof(char)+
+				(sizeof(int)*5)
+				+ strlen(nombreProceso)
+				+ strlen(key);	
+	}else{
+		sizeBuffer =sizeof(char)+
+				(sizeof(int)*6)
+				+ strlen(nombreProceso)
+				+ strlen(key)
+				+ strlen(dato);
+	}
 
 	paquete.tam_buffer = sizeBuffer;
 	paquete.buffer = malloc( sizeBuffer );
@@ -26,12 +34,20 @@ Paquete srlz_datosKeyBloqueada(char proceso, int codigoOperacion, char* nombrePr
 	memcpy(paquete.buffer + (posicion += sizeof(int))						,&(tamPayload)					,sizeof(int));
 
 	tamString = strlen(nombreProceso);
-	memcpy(paquete.buffer + (posicion += sizeof(tamPayload))				,&(tamString)					,sizeof(int) );
+	memcpy(paquete.buffer + (posicion += sizeof(int))						,&(tamString)					,sizeof(int) );
 	memcpy(paquete.buffer + (posicion += sizeof(int) )						,nombreProceso					,strlen(nombreProceso));
 
+	memcpy(paquete.buffer + (posicion += strlen(nombreProceso))				,&(operacion)					,sizeof(int) );
+
 	tamString = strlen(key);
-	memcpy(paquete.buffer + (posicion += strlen(nombreProceso))				,&(tamString)					,sizeof(int) );
+	memcpy(paquete.buffer + (posicion += sizeof(int) )						,&(tamString)					,sizeof(int) );
 	memcpy(paquete.buffer + (posicion += sizeof(int) )						,key							,strlen(key)); 
+
+	if(operacion==SET){	
+		tamString = strlen(dato);
+		memcpy(paquete.buffer + (posicion += strlen(key))					,&(tamString)					,sizeof(int));
+		memcpy(paquete.buffer + (posicion += sizeof(int))					,dato							,strlen(dato));
+	}
 
 	return paquete;
 }
@@ -48,9 +64,21 @@ KeyBloqueada dsrlz_datosKeyBloqueada(void* buffer){
 	memcpy(solicitud.nombreProceso			,buffer+(posicion+=sizeof(int))							,sizeof(char)*tamString);
 	solicitud.nombreProceso[tamString]='\0';
 
-	memcpy(&(tamString)					 	,buffer+(posicion+=sizeof(char)*tamString)				,sizeof(int));
+	memcpy(&solicitud.operacion			 	,buffer+(posicion+=sizeof(char)*tamString)				,sizeof(int));
+
+	memcpy(&(tamString)					 	,buffer+(posicion+=sizeof(int))							,sizeof(int));
 	memcpy(solicitud.key					,buffer+(posicion+=sizeof(int))							,sizeof(char)*tamString);	
 	solicitud.key[tamString] = '\0';
+
+	if(solicitud.operacion==SET){	
+
+		memcpy(&(tamString)					 	,buffer+(posicion+=sizeof(char)*tamString)				,sizeof(int));
+		memcpy(solicitud.dato					,buffer+(posicion+=sizeof(int))							,sizeof(char)*tamString);	
+		solicitud.dato[tamString] = '\0';
+
+	} else {
+		solicitud.dato = NULL;
+	}
 
 	return solicitud;
 }
@@ -707,58 +735,45 @@ void showContenidocolaReady(t_queue* colaReady){
 }
 
 // Coordina la Planificacion de Todos los Procesos
-Proceso* obtenerProximoProcesoPlanificado(t_list* listaESIconectados, t_list* listaReady, t_queue* colaReady, char* algoritmoPlanificacion){
-
-	// TODO
+Proceso* obtenerProximoProcesoPlanificado(t_list* listaReady, t_queue* colaReady, char* algoritmoPlanificacion){
 
 	Proceso* proximoProcesoPlanificado = NULL;	
-	//proximoProcesoPlanificado = malloc(sizeof(Proceso));
 
-	if(list_size(listaESIconectados) > 0){
-		proximoProcesoPlanificado = list_get(listaESIconectados, 0);
+	// Si hay elementos en la ListaReady
+	if(list_size(listaReady) > 0){
+
+		// TODO Aplicar los Algoritmos de Planificacion. Ahora solo agarra la ListaReady y ejecuta una clase de FIFO
+
+		// Ordeno la ColaReady segun el Algoritmo de Planificacion
+		if(string_starts_with(algoritmoPlanificacion,"SJF-SD")){
+			// TODO Aca se deberia cargar la ColaReady siguiendo el Algoritmo
+		}	
+
+		if(string_starts_with(algoritmoPlanificacion,"SJF-CD")){
+			// TODO Aca se deberia cargar la ColaReady siguiendo el Algoritmo
+		}	
+
+
+		if(string_starts_with(algoritmoPlanificacion,"HRRN")){
+			// TODO Aca se deberia cargar la ColaReady siguiendo el Algoritmo
+		}	
+
+
+		// Cargo la ColaReady FIFO para TESTEAR
+	    void _each_elemento_(Proceso* registroProcesoAux)
+		{
+			// Agrego el Registro a la cola
+			queue_push(colaReady, registroProcesoAux);
+		}
+	    list_iterate(listaReady, (void*)_each_elemento_);
+
+		// Extraigo un elemento de la ColaReady
+		proximoProcesoPlanificado = queue_pop(colaReady);
+
 		return proximoProcesoPlanificado;		
 	}else{
 		return NULL;		
 	}
-}
-
-//**************************************************************************//
-// Ordena la ColaReady y la devuelve segun el Planificador
-//**************************************************************************//
-t_queue* planificarReady(t_list* listaReady, char* algoritmoPlanificacion){
-
-	t_queue* colaAux;
-	colaAux = queue_create();
-
-
-	if(string_starts_with(algoritmoPlanificacion,"SJF-SD")){
-		// TODO
-	}	
-
-	if(string_starts_with(algoritmoPlanificacion,"SJF-CD")){
-		// TODO
-	}	
-
-
-	if(string_starts_with(algoritmoPlanificacion,"HRRN")){
-
-		// TODO
-
-		if(list_size(listaReady) > 0){
-
-		    void _each_elemento_(Proceso* registroProcesoAux)
-			{
-
-				// Agrego el Registro a la cola
-				queue_push(colaAux, registroProcesoAux);
-			}
-		    list_iterate(listaReady, (void*)_each_elemento_);
-		}
-
-
-	}	
-
-	return colaAux;
 }
 
 //Funcion para determinar si un archivo local existe

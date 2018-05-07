@@ -43,7 +43,7 @@
 	Instruccion dsrlz_instruccion (void* buffer);
 	Paquete srlz_instruccion (char proceso, int codigoOperacion, Instruccion instruccion);
 
-	Paquete srlz_datosKeyBloqueada(char proceso, int codigoOperacion, char* nombreProceso, char key[40]);
+	Paquete srlz_datosKeyBloqueada(char proceso, int codigoOperacion, char* nombreProceso, int operacion, char key[40], char* dato);
 	KeyBloqueada dsrlz_datosKeyBloqueada(void* buffer);
 
 /* ---------------------------------------- */
@@ -69,8 +69,7 @@
 
 	void showContenidolistaReady(t_list* listaReady);
 	void showContenidocolaReady(t_queue* colaReady);
-	Proceso* obtenerProximoProcesoPlanificado(t_list* listaESIconectados, t_list* listaReady, t_queue* colaReady, char* algoritmoPlanificacion);
-	t_queue* planificarReady(t_list* listaReady, char* algoritmoPlanificacion);
+	Proceso* obtenerProximoProcesoPlanificado(t_list* listaReady, t_queue* colaReady, char* algoritmoPlanificacion);
 	char* obtenerNombreProceso(t_list* listaProcesosConectados, int socketProcesoConsultar);
 	int obtenerSocketProceso(t_list* listaProcesosConectados, char* nombreProcesoBuscado);
 	Proceso* obtenerRegistroProceso(t_list* listaProcesosConectados, int socketProcesoConsultar);

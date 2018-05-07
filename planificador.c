@@ -197,7 +197,8 @@ void servidorPlanificador(void* puerto){
     Proceso registroProceso;
     KeyBloqueada registroKeyBloqueada;
     Proceso* procesoSeleccionado;
-    int indice = 0;
+    int indice = 0, resultadoEjecucion;
+    bool recursoOcupado;
 
     while(1){
 
@@ -280,6 +281,28 @@ void servidorPlanificador(void* puerto){
 
                                     log_info(infoLogger,"Respuesta sobre la Ejecución de Instruccion recibida del Proceso ESI %s.", obtenerNombreProceso(listaESIconectados, i));
 
+
+                                    resultadoEjecucion = encabezado.tam_payload;
+
+                                    // Si la ejecucion de la instruccion fallo
+                                    if(resultadoEjecucion == 0){
+                                        log_info(infoLogger,"Respuesta sobre la Ejecución FALLIDA de la Instruccion recibida por el Proceso ESI.");
+
+                                        // TODO
+                                        // Si el Resultado es fallido, puede ser porque quizo acceder a un Recurso que estaba tomado por otro proceso. En este caso, cambio al proceso a la ColaBloqueados
+                                        
+                                        // Cargar el Proceso en la Cola de Terminados
+                                        cargarProcesoCola(listaESIconectados, colaBloqueados, i);
+                                        eliminarProcesoLista(listaReady, i);
+                                        eliminarProcesoCola(colaReady, i);
+
+                                        log_info(infoLogger,"Actualizacion de las Estructuras Administrativas");                                        
+
+                                    }else{ // Si la ejecucion de la instruccion no fallo
+
+                                        log_info(infoLogger,"Respuesta sobre la Ejecución EXITOSA de la Instruccion recibida por el Proceso ESI.");
+                                    }
+
                                     // Activo la Planificacion de los Procesos
                                     planificarProcesos = true;
                                     break;
@@ -317,7 +340,7 @@ void servidorPlanificador(void* puerto){
                                     registroKeyBloqueada = dsrlz_datosKeyBloqueada(paquete.buffer);
                                     free(paquete.buffer);
 
-                                    bool recursoOcupado = false;
+                                    recursoOcupado = false;
 
                                     // Si el Recurso esta bloqueado por otro Proceso
                                     if(dictionary_has_key(listaClavesBloqueadas, registroKeyBloqueada.key) ){
@@ -325,7 +348,7 @@ void servidorPlanificador(void* puerto){
                                         log_info(infoLogger,"El Recurso %s ya se encuentra tomado por otro Proceso ESI.", registroKeyBloqueada.key);
 
                                         // Serializado el Proceso y la Key
-                                        paquete = srlz_datosKeyBloqueada('P', RECURSO_OCUPADO, registroKeyBloqueada.nombreProceso, registroKeyBloqueada.key);
+                                        paquete = srlz_datosKeyBloqueada('P', RECURSO_OCUPADO, registroKeyBloqueada.nombreProceso, registroKeyBloqueada.operacion,registroKeyBloqueada.key,registroKeyBloqueada.dato);
 
                                         recursoOcupado = true;
 
@@ -338,7 +361,7 @@ void servidorPlanificador(void* puerto){
                                         log_info(infoLogger,"Se agrego el Recurso %s en la Lista de Claves Bloqueadas que lo tomo el Proceso ESI %s.", registroKeyBloqueada.key, registroKeyBloqueada.nombreProceso);
 
                                         // Serializado el Proceso y la Key
-                                        paquete = srlz_datosKeyBloqueada('P', RECURSO_LIBRE, registroKeyBloqueada.nombreProceso, registroKeyBloqueada.key);
+                                        paquete = srlz_datosKeyBloqueada('P', RECURSO_LIBRE, registroKeyBloqueada.nombreProceso, registroKeyBloqueada.operacion,registroKeyBloqueada.key,registroKeyBloqueada.dato);
                                     }
 
                                     // Envio el Paquete al Coordinador con la notificacion
@@ -380,7 +403,7 @@ printf("Planificando\n");
                 planificarProcesos = false;                                    
 
                 // Obtengo el Proximo Proceso a planificar
-                procesoSeleccionado = obtenerProximoProcesoPlanificado(listaESIconectados, listaReady, colaReady, algoritmoPlanificacion);
+                procesoSeleccionado = obtenerProximoProcesoPlanificado(listaReady, colaReady, algoritmoPlanificacion);
 
                 // Si existe un Proceso para planificar
                 if(procesoSeleccionado != NULL){

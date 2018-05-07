@@ -146,144 +146,131 @@ int main(int argc, char* argv[]){
     	}
     	for(i = 0; i <= fd_maximo; i++) {
             if (FD_ISSET(i, &temporales)) { // ¡¡tenemos datos!!
-                if (i == escucha_master) {
-                    // gestionar nuevas conexiones
-                    size = sizeof(master_addr);
-                    if ((nuevo_fd = accept(escucha_master, (struct sockaddr *)&master_addr,
-                                                             &size)) == -1) {
-                        perror("accept");
-                    } else {
-                        FD_SET(nuevo_fd, &master); // añadir al conjunto maestro
-                        if (nuevo_fd > fd_maximo) {    // actualizar el máximo
-                            fd_maximo = nuevo_fd;
-                        }
-						log_info(infoLogger, "Conexion nueva recibida" );
-						printf("Conexion nueva recibida\n");
+
+				encabezado=recibir_header(&i);
+
+				// gestionar datos de un cliente
+				if ((nbytes = encabezado.tam_payload) <= 0) {
+					 // error o conexión cerrada por el cliente
+					 if (nbytes == 0) {
+					 // conexión cerrada
+					 	printf("selectserver: socket %d se ha caído\n", i);
+					 } else {
+					 	perror("recv");
+					 }
+					 close(i); // ¡Hasta luego!
+					 FD_CLR(i, &master); // eliminar del conjunto maestro
+				} else {
+
+                    // Si el mensaje proviene de COORDINADOR
+                    if(encabezado.proceso == 'C'){
+
+						switch(encabezado.cod_operacion){
+
+                            case RESPUESTA_EJECUTAR_INSTRUCCION:
+
+                                resultadoEjecucion = encabezado.tam_payload;
+
+printf("Resultado de Instruccion: %d\n", resultadoEjecucion);
+
+                                // Si la ejecucion de la instruccion fallo
+                                if(resultadoEjecucion == 0){
+                                    log_info(infoLogger,"Respuesta sobre la Ejecución FALLIDA de la Instruccion recibida por el Coordinador.");
+
+                                }else{ // Si la ejecucion de la instruccion no fallo
+
+                                    log_info(infoLogger,"Respuesta sobre la Ejecución EXITOSA de la Instruccion recibida por el Coordinador.");
+
+                                    // Se elimina la Instruccion Ejecutada de la Lista
+                                    eliminarUltimaInstruccion(listaInstrucciones);
+                                }
+
+                                // Armo el Paquete del Resultado de la Ejecucion de la Instruccion
+                                paquete = crearHeader('E', RESPUESTA_EJECUTAR_INSTRUCCION, resultadoEjecucion);
+
+                                // Envio el Paquetea al Planificador
+                                if(send(planificador_fd,paquete.buffer,paquete.tam_buffer,0) != -1){
+
+                                    free(paquete.buffer);
+                                    log_info(infoLogger, "Se le respondio al PLANIFICADOR el resultado de la ejecucion de la Instruccion");
+                                }else{
+                                    log_error(infoLogger, "No se pudo enviar mensaje al PLANIFICADOR sobre el resultado de la ejecucion de la Instruccion");
+                                }
+                                break;
+						}
                     }
-                } else {
 
-					encabezado=recibir_header(&i);
+                    // Si el mensaje proviene del PLANIFICADOR
+                    if(encabezado.proceso == 'P'){
 
-					// gestionar datos de un cliente
-					if ((nbytes = encabezado.tam_payload) <= 0) {
-						 // error o conexión cerrada por el cliente
-						 if (nbytes == 0) {
-						 // conexión cerrada
-						 	printf("selectserver: socket %d se ha caído\n", i);
-						 } else {
-						 	perror("recv");
-						 }
-						 close(i); // ¡Hasta luego!
-						 FD_CLR(i, &master); // eliminar del conjunto maestro
-					} else {
+                        switch(encabezado.cod_operacion){
 
-                        // Si el mensaje proviene de COORDINADOR
-                        if(encabezado.proceso == 'C'){
+                            case EJECUTAR_INSTRUCCION:
 
-    						switch(encabezado.cod_operacion){
+                                log_info(infoLogger,"Pedido de Ejecución de Instruccion recibido del Planificador.");
 
-                                case RESPUESTA_EJECUTAR_INSTRUCCION:
+                                // TODO
+                                Instruccion* aux= obtenerSiguienteInstruccion(listaInstrucciones);
 
-                                    resultadoEjecucion = encabezado.tam_payload;
+                                // Si se obtuvo una Proxima Instrucion
+                                if(NULL != aux){
 
-                                    // Si la ejecucion de la instruccion fallo
-                                    if(resultadoEjecucion == 0){
-                                        log_info(infoLogger,"Respuesta sobre la Ejecución FALLIDA de la Instruccion recibida por el Coordinador.");
+                                    Instruccion proximaInstruccion;
+                                    proximaInstruccion=pasarAEstructura(aux);
 
-                                    }else{ // Si la ejecucion de la instruccion no fallo
+                                    // Armo el Paquete de Ejecucion de la Proxima Instruccion
+                                    paquete = srlz_instruccion('E', EJECUTAR_INSTRUCCION,proximaInstruccion);
 
-                                        log_info(infoLogger,"Respuesta sobre la Ejecución EXITOSA de la Instruccion recibida por el Coordinador.");
-
-                                        // Se elimina la Instruccion Ejecutada de la Lista
-                                        eliminarUltimaInstruccion(listaInstrucciones);
-                                    }
-
-                                    // Armo el Paquete del Resultado de la Ejecucion de la Instruccion
-                                    paquete = crearHeader('E', RESPUESTA_EJECUTAR_INSTRUCCION, resultadoEjecucion);
+                                    //printf("\n\n codigo %d    key  %s    dato %s  \n\n",proximaInstruccion.operacion,proximaInstruccion.key,proximaInstruccion.dato);
 
                                     // Envio el Paquetea al Planificador
-                                    if(send(planificador_fd,paquete.buffer,paquete.tam_buffer,0) != -1){
+                                    if(send(coordinador_fd,paquete.buffer,paquete.tam_buffer,0) != -1){
 
                                         free(paquete.buffer);
-                                        log_info(infoLogger, "Se le respondio al PLANIFICADOR el resultado de la ejecucion de la Instruccion");
+                                        log_info(infoLogger, "Se le envio al COORDINADOR la proxima Instruccion a ejecutar");
                                     }else{
-                                        log_error(infoLogger, "No se pudo enviar mensaje al PLANIFICADOR sobre el resultado de la ejecucion de la Instruccion");
+                                        log_error(infoLogger, "No se pudo enviar al COORDINADOR la proxima Instruccion a ejecutar");
                                     }
-                                    break;
-    						}
-                        }
+                                }else{
+                                    log_info(infoLogger, "El ESI %s ya no posee mas Instrucciones ha ejecutar.", nombreProceso);
 
-                        // Si el mensaje proviene del PLANIFICADOR
-                        if(encabezado.proceso == 'P'){
+                                    // Armo el Paquete de Finalizacion de Ejecucion del Proceso ESI
+                                    paquete = crearHeader('E', FINALIZACION_EJECUCION_ESI, 1);
 
-                            switch(encabezado.cod_operacion){
+                                    // Notifico al Planificador que voy a finalizar
+                                    if(send(planificador_fd,paquete.buffer,paquete.tam_buffer,0) != -1){
 
-                                case EJECUTAR_INSTRUCCION:
+                                        log_info(infoLogger, "Se le notifico al PLANIFICADOR que el ESI %s finalizo", nombreProceso);
 
-                                    log_info(infoLogger,"Pedido de Ejecución de Instruccion recibido del Planificador.");
 
-                                    // TODO
-                                    Instruccion* aux= obtenerSiguienteInstruccion(listaInstrucciones);
-
-                                    // Si se obtuvo una Proxima Instrucion
-                                    if(NULL != aux){
-
-                                        Instruccion proximaInstruccion;
-                                        proximaInstruccion=pasarAEstructura(aux);
-
-                                        // Armo el Paquete de Ejecucion de la Proxima Instruccion
-                                        paquete = srlz_instruccion('E', EJECUTAR_INSTRUCCION,proximaInstruccion);
-
-                                        //printf("\n\n codigo %d    key  %s    dato %s  \n\n",proximaInstruccion.operacion,proximaInstruccion.key,proximaInstruccion.dato);
-
-                                        // Envio el Paquetea al Planificador
+                                        // Notifico al Coordinador que voy a finalizar
                                         if(send(coordinador_fd,paquete.buffer,paquete.tam_buffer,0) != -1){
 
                                             free(paquete.buffer);
-                                            log_info(infoLogger, "Se le envio al COORDINADOR la proxima Instruccion a ejecutar");
+                                            log_info(infoLogger, "Se le notifico al COORDINADOR que el ESI %s finalizo", nombreProceso);
+
+                                            printf("Proceso %s finalizado.\n", nombreProceso);
+                                            return EXIT_SUCCESS;
+
                                         }else{
-                                            log_error(infoLogger, "No se pudo enviar al COORDINADOR la proxima Instruccion a ejecutar");
+                                            log_error(infoLogger, "No se pudo enviar al COORDINADOR la notificacion de finalizacion del ESI %s", nombreProceso);
                                         }
+
+                                        printf("Proceso %s finalizado con ERROR.\n", nombreProceso);
+                                        return EXIT_FAILURE;
                                     }else{
-                                        log_info(infoLogger, "El ESI %s ya no posee mas Instrucciones ha ejecutar.", nombreProceso);
+                                        log_error(infoLogger, "No se pudo enviar al PLANIFICADOR la notificacion de finalizacion del ESI %s", nombreProceso);
 
-                                        // Armo el Paquete de Finalizacion de Ejecucion del Proceso ESI
-                                        paquete = crearHeader('E', FINALIZACION_EJECUCION_ESI, 1);
-
-                                        // Notifico al Planificador que voy a finalizar
-                                        if(send(planificador_fd,paquete.buffer,paquete.tam_buffer,0) != -1){
-
-                                            log_info(infoLogger, "Se le notifico al PLANIFICADOR que el ESI %s finalizo", nombreProceso);
-
-
-                                            // Notifico al Coordinador que voy a finalizar
-                                            if(send(coordinador_fd,paquete.buffer,paquete.tam_buffer,0) != -1){
-
-                                                free(paquete.buffer);
-                                                log_info(infoLogger, "Se le notifico al COORDINADOR que el ESI %s finalizo", nombreProceso);
-
-                                                printf("Proceso %s finalizado.\n", nombreProceso);
-                                                return EXIT_SUCCESS;
-
-                                            }else{
-                                                log_error(infoLogger, "No se pudo enviar al COORDINADOR la notificacion de finalizacion del ESI %s", nombreProceso);
-                                            }
-
-                                            printf("Proceso %s finalizado con ERROR.\n", nombreProceso);
-                                            return EXIT_FAILURE;
-                                        }else{
-                                            log_error(infoLogger, "No se pudo enviar al PLANIFICADOR la notificacion de finalizacion del ESI %s", nombreProceso);
-
-                                            printf("Proceso %s finalizado con ERROR.\n", nombreProceso);
-                                            return EXIT_FAILURE;
-                                        }
+                                        printf("Proceso %s finalizado con ERROR.\n", nombreProceso);
+                                        return EXIT_FAILURE;
                                     }
-                                    break;
-                            }
+                                }
+                                break;
                         }
+                    }
 
-					}
-                }
+				}
+
             }
         }
     }

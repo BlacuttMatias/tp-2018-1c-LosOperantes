@@ -164,8 +164,6 @@ void servidorCoordinador(void* puerto){
                                     // Averiguo el Socket del Proceso ESI para notificarle que fallo la Ejecucion de la Instruccion
                                     socketESI = obtenerSocketProceso(listaProcesosConectados, registroKeyBloqueada.nombreProceso);
 
-printf("Socket del Proceso ESI para mandar mensaje RESPUESTA_EJECUTAR_INSTRUCCION: %d \n", socketESI);
-
                                     // Armo el Paquete del Resultado de la Ejecucion de la Instruccion
                                     paquete = crearHeader('C', RESPUESTA_EJECUTAR_INSTRUCCION, 0);
 
@@ -278,7 +276,7 @@ printf("Socket del Proceso ESI para mandar mensaje RESPUESTA_EJECUTAR_INSTRUCCIO
                                         Proceso* registroProcesoAux = obtenerRegistroProceso(listaProcesosConectados, i);
 
                                         // Serializado el Proceso y la Key
-                                        paquete = srlz_datosKeyBloqueada('C', NOTIFICAR_USO_RECURSO, registroProcesoAux->nombreProceso, registroInstruccion.key);
+                                        paquete = srlz_datosKeyBloqueada('C', NOTIFICAR_USO_RECURSO, registroProcesoAux->nombreProceso, registroInstruccion.operacion, registroInstruccion.key, registroInstruccion.dato);
 
                                         // Envio el Paquetea al Planificador
                                         if(send(fd_planificador,paquete.buffer,paquete.tam_buffer,0) != -1){

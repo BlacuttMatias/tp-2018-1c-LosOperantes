@@ -339,9 +339,22 @@ Instruccion* obtenerSiguienteInstruccion(t_list* listaInstrucciones){
 
 	Instruccion* instruccionAux = NULL;
 	if(list_size(listaInstrucciones)>0){
-		instruccionAux =	list_get(listaInstrucciones,0);
+		instruccionAux = list_get(listaInstrucciones,0);
 	}
 	return instruccionAux;
+}
+
+//**************************************************************************//
+// Elimina la Ultima Instruccion Ejecutada de un ESI
+//**************************************************************************//
+void eliminarUltimaInstruccion(t_list* listaInstrucciones){
+
+	Instruccion* instruccionAux = NULL;
+	if(list_size(listaInstrucciones)>0){
+		instruccionAux = list_remove(listaInstrucciones,0);
+		
+	}
+	return;
 }
 
 //**************************************************************************//
@@ -358,35 +371,37 @@ int obtenerTamanoProximaInstruccion(t_list* listaInstrucciones){
 
 
 // Dado un Socket de un Proceso, lo elimino de la Lista
-void eliminarProcesoLista(t_list* listaProcesosConectados, int socketProcesoEliminar){
+void eliminarProcesoLista(t_list* listaProcesar, int socketProcesoEliminar){
 
+	if(list_size(listaProcesar) > 0){
 
-	bool _find_socket_(Proceso* registroProcesoAux)
-	{
-		return (registroProcesoAux->socketProceso == socketProcesoEliminar);
+		bool _find_socket_(Proceso* registroProcesoAux)
+		{
+			return (registroProcesoAux->socketProceso == socketProcesoEliminar);
+		}
+
+		list_remove_by_condition(listaProcesar,(void*)_find_socket_);
+	
 	}
-
-	list_remove_by_condition(listaProcesosConectados,(void*)_find_socket_);
-
 	return;
 }
 
 // Dado un Socket de un Proceso, lo elimino de la Cola
-void eliminarProcesoCola(t_queue* colaReady, int socketProcesoEliminar){
+void eliminarProcesoCola(t_queue* colaProcesar, int socketProcesoEliminar){
 
 	Proceso* registroProcesoAux;
 	int indice;
 
-	if(queue_size(colaReady) > 0){
+	if(queue_size(colaProcesar) > 0){
 
-		for (indice = 0; indice  < queue_size(colaReady); indice=indice+1 ) {
+		for (indice = 0; indice  < queue_size(colaProcesar); indice=indice+1 ) {
 
 			// Extraigo un elemento
-			registroProcesoAux = queue_pop(colaReady);
+			registroProcesoAux = queue_pop(colaProcesar);
 
 			if(registroProcesoAux->socketProceso != socketProcesoEliminar){
 				// Lo vuelvo a agregar a la cola
-				queue_push(colaReady, registroProcesoAux);
+				queue_push(colaProcesar, registroProcesoAux);
 			}
 		}
 	}
@@ -693,16 +708,18 @@ void showContenidocolaReady(t_queue* colaReady){
 
 // Coordina la Planificacion de Todos los Procesos
 Proceso* obtenerProximoProcesoPlanificado(t_list* listaESIconectados, t_list* listaReady, t_queue* colaReady, char* algoritmoPlanificacion){
-	
+
 	// TODO
 
-	Proceso* proximoProcesoPlanificado = NULL;
-	proximoProcesoPlanificado = malloc(sizeof(Proceso));
+	Proceso* proximoProcesoPlanificado = NULL;	
+	//proximoProcesoPlanificado = malloc(sizeof(Proceso));
 
-	proximoProcesoPlanificado = list_get(listaESIconectados, 0);
-
-	return proximoProcesoPlanificado;
-
+	if(list_size(listaESIconectados) > 0){
+		proximoProcesoPlanificado = list_get(listaESIconectados, 0);
+		return proximoProcesoPlanificado;		
+	}else{
+		return NULL;		
+	}
 }
 
 //**************************************************************************//

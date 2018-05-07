@@ -194,8 +194,8 @@ int main(int argc, char* argv[]){
 
                                         log_info(infoLogger,"Respuesta sobre la Ejecución EXITOSA de la Instruccion recibida por el Coordinador.");
 
-                                        // TODO : Aca habria que sacar la Instruccion de la Lista
-
+                                        // Se elimina la Instruccion Ejecutada de la Lista
+                                        eliminarUltimaInstruccion(listaInstrucciones);
                                     }
 
                                     // Armo el Paquete del Resultado de la Ejecucion de la Instruccion

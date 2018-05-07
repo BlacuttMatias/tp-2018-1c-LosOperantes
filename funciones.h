@@ -56,6 +56,7 @@
 	bool procesarScript(char* pathScript, t_list* listaInstrucciones);
 
 	Instruccion* obtenerSiguienteInstruccion(t_list* listaInstrucciones);
+	void eliminarUltimaInstruccion(t_list* listaInstrucciones);
 	int obtenerTamanoProximaInstruccion(t_list* listaInstrucciones);
 	void cargarInstruccion(Instruccion* registro,int codigo,char* key, char* valor);
 	void mostrarInstruccion(Instruccion* instruccion);

@@ -164,6 +164,8 @@ void servidorCoordinador(void* puerto){
                                     // Averiguo el Socket del Proceso ESI para notificarle que fallo la Ejecucion de la Instruccion
                                     socketESI = obtenerSocketProceso(listaProcesosConectados, registroKeyBloqueada.nombreProceso);
 
+printf("Socket del Proceso ESI para mandar mensaje RESPUESTA_EJECUTAR_INSTRUCCION: %d \n", socketESI);
+
                                     // Armo el Paquete del Resultado de la Ejecucion de la Instruccion
                                     paquete = crearHeader('C', RESPUESTA_EJECUTAR_INSTRUCCION, 0);
 

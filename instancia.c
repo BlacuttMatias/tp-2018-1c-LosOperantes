@@ -21,20 +21,20 @@
 //prueba persistir una entrada
 void persistirEntrada(t_entrada* unaEntrada){
 
-	FILE* archivoTexto;
+    // Defino el Nombre del Archivo con el nombre de la entrada
+	char *nombre_formato_archivo = string_new();
+    string_append_with_format(&nombre_formato_archivo, "entradas/%s.txt", unaEntrada->clave); 
 
-	char *nombreEntrada;
-	strcpy(nombreEntrada,unaEntrada->clave);
-	char *nombre_formato_archivo = strcat(nombreEntrada,".txt"); //clave como nombre de archivo mas formato ".txt"
-
-	archivoTexto = fopen(nombre_formato_archivo,"w+"); //abrimos / creamos archivo en carpeta RAIZ (hay que cambiar esto)
-
+    FILE* archivoTexto;
+	archivoTexto = fopen(nombre_formato_archivo,"w+");
 
 	char *valorIdentificado = unaEntrada->valor;
 
+    // Gravo el Valor de la Entrada en el Archivo
 	fputs(valorIdentificado, archivoTexto );
 
 	fclose ( archivoTexto );
+    free(nombre_formato_archivo);
 }
 
 
@@ -64,6 +64,9 @@ int main(int argc, char* argv[]){
 	
 	//muestro entrada hardcodeada
   	printf("Clave:%s - Valor:%s - Numero:%d - Tamanio:%d \n",primerElemento->clave,primerElemento->valor,primerElemento->numeroDeEntrada,primerElemento->tamanioValorAlmacenado); //prueba imprimir por pantalla el elemento obtenido
+
+    // Persisto una Entrada
+    persistirEntrada(primerElemento);
 
 	printf("Iniciando INSTANCIA\n");
 

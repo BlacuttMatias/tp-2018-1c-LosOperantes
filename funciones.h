@@ -87,6 +87,7 @@
 	int estimarRafaga(int estimacionAnterior, int rafagaAnterior);
 	int countParametrosConsola(char * string);
 	void listarRecursosBloqueados(t_list* listaClavesBloqueadasRequeridas, char* key);
+	void liberarRecursosProceso(t_dictionary * dictionario, char* nombreProceso);
 
 /* ---------------------------------------- */
 /*  Funciones de Coordinador 				*/

@@ -1046,3 +1046,8 @@ int countParametrosConsola(char * string){
 	return cant_elementos;
 
 }
+
+// Libera Todos los Recursos de un determinado Proceso
+void liberarRecursosProceso(t_dictionary * dictionario, char* nombreProceso){
+
+}

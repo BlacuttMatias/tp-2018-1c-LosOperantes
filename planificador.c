@@ -370,6 +370,10 @@ void servidorPlanificador(void* puerto){
                                 case FINALIZACION_EJECUCION_ESI:
                                     log_info(infoLogger,"Notificacion sobre la finalizacion del Proceso ESI %s.", obtenerNombreProceso(listaESIconectados, i));
 
+                                    // Libero los Recursos que tenia asignado en Lista de Claves Bloqueadas
+                                    // TODO
+                                    liberarRecursosProceso(diccionarioClavesBloqueadas, obtenerNombreProceso(listaESIconectados, i));
+
                                     // Cargar el Proceso en la Cola de Terminados
                                     cargarProcesoCola(listaESIconectados, colaTerminados, i);
 
@@ -379,8 +383,6 @@ void servidorPlanificador(void* puerto){
                                     eliminarProcesoLista(listaReady, i);
                                     eliminarProcesoCola(colaReady, i);
                                     
-                                    
-
                                     log_info(infoLogger,"Actualizacion de las Estructuras Administrativas");
 
                                     // Activo la Planificacion de los Procesos

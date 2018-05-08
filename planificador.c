@@ -30,7 +30,8 @@
     t_queue* colaEjecucion;
     t_queue* colaBloqueados;
     t_queue* colaTerminados;
-    t_dictionary * listaClavesBloqueadas;
+    t_dictionary* diccionarioClavesBloqueadas;
+    t_list*  listaClavesBloqueadasRequeridas;    
     t_list* listaReady;
     t_list* listaESIconectados;
 
@@ -114,6 +115,10 @@ void hiloConsolaInteractiva(void * unused) {
                     showContenidolistaReady(listaReady);
                     showContenidocolaReady(colaReady);
                     showContenidocolaBloqueados(colaBloqueados);
+                    showContenidoDiccionario(diccionarioClavesBloqueadas, "CLAVES BLOQUEADAS");
+                    showContenidolistaClavesBloqueadasRequeridas(listaClavesBloqueadasRequeridas);
+                    
+                    
                 }
 
                 if(string_starts_with(comandoConsola,"PAUSAR")){
@@ -142,7 +147,17 @@ void hiloConsolaInteractiva(void * unused) {
 
                 if(string_starts_with(comandoConsola,"LISTAR")){
                     comandoAceptado = true;
-                    printf("Comando no implementado...\n");
+
+                    // Si se ingreso un solo parametro
+                    if(countParametrosConsola(comandoConsola) == 1){
+
+                        // Convierto el parametro en minuscula
+                        string_to_lower(parametrosConsola[1]);
+
+                        listarRecursosBloqueados(listaClavesBloqueadasRequeridas, parametrosConsola[1]);
+                    }else{
+                        printf("[Error] Cantidad de parámetros incorrectos\n");
+                    }
                 }
 
                 if(string_starts_with(comandoConsola,"KILL")){
@@ -152,7 +167,41 @@ void hiloConsolaInteractiva(void * unused) {
 
                 if(string_starts_with(comandoConsola,"STATUS")){
                     comandoAceptado = true;
-                    printf("Comando no implementado...\n");
+                    
+                    // Si se ingreso un solo parametro
+                    if(countParametrosConsola(comandoConsola) == 1){
+
+                        // Convierto el parametro en minuscula
+                        string_to_lower(parametrosConsola[1]);
+
+                        // Serializado el Proceso y la Key
+                        Paquete paquete = srlz_datosKeyBloqueada('P', OBTENER_STATUS_CLAVE, "PLANIFICADOR", 1, parametrosConsola[1], "_");
+
+                        // Envio el Paquetea al Coordinador
+                        if(send(coordinador_fd,paquete.buffer,paquete.tam_buffer,0) != -1){
+
+                            free(paquete.buffer);
+                            log_info(infoLogger, "Se le pide al COORDINADOR infomarcion sobre el Recurso %s.", parametrosConsola[1]);
+
+                            // Recibo la informacion de la Instancia 
+                            Encabezado encabezado=recibir_header(&coordinador_fd);
+                            paquete = recibir_payload(&coordinador_fd,&encabezado.tam_payload);
+                            Instancia registroInstancia = dsrlz_datosInstancia(paquete.buffer);
+                            free(paquete.buffer);
+
+                            // Determino si el Recurso fue distribuido en alguna Instancia
+                            if(strcmp(registroInstancia.nombreProceso, "NONE") == 0){
+                                printf("El Recurso %s no se encuentra distribuido aun\n", parametrosConsola[1]);
+                            }else{
+                                printf("El Recurso %s se encuentra distribuido en la Instancia %s\n", parametrosConsola[1],registroInstancia.nombreProceso);                                
+                            }
+
+                        }else{
+                            printf("No se pudo pedir infomacion al COORDINADOR sobre el Recurso %s\n", parametrosConsola[1]);
+                        }
+                    }else{
+                        printf("[Error] Cantidad de parámetros incorrectos\n");
+                    }
                 }
 
                 if(string_starts_with(comandoConsola,"DEADLOCK")){
@@ -290,14 +339,13 @@ void servidorPlanificador(void* puerto){
 
                                         log_info(infoLogger,"Respuesta sobre la Ejecución EXITOSA de la Instruccion recibida por el Proceso ESI.");
 
-                                    }else{ // Si la ejecucion de la instruccion no fallo
+                                    }else{ // Si la ejecucion de la instruccion fallo
 
                                         log_info(infoLogger,"Respuesta sobre la Ejecución FALLIDA de la Instruccion recibida por el Proceso ESI.");
 
-                                        // TODO
                                         // Si el Resultado es fallido, puede ser porque quizo acceder a un Recurso que estaba tomado por otro proceso. En este caso, cambio al proceso a la ColaBloqueados
                                         
-                                        // Cargar el Proceso en la Cola de Terminados
+                                        // Cargar el Proceso en la Cola de Bloqueados
                                         cargarProcesoCola(listaESIconectados, colaBloqueados, i);
                                         eliminarProcesoLista(listaReady, i);
                                         eliminarProcesoCola(colaReady, i);
@@ -342,7 +390,7 @@ void servidorPlanificador(void* puerto){
                                     log_info(infoLogger,"Notificacion del COORDINADOR que el Proceso ESI %s libera el Recurso %s.", registroKeyBloqueada.nombreProceso, registroKeyBloqueada.key);
 
                                     // Libero un Recurso de la Lista de Claves Bloqueadas
-                                    dictionary_remove(listaClavesBloqueadas, registroKeyBloqueada.key);
+                                    dictionary_remove(diccionarioClavesBloqueadas, registroKeyBloqueada.key);
 
                                     log_info(infoLogger,"Se libero el Recurso %s de la Lista de Claves Bloqueadas que lo tenia tomado el Proceso ESI %s.", registroKeyBloqueada.key, registroKeyBloqueada.nombreProceso);
                                     break;
@@ -360,7 +408,10 @@ void servidorPlanificador(void* puerto){
                                     recursoOcupado = false;
 
                                     // Si el Recurso esta bloqueado por otro Proceso
-                                    if(dictionary_has_key(listaClavesBloqueadas, registroKeyBloqueada.key) ){
+                                    if(dictionary_has_key(diccionarioClavesBloqueadas, registroKeyBloqueada.key) ){
+
+                                        // Guardo una Lista de las Claves Bloqueadas que quieren ser usadas por otros Procesos
+                                        list_add(listaClavesBloqueadasRequeridas, &registroKeyBloqueada);
 
                                         log_info(infoLogger,"El Recurso %s ya se encuentra tomado por otro Proceso ESI.", registroKeyBloqueada.key);
 
@@ -373,7 +424,7 @@ void servidorPlanificador(void* puerto){
                                     }else{ // Si el Recurso no esta bloqueado
 
                                         // Bloqueo el Recurso y lo cargo en la Lista de Claves Bloqueadas
-                                        dictionary_put(listaClavesBloqueadas, registroKeyBloqueada.key, &registroKeyBloqueada);
+                                        dictionary_put(diccionarioClavesBloqueadas, registroKeyBloqueada.key, &registroKeyBloqueada);
 
                                         log_info(infoLogger,"Se agrego el Recurso %s en la Lista de Claves Bloqueadas que lo tomo el Proceso ESI %s.", registroKeyBloqueada.key, registroKeyBloqueada.nombreProceso);
 
@@ -466,8 +517,9 @@ int main(int argc, char* argv[]){
     // Creo las Listas para la Planificacion
     listaReady = list_create();
 
-    // Creo la Lista de Claves Bloqueadas
-    listaClavesBloqueadas = dictionary_create();
+    // Creo la Lista de Claves Bloqueadas y Claves Bloqueadas que quieren ser usadas
+    diccionarioClavesBloqueadas = dictionary_create();
+    listaClavesBloqueadasRequeridas = list_create();
 
     // Creo la lista de Todos los ESIs conectados al Planificador
     listaESIconectados = list_create();
@@ -517,9 +569,10 @@ int main(int argc, char* argv[]){
     queue_destroy(colaEjecucion);
     queue_destroy(colaBloqueados);
     queue_destroy(colaTerminados);
-    dictionary_destroy(listaClavesBloqueadas);
+    dictionary_destroy(diccionarioClavesBloqueadas);
     list_destroy(listaReady);
     list_destroy(listaESIconectados);    
+    list_destroy(listaClavesBloqueadasRequeridas);
 
     free(algoritmoPlanificacion);
 

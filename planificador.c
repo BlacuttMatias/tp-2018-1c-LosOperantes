@@ -327,7 +327,7 @@ void servidorPlanificador(void* puerto){
                                     Rafagas* registroRafagaAux= malloc(sizeof(Rafagas));
                                     registroRafagaAux->rafagaAnterior=0;
                                     registroRafagaAux->estimacionRafagaAnterior=0;
-                                    registroRafagaAux->proximaEstimacion=10;
+                                    registroRafagaAux->proximaEstimacion=config_get_int_value(cfg,"ESTIMACION_INICIAL");
                                     dictionary_put(diccionarioRafagas,registroProcesoAux->nombreProceso,registroRafagaAux);
 
                                     // Cargo los ESIs conectados en la Lista de ESIs conectados al Planificador

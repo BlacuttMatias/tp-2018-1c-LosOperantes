@@ -18,24 +18,14 @@
 #include "sockets.h"
 
 
-//prueba persistir una entrada
-void persistirEntrada(t_entrada* unaEntrada){
+//prueba dump
+void dump(t_list* tablaEntradas){
 
-    // Defino el Nombre del Archivo con el nombre de la entrada
-	char *nombre_formato_archivo = string_new();
-    string_append_with_format(&nombre_formato_archivo, "entradas/%s.txt", unaEntrada->clave); 
 
-    FILE* archivoTexto;
-	archivoTexto = fopen(nombre_formato_archivo,"w+");
+		list_iterate(tablaEntradas,(void*)persistirEntrada);
 
-	char *valorIdentificado = unaEntrada->valor;
-
-    // Gravo el Valor de la Entrada en el Archivo
-	fputs(valorIdentificado, archivoTexto );
-
-	fclose ( archivoTexto );
-    free(nombre_formato_archivo);
 }
+
 
 
 /* ---------------------------------------- */
@@ -52,21 +42,49 @@ int main(int argc, char* argv[]){
 	t_list* tablaEntradas = list_create(); //creo lista tabla de entradas
 	
 	//hardcodeo una instruccion
-	Instruccion* nuevaInstruccion;
-	nuevaInstruccion->dato = "MESSI";
+	Instruccion* nuevaInstruccion = NULL;
+	Instruccion* otraInstruccion = NULL;
+	nuevaInstruccion = malloc(sizeof(Instruccion));
+	otraInstruccion = malloc(sizeof(Instruccion));
+
+	//carga de datos
+	nuevaInstruccion->dato = malloc(strlen("MESSI")+1);
+	strcpy(nuevaInstruccion->dato, "MESSI");
+	nuevaInstruccion->dato[strlen("MESSI")] = '\0';
+
+	otraInstruccion->dato = malloc(strlen("NARDIELLO")+1);
+	strcpy(otraInstruccion->dato, "NARDIELLO");
+	otraInstruccion->dato[strlen("NARDIELLO")] = '\0';
+
+
+	//carga de claves
 	strcpy(nuevaInstruccion->key,"FUTBOL");
+	strcpy(otraInstruccion->key,"OPERATIVOS");
+	//carga de operaciones
 	nuevaInstruccion->operacion = 1;
+	otraInstruccion->operacion = 2;
 	
+
 	//cargo tabla con entrada hardcodeada
 	cargarTablaEntradas(tablaEntradas,nuevaInstruccion);
+	cargarTablaEntradas(tablaEntradas,otraInstruccion);
+
 	t_entrada* primerElemento;
+	t_entrada* segundoElemento;
 	primerElemento = list_get(tablaEntradas,0);
+	segundoElemento = list_get(tablaEntradas,1);
 	
 	//muestro entrada hardcodeada
   	printf("Clave:%s - Valor:%s - Numero:%d - Tamanio:%d \n",primerElemento->clave,primerElemento->valor,primerElemento->numeroDeEntrada,primerElemento->tamanioValorAlmacenado); //prueba imprimir por pantalla el elemento obtenido
 
-    // Persisto una Entrada
-    persistirEntrada(primerElemento);
+    // Persisto dos Entradas
+    //persistirEntrada(primerElemento);
+    //persistirEntrada(segundoElemento);
+
+  	//testeo de dump
+  	dump(tablaEntradas);
+  	
+  	
 
 	printf("Iniciando INSTANCIA\n");
 
@@ -112,16 +130,7 @@ int main(int argc, char* argv[]){
 
 
     Instruccion* datosInstruccion;
-    
-/*
-    datosInstruccion->operacion = STORE;
-    strcpy(datosInstruccion->key, "clave\0");
-    datosInstruccion->dato=NULL;
-*/
 
-    //datosInstruccion->texto_instruccion = malloc(strlen("STORE clave")+1);
-    //strcpy( datosInstruccion->texto_instruccion ,"STORE clave");
-    //datosInstruccion->texto_instruccion[strlen("STORE clave")] = '\0';
 
     // Defino el Algoritmo de Almacenamiento a utlizar
     char* algoritmoAlmacenamiento = string_new();

@@ -486,15 +486,29 @@ void servidorPlanificador(void* puerto){
                 procesoSeleccionado = obtenerProximoProcesoPlanificado(listaReady, colaReady, diccionarioRafagas, algoritmoPlanificacion);
 
                 //si cambia el proceso, guarda nuevas rafagas
-                if(&procesoSeleccionado != &procesoAnterior){
-                    Rafagas* rafagasAux=NULL;
-                    rafagasAux= dictionary_get(diccionarioRafagas, procesoAnterior->nombreProceso);
-                    rafagasAux->estimacionRafagaAnterior= rafagasAux->proximaEstimacion;
-                    rafagasAux->rafagaAnterior= rafagaActual;
-                    rafagasAux->proximaEstimacion= estimarRafaga(rafagasAux->estimacionRafagaAnterior,rafagaActual);
-                    rafagaActual=0;
+                if(procesoAnterior == NULL) 
+                    {procesoAnterior=procesoSeleccionado;
+                    puts("asigno actual al anterior");
                 }
+                   // puts("\n\n entro a if \n\n");
+                if(procesoSeleccionado == NULL){
+                    puts("proceso seleccionado es nulo");
+                }
+                else{
 
+                    if(procesoSeleccionado != procesoAnterior){
+                        puts("entro if");
+                        printf(" proceso seleccionado %s y proceso anterior %s  \n" ,procesoSeleccionado->nombreProceso, procesoAnterior->nombreProceso);
+                        Rafagas* rafagasAux=NULL;
+                            rafagasAux= dictionary_get(diccionarioRafagas, procesoAnterior->nombreProceso);
+                            rafagasAux->estimacionRafagaAnterior= rafagasAux->proximaEstimacion;
+                            rafagasAux->rafagaAnterior= rafagaActual;
+                            rafagasAux->proximaEstimacion= estimarRafaga(rafagasAux->estimacionRafagaAnterior,rafagaActual);
+                            rafagaActual=0;
+                        procesoAnterior= procesoSeleccionado;
+                        puts(" salgo if");
+                    }
+                }
                 // Si existe un Proceso para planificar
                 if(procesoSeleccionado != NULL){
 
@@ -603,6 +617,6 @@ int main(int argc, char* argv[]){
     list_destroy(listaClavesBloqueadasRequeridas);
 
     free(algoritmoPlanificacion);
-
+    puts("cierro bien");
     return EXIT_SUCCESS;
 }

@@ -991,6 +991,25 @@ void cargarTablaEntradas(t_list *tablaEntradas,Instruccion* estructuraInstruccio
 	list_add(tablaEntradas,nuevaEntrada);
 }
 
+// persistir una entrada en disco
+void persistirEntrada(t_entrada* unaEntrada){
+
+    // Defino el Nombre del Archivo con el nombre de la entrada
+	char *nombre_formato_archivo = string_new();
+    string_append_with_format(&nombre_formato_archivo, "entradas/%s.txt", unaEntrada->clave);
+
+    FILE* archivoTexto;
+	archivoTexto = fopen(nombre_formato_archivo,"w+");
+
+	char *valorIdentificado = unaEntrada->valor;
+
+    // Gravo el Valor de la Entrada en el Archivo
+	fputs(valorIdentificado, archivoTexto );
+
+	fclose ( archivoTexto );
+    free(nombre_formato_archivo);
+}
+
 // Cargo la Lista de Procesos Conectados en el Coordinador
 void cargarListaProcesosConectados(t_list *listaProcesosConectados, Proceso* nuevoProceso){
 

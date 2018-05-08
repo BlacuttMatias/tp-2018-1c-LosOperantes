@@ -76,7 +76,7 @@
 	void showContenidoDiccionario(t_dictionary * dictionario, char* nombreDiccionario);
 	void showContenidolistaClavesBloqueadasRequeridas(t_list* listaClavesBloqueadasRequeridas);
 
-	Proceso* obtenerProximoProcesoPlanificado(t_list* listaReady, t_queue* colaReady, char* algoritmoPlanificacion);
+	Proceso* obtenerProximoProcesoPlanificado(t_list* listaReady, t_queue* colaReady, t_dictionary* diccionarioRafagas, char* algoritmoPlanificacion);
 	char* obtenerNombreProceso(t_list* listaProcesosConectados, int socketProcesoConsultar);
 	int obtenerSocketProceso(t_list* listaProcesosConectados, char* nombreProcesoBuscado);
 	Proceso* obtenerRegistroProceso(t_list* listaProcesosConectados, int socketProcesoConsultar);
@@ -84,6 +84,7 @@
 	void eliminarProcesoCola(t_queue* colaReady, int socketProcesoEliminar);
 	void cargarProcesoCola(t_list* listaUtilizar, t_queue* colaUtilizar, int socketProcesoConsultar);
 
+	int estimarRafaga(int estimacionAnterior, int rafagaAnterior);
 	int countParametrosConsola(char * string);
 	void listarRecursosBloqueados(t_list* listaClavesBloqueadasRequeridas, char* key);
 

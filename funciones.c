@@ -915,10 +915,27 @@ void showContenidocolaBloqueados(t_queue* colaBloqueados){
 	}
 }
 
-// Coordina la Planificacion de Todos los Procesos
-Proceso* obtenerProximoProcesoPlanificado(t_list* listaReady, t_queue* colaReady, char* algoritmoPlanificacion){
+	//TODO
+	//falta que estime realmente bien usando el multiplicador alfa
+int estimarRafaga (int estimacionAnterior, int rafagaAnterior){
+	return (estimacionAnterior + rafagaAnterior)/2;
+}
 
-	Proceso* proximoProcesoPlanificado = NULL;	
+// Coordina la Planificacion de Todos los Procesos
+Proceso* obtenerProximoProcesoPlanificado(t_list* listaReady, t_queue* colaReady,t_dictionary* diccionarioRafagas, char* algoritmoPlanificacion){
+
+	Proceso* proximoProcesoPlanificado = NULL;
+	//ejemplo para conseguir rafaga
+	/*Proceso* unProceso;
+	Rafagas* unasRafagas;
+	unProceso= list_get(listaReady,0);
+	unasRafagas= dictionary_get(diccionarioRafagas, unProceso->nombreProceso);
+	int estimacionRafaga=unasRafagas->proximaEstimacion;
+*/
+
+
+	
+
 
 	// Si hay elementos en la ListaReady
 	if(list_size(listaReady) > 0){

@@ -31,6 +31,7 @@
     t_queue* colaBloqueados;
     t_queue* colaTerminados;
     t_dictionary* diccionarioClavesBloqueadas;
+    t_dictionary* diccionarioRafagas;
     t_list*  listaClavesBloqueadasRequeridas;    
     t_list* listaReady;
     t_list* listaESIconectados;
@@ -39,6 +40,8 @@
     bool planificarProcesos;
     char* algoritmoPlanificacion = NULL;
     int coordinador_fd;
+    int rafagaActual;
+    Proceso* procesoAnterior;
 
 /* ---------------------------------------- */
 /*  Consola interactiva                     */
@@ -320,6 +323,13 @@ void servidorPlanificador(void* puerto){
                                     // Cargo el Proceso en la listaReady
                                     list_add(listaReady, registroProcesoAux);
 
+                                    //cargo el proceso en dictionary
+                                    Rafagas* registroRafagaAux= malloc(sizeof(Rafagas));
+                                    registroRafagaAux->rafagaAnterior=0;
+                                    registroRafagaAux->estimacionRafagaAnterior=0;
+                                    registroRafagaAux->proximaEstimacion=10;
+                                    dictionary_put(diccionarioRafagas,registroProcesoAux->nombreProceso,registroRafagaAux);
+
                                     // Cargo los ESIs conectados en la Lista de ESIs conectados al Planificador
                                     cargarListaProcesosConectados(listaESIconectados, registroProcesoAux);
 
@@ -336,7 +346,7 @@ void servidorPlanificador(void* puerto){
 
                                     // Si la ejecucion de la instruccion no fallo
                                     if(resultadoEjecucion == EJECUCION_EXITOSA){
-
+                                        rafagaActual += 1;
                                         log_info(infoLogger,"Respuesta sobre la Ejecución EXITOSA de la Instruccion recibida por el Proceso ESI.");
 
                                     }else{ // Si la ejecucion de la instruccion fallo
@@ -364,9 +374,12 @@ void servidorPlanificador(void* puerto){
                                     cargarProcesoCola(listaESIconectados, colaTerminados, i);
 
                                     // Elimino el Proceso ESI de las estrucutras Administrativas
+                                    dictionary_remove(diccionarioRafagas, obtenerNombreProceso(listaESIconectados,i));
                                     eliminarProcesoLista(listaESIconectados, i);
                                     eliminarProcesoLista(listaReady, i);
                                     eliminarProcesoCola(colaReady, i);
+                                    
+                                    
 
                                     log_info(infoLogger,"Actualizacion de las Estructuras Administrativas");
 
@@ -470,7 +483,17 @@ void servidorPlanificador(void* puerto){
                 planificarProcesos = false;                                    
 
                 // Obtengo el Proximo Proceso a planificar
-                procesoSeleccionado = obtenerProximoProcesoPlanificado(listaReady, colaReady, algoritmoPlanificacion);
+                procesoSeleccionado = obtenerProximoProcesoPlanificado(listaReady, colaReady, diccionarioRafagas, algoritmoPlanificacion);
+
+                //si cambia el proceso, guarda nuevas rafagas
+                if(&procesoSeleccionado != &procesoAnterior){
+                    Rafagas* rafagasAux=NULL;
+                    rafagasAux= dictionary_get(diccionarioRafagas, procesoAnterior->nombreProceso);
+                    rafagasAux->estimacionRafagaAnterior= rafagasAux->proximaEstimacion;
+                    rafagasAux->rafagaAnterior= rafagaActual;
+                    rafagasAux->proximaEstimacion= estimarRafaga(rafagasAux->estimacionRafagaAnterior,rafagaActual);
+                    rafagaActual=0;
+                }
 
                 // Si existe un Proceso para planificar
                 if(procesoSeleccionado != NULL){
@@ -505,6 +528,8 @@ int main(int argc, char* argv[]){
     /* Creo la instancia del Archivo de Configuracion y del Log */
     cfg = config_create("config/config.cfg");
     infoLogger = log_create("log/planificador.log", "PLANIFICADOR", false, LOG_LEVEL_INFO);
+    rafagaActual=0;
+    procesoAnterior=NULL;
 
     log_trace(infoLogger, "Iniciando PLANIFICADOR" );
 
@@ -519,6 +544,8 @@ int main(int argc, char* argv[]){
 
     // Creo la Lista de Claves Bloqueadas y Claves Bloqueadas que quieren ser usadas
     diccionarioClavesBloqueadas = dictionary_create();
+    diccionarioRafagas= dictionary_create();
+
     listaClavesBloqueadasRequeridas = list_create();
 
     // Creo la lista de Todos los ESIs conectados al Planificador
@@ -570,6 +597,7 @@ int main(int argc, char* argv[]){
     queue_destroy(colaBloqueados);
     queue_destroy(colaTerminados);
     dictionary_destroy(diccionarioClavesBloqueadas);
+    dictionary_destroy(diccionarioRafagas);
     list_destroy(listaReady);
     list_destroy(listaESIconectados);    
     list_destroy(listaClavesBloqueadasRequeridas);

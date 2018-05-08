@@ -567,32 +567,35 @@ void cargarProcesoCola(t_list* listaUtilizar, t_queue* colaUtilizar, int socketP
 // El Coordinador procesa la instruccion y elige la Instancia que lo va a ejecutar
 //**************************************************************************//
 Instancia* obtenerInstanciaAsignada(t_list* listaInstanciasConectadas, Instruccion* datosInstruccion, char* algoritmoDistribucion){
-	int algoritmo;
+	int algoritmo=8;
 	int ultimaPosicion;						//para algoritmo EL
 	int cantidadElem,dividendo,resto;						//para algoritmo EK
 	char key;
 	Instancia* instanciaElegida = NULL;
 
 	bool comparacion(Instancia* instancia1, Instancia* instancia2){
-		if (instancia1->entradasLibres > instancia2->entradasLibres){return true;}
+		if (instancia1->entradasLibres >= instancia2->entradasLibres){return true;}
 		else {return false;}
 	}
-
-	if(strcmp(algoritmoDistribucion,"LSU")){
+	if(!strcmp(algoritmoDistribucion,"LSU")){
 		algoritmo=LSU;
 	}	else{
-		if(strcmp(algoritmoDistribucion,"KE")){
+		if(algoritmoDistribucion[0]=='K'){
 			algoritmo=KE;
 		}
-		else{algoritmo=EL;}}
+		else{
+			if(algoritmoDistribucion[0]=='E'){
+			algoritmo=EL;}
+			else{puts("no se reconoce algoritmo");}
+			}}
 
 	switch(algoritmo){
 
 		case EL:
-
+			puts("EL");
 			//consigo la ultima posicion de la lista (asumo que los primeros elementos en la lista
 			//fueron los mas recientemente usados. y al final los menos usados
-			ultimaPosicion = listaInstanciasConectadas->elements_count;
+			ultimaPosicion = list_size(listaInstanciasConectadas);
 			ultimaPosicion = ultimaPosicion - 1;
 			//saco la instancia en posicion ultima, que es la menos usada o mas recientemente agregada
 			instanciaElegida = list_remove(listaInstanciasConectadas, ultimaPosicion);
@@ -602,20 +605,21 @@ Instancia* obtenerInstanciaAsignada(t_list* listaInstanciasConectadas, Instrucci
 			break;
 
 		case LSU:
-
-			list_sort(listaInstanciasConectadas, (void*)(bool)comparacion);
-			instanciaElegida = list_get(listaInstanciasConectadas,0);
-
-			// hasta aca elige por espacio de sobra. en caso de que empaten, FALTA APLICAR ALGORITMO DE EL. Lo aplicare
-			//una ves que vea que funcione como se supone hasta ahora.
-			//debería cambiar la estructura de Instancia para al no tener la lista ordenada por uso, aú asi
-			//poder calcular cual fue la ultima usada
+			puts("LSU");
+			list_sort(listaInstanciasConectadas, (void*)comparacion);
+			instanciaElegida = list_remove(listaInstanciasConectadas,0);
+			list_add(listaInstanciasConectadas,instanciaElegida);
+			// hasta aca elige por espacio de sobra. en caso de que empaten, Tiene en Cuenta el orden original de la lista
+			//Se mantiene la hipotesis que en algoritmo EL, cuando empatan se mantiene primero a la menos recientemente usada
+			//por eso se quita y vuelve a agregar el elemento a la lista, para marcar que fue usado recientemente y quede despues de otros
+			//en caso de empatar
 
 			break;
 
 		case KE:
 		//calculo elementos de la lista
-			cantidadElem= listaInstanciasConectadas->elements_count;
+		puts("KE");
+			cantidadElem= list_size(listaInstanciasConectadas);
 			key= datosInstruccion->key[0];
 			key= tolower(key);
 			//divido cantidad de letras del abecedario por cantidad de instancias
@@ -631,15 +635,16 @@ Instancia* obtenerInstanciaAsignada(t_list* listaInstanciasConectadas, Instrucci
 			break;
 
 		default:
-			log_info (infoLogger,"algoritmo de distribucion no reconocido");
-
+			puts("default");
+			log_error (infoLogger,"algoritmo de distribucion no reconocido");
+	break;
 	}
 
 
-
-
+	puts("\n\n\n");
+	showContenidolistaProcesosConectados(listaInstanciasConectadas);
+	puts("\n\n\n");
 // TODO
-
 
 	return instanciaElegida;
 }

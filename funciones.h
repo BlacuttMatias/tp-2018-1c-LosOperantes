@@ -103,6 +103,9 @@
 
 	bool persistirDatos(Instruccion* datosInstruccion, char* algoritmoAlmacenamiento);
 	void cargarTablaEntradas(t_list *tablaEntradas,Instruccion* estructuraInstruccion);
+	void persistirEntrada(t_entrada* unaEntrada);
+	
+
 
 /* ---------------------------------------- */
 #endif

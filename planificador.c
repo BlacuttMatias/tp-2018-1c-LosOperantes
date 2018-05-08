@@ -167,7 +167,41 @@ void hiloConsolaInteractiva(void * unused) {
 
                 if(string_starts_with(comandoConsola,"STATUS")){
                     comandoAceptado = true;
-                    printf("Comando no implementado...\n");
+                    
+                    // Si se ingreso un solo parametro
+                    if(countParametrosConsola(comandoConsola) == 1){
+
+                        // Convierto el parametro en minuscula
+                        string_to_lower(parametrosConsola[1]);
+
+                        // Serializado el Proceso y la Key
+                        Paquete paquete = srlz_datosKeyBloqueada('P', OBTENER_STATUS_CLAVE, "PLANIFICADOR", 1, parametrosConsola[1], "_");
+
+                        // Envio el Paquetea al Coordinador
+                        if(send(coordinador_fd,paquete.buffer,paquete.tam_buffer,0) != -1){
+
+                            free(paquete.buffer);
+                            log_info(infoLogger, "Se le pide al COORDINADOR infomarcion sobre el Recurso %s.", parametrosConsola[1]);
+
+                            // Recibo la informacion de la Instancia 
+                            Encabezado encabezado=recibir_header(&coordinador_fd);
+                            paquete = recibir_payload(&coordinador_fd,&encabezado.tam_payload);
+                            Instancia registroInstancia = dsrlz_datosInstancia(paquete.buffer);
+                            free(paquete.buffer);
+
+                            // Determino si el Recurso fue distribuido en alguna Instancia
+                            if(strcmp(registroInstancia.nombreProceso, "NONE") == 0){
+                                printf("El Recurso %s no se encuentra distribuido aun\n", parametrosConsola[1]);
+                            }else{
+                                printf("El Recurso %s se encuentra distribuido en la Instancia %s\n", parametrosConsola[1],registroInstancia.nombreProceso);                                
+                            }
+
+                        }else{
+                            printf("No se pudo pedir infomacion al COORDINADOR sobre el Recurso %s\n", parametrosConsola[1]);
+                        }
+                    }else{
+                        printf("[Error] Cantidad de parámetros incorrectos\n");
+                    }
                 }
 
                 if(string_starts_with(comandoConsola,"DEADLOCK")){
@@ -305,14 +339,13 @@ void servidorPlanificador(void* puerto){
 
                                         log_info(infoLogger,"Respuesta sobre la Ejecución EXITOSA de la Instruccion recibida por el Proceso ESI.");
 
-                                    }else{ // Si la ejecucion de la instruccion no fallo
+                                    }else{ // Si la ejecucion de la instruccion fallo
 
                                         log_info(infoLogger,"Respuesta sobre la Ejecución FALLIDA de la Instruccion recibida por el Proceso ESI.");
 
-                                        // TODO
                                         // Si el Resultado es fallido, puede ser porque quizo acceder a un Recurso que estaba tomado por otro proceso. En este caso, cambio al proceso a la ColaBloqueados
                                         
-                                        // Cargar el Proceso en la Cola de Terminados
+                                        // Cargar el Proceso en la Cola de Bloqueados
                                         cargarProcesoCola(listaESIconectados, colaBloqueados, i);
                                         eliminarProcesoLista(listaReady, i);
                                         eliminarProcesoCola(colaReady, i);

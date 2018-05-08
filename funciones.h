@@ -46,6 +46,9 @@
 	Paquete srlz_datosKeyBloqueada(char proceso, int codigoOperacion, char* nombreProceso, int operacion, char key[40], char* dato);
 	KeyBloqueada dsrlz_datosKeyBloqueada(void* buffer);
 
+	Paquete srlz_datosInstancia(char proceso, int codigoOperacion, char* nombreProceso, int entradasLibres, int socketProceso);
+	Instancia dsrlz_datosInstancia(void* buffer);
+
 /* ---------------------------------------- */
 /*  Funciones de ESI 						*/
 /* ---------------------------------------- */

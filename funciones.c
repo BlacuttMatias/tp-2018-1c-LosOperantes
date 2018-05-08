@@ -2,6 +2,55 @@
 
 //*********************** SERIALIZADO Y DESERIALIZADO ********************************//
 
+Paquete srlz_datosInstancia(char proceso, int codigoOperacion, char* nombreProceso, int entradasLibres, int socketProceso){
+
+	int posicion = 0;//int para ir guiando desde donde se copia
+	int sizeBuffer = 0;
+	int tamString = 0;
+	int tamPayload = 0;
+	Paquete paquete;
+
+
+	sizeBuffer =sizeof(char)+
+			(sizeof(int)*5)
+			+ strlen(nombreProceso);
+
+	paquete.tam_buffer = sizeBuffer;
+	paquete.buffer = malloc( sizeBuffer );
+	tamPayload = sizeBuffer - (sizeof(int)*2) - sizeof(char);
+
+	memcpy(paquete.buffer                                                   ,&(proceso)                     ,sizeof(char));
+	memcpy(paquete.buffer + (posicion=sizeof(char))							,&(codigoOperacion)				,sizeof(int));
+	memcpy(paquete.buffer + (posicion += sizeof(int))						,&(tamPayload)					,sizeof(int));
+
+	tamString = strlen(nombreProceso);
+	memcpy(paquete.buffer + (posicion += sizeof(tamPayload))				,&(tamString)					,sizeof(int) ); //guardo el tam del siguiente array
+	memcpy(paquete.buffer + (posicion += sizeof(int) )						,nombreProceso					,strlen(nombreProceso)); //se copia el nombre
+
+	memcpy(paquete.buffer + (posicion += strlen(nombreProceso))				,&(entradasLibres)				,sizeof(int));
+	memcpy(paquete.buffer + (posicion += sizeof(int))						,&(socketProceso)				,sizeof(int));
+
+	return paquete;
+}
+
+Instancia dsrlz_datosInstancia(void* buffer)
+{
+	int posicion = 0; //int para ir guiando desde donde se copia
+	int tamString = 0;
+	Instancia solicitud;
+
+
+	memcpy(&(tamString)					 	,buffer+posicion										,sizeof(int));
+	solicitud.nombreProceso = malloc(sizeof(char) * tamString+1);
+	memcpy(solicitud.nombreProceso			,buffer+(posicion+=sizeof(int))							,sizeof(char)*tamString);
+	solicitud.nombreProceso[tamString]='\0';
+
+	memcpy(&solicitud.entradasLibres 			,buffer+(posicion+=sizeof(char) * tamString)			,sizeof(int));
+	memcpy(&solicitud.socketProceso 			,buffer+(posicion+=sizeof(int))							,sizeof(int));
+
+	return solicitud;
+}
+
 Paquete srlz_datosKeyBloqueada(char proceso, int codigoOperacion, char* nombreProceso, int operacion, char key[40], char* dato){
 
 	int posicion = 0;//int para ir guiando desde donde se copia

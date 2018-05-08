@@ -190,6 +190,32 @@ void servidorCoordinador(void* puerto){
                                         log_error(infoLogger, "No se pudo notificar al ESI %s que el Recurso %s estaba tomado por otro Proceso ESI", obtenerNombreProceso(listaProcesosConectados, socketESI), registroKeyBloqueada.key);
                                     }
                                     break;
+
+                                case OBTENER_STATUS_CLAVE:
+
+                                    // Recibo los datos del Key y Proceso
+                                    paquete = recibir_payload(&i,&encabezado.tam_payload);
+                                    registroKeyBloqueada = dsrlz_datosKeyBloqueada(paquete.buffer);
+                                    free(paquete.buffer);
+
+                                    log_info(infoLogger,"El PLANIFICADOR solicita informacion sobre el Recurso %s.", registroKeyBloqueada.key);
+
+
+                                    // TODO Falta generar la informacion de la Instancia y devolverlo al Planificador. Hoy esta harcodeado
+
+                                    // Serializado la Respuesta (ESTE MENSAJE LLEGA DIRECTAMENTE A LA CONSOLA)
+                                    paquete = srlz_datosInstancia('C', OBTENER_STATUS_CLAVE, "Instancia1", 2, 3);
+
+                                    // Envio el Paquete al Planificador
+                                    if(send(i,paquete.buffer,paquete.tam_buffer,0) != -1){
+
+                                        free(paquete.buffer);
+                                        log_info(infoLogger, "Se le envio informacion al PLANIFICADOR sobre la Instancia");
+
+                                    }else{
+                                        log_error(infoLogger, "No se pudo enviar informacion al PLANIFICADOR sobre la Instancia");
+                                    }
+                                    break;                                
                             }
                         }
 

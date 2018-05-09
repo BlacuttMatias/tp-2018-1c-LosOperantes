@@ -371,7 +371,6 @@ void servidorPlanificador(void* puerto){
                                     log_info(infoLogger,"Notificacion sobre la finalizacion del Proceso ESI %s.", obtenerNombreProceso(listaESIconectados, i));
 
                                     // Libero los Recursos que tenia asignado en Lista de Claves Bloqueadas
-                                    // TODO
                                     liberarRecursosProceso(diccionarioClavesBloqueadas, obtenerNombreProceso(listaESIconectados, i));
 
                                     // Cargar el Proceso en la Cola de Terminados

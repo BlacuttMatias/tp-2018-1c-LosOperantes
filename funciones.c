@@ -278,7 +278,6 @@ Paquete crearHeader(char proceso, int cod_operacion, int tamPayload){
 //Sacar Siguiente instruccion de la lista
 //**************************************************************************//
 Instruccion* sacarSiguienteInstruccion(t_list* listaInstruccion) {
-	t_list* listaAuxiliar;
 	Instruccion* instruccionAux=NULL;
 	if(list_size(listaInstruccion)>0){
 		instruccionAux =	list_remove(listaInstruccion,0);
@@ -297,8 +296,9 @@ Instruccion pasarAEstructura(Instruccion* puntero) {
 	instruccion.dato= puntero->dato;
 	return instruccion;
 }
+
 //**************************************************************************//
-// Persistir Datos en el Coordinador
+// Persistir Datos en la Instancia
 //**************************************************************************//
 bool persistirDatos(Instruccion* datosInstruccion, char* algoritmoDistricucion){
 
@@ -1050,4 +1050,15 @@ int countParametrosConsola(char * string){
 // Libera Todos los Recursos de un determinado Proceso
 void liberarRecursosProceso(t_dictionary * dictionario, char* nombreProceso){
 
+	void elemento_destroy(Proceso* self){
+		//free(self); // Explota!!!
+	}
+
+    void _each_elemento_(char* key, Proceso* registroProcesoAux)
+	{
+		if(strcmp(registroProcesoAux->nombreProceso, nombreProceso) == 0) {
+			dictionary_remove_and_destroy(dictionario, key, (void*) elemento_destroy);
+		}
+	}
+    dictionary_iterator(dictionario, (void*)_each_elemento_);
 }

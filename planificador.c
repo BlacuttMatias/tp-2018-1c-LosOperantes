@@ -232,6 +232,7 @@ void servidorPlanificador(void* puerto){
     Paquete paquete;
     struct sockaddr_in servidor_addr,my_addr,master_addr; // información de la dirección de destino
     int servidor,escucha_master,fd_maximo,nuevo_fd,i,size, nbytes;
+    int alfa = config_get_int_value(cfg,"ALFA"); //para el calculo de rafaga
 
     fd_set master,temporales;
     FD_ZERO(&master);
@@ -504,7 +505,7 @@ void servidorPlanificador(void* puerto){
                             rafagasAux= dictionary_get(diccionarioRafagas, procesoAnterior->nombreProceso);
                             rafagasAux->estimacionRafagaAnterior= rafagasAux->proximaEstimacion;
                             rafagasAux->rafagaAnterior= rafagaActual;
-                            rafagasAux->proximaEstimacion= estimarRafaga(rafagasAux->estimacionRafagaAnterior,rafagaActual);
+                            rafagasAux->proximaEstimacion= estimarRafaga(rafagasAux->estimacionRafagaAnterior,rafagaActual,alfa);
                             rafagaActual=0;
                         procesoAnterior= procesoSeleccionado;
                         puts(" salgo if");
@@ -591,6 +592,7 @@ int main(int argc, char* argv[]){
     send(coordinador_fd,paquete.buffer,paquete.tam_buffer,0);
     free(paquete.buffer);
 
+    // leo de config el alfa para calcular rafaga
 
     pthread_t hiloConsola;
     pthread_create(&hiloConsola, NULL, (void*) hiloConsolaInteractiva, NULL);

@@ -84,7 +84,7 @@
 	void eliminarProcesoCola(t_queue* colaReady, int socketProcesoEliminar);
 	void cargarProcesoCola(t_list* listaUtilizar, t_queue* colaUtilizar, int socketProcesoConsultar);
 
-	int estimarRafaga(int estimacionAnterior, int rafagaAnterior);
+	int estimarRafaga(int estimacionAnterior, int rafagaAnterior, int alfa);
 	int countParametrosConsola(char * string);
 	void listarRecursosBloqueados(t_list* listaClavesBloqueadasRequeridas, char* key);
 	void liberarRecursosProceso(t_dictionary * dictionario, char* nombreProceso);

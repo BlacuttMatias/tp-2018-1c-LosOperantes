@@ -915,10 +915,8 @@ void showContenidocolaBloqueados(t_queue* colaBloqueados){
 	}
 }
 
-	//TODO
-	//falta que estime realmente bien usando el multiplicador alfa
-int estimarRafaga (int estimacionAnterior, int rafagaAnterior){
-	return (estimacionAnterior + rafagaAnterior)/2;
+int estimarRafaga (int estimacionAnterior, int rafagaAnterior, int alfa){
+	return (estimacionAnterior*alfa/100 + ((100 - alfa)/100) * rafagaAnterior);
 }
 
 // Coordina la Planificacion de Todos los Procesos

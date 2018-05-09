@@ -266,6 +266,20 @@ int main(int argc, char* argv[]){
                                     }
                                 }
                                 break;
+
+                                case ESI_MORITE:
+
+                                log_info(infoLogger, "planificador envió orden de morir");
+                                paquete= crearHeader('E', FINALIZACION_EJECUCION_ESI, 1 );
+
+                                if(send(coordinador_fd, paquete.buffer, paquete.tam_buffer,0) != -1){
+                                    log_info(infoLogger,"se aviso al COORDINADOR fin de esi");
+                                }
+                                 else {
+                                    log_info(infoLogger,"no se pudo avisar al COORDINADOR fin de esi");
+                                 }
+                                 free(paquete.buffer);
+                                 return EXIT_FAILURE;
                         }
                     }
 

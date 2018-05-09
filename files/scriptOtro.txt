@@ -1,0 +1,5 @@
+SET beportes:futbol:messi Lionel Messi
+GET beportes:futbol:messi
+GET oeportes:basquet:ginobili
+SET oeportes:basquet:ginobili Emanuel Ginobili
+STORE oeportes:basquet:ginobili

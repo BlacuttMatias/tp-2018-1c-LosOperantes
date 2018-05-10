@@ -13,24 +13,54 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
+#include <sys/types.h>
+#include <dirent.h>
+
 #include "funciones.h"
 #include "registros.h"
 #include "sockets.h"
 
 
-//prueba dump
-void dump(t_list* tablaEntradas){
-
-
-		list_iterate(tablaEntradas,(void*)persistirEntrada);
-
-}
-
-
-
 /* ---------------------------------------- */
 
 int main(int argc, char* argv[]){
+
+	// -----------------------------------------------------------------------
+	//    Prueba de funciones 1
+	// -----------------------------------------------------------------------
+
+
+	////////////////////////////////////////////
+
+	  /* Con un puntero a DIR abro el directorio */
+	  DIR *dir;
+	  /* en *ent habrá información sobre el archivo que se está "sacando" a cada momento */
+	  struct dirent *ent;
+
+	  /* Empezaremos a leer en el directorio entradas */
+	  dir = opendir ("entradas/");
+
+	  /* Miramos que no haya error */
+	  if (dir == NULL)
+	    error("No se puede abrir el directorio");
+
+	  /* Una vez nos aseguramos de que no hay error... */
+	  /* Leyendo uno a uno todos los archivos que hay */
+	  while ((ent = readdir (dir)) != NULL)
+	    {
+	      /* Nos devolverá el directorio actual (.) y el anterior (..), como hace ls */
+	      if ( (strcmp(ent->d_name, ".")!=0) && (strcmp(ent->d_name, "..")!=0) )
+	    {
+	      /* Una vez tenemos el archivo, lo pasamos a una función para procesarlo. */
+	      procesoArchivo(ent->d_name);
+	    }
+	    }
+	  closedir (dir);
+
+
+
+	//////////////////////////////////////
+
 
 	/* Creo la instancia del Archivo de Configuracion y del Log */
 	cfg = config_create("config/config.cfg");
@@ -88,11 +118,7 @@ int main(int argc, char* argv[]){
 
 	printf("Iniciando INSTANCIA\n");
 
-	
-	
-	
-	
-	
+
 
 	Encabezado encabezado;
 	Paquete paquete;
@@ -125,9 +151,8 @@ int main(int argc, char* argv[]){
 
 
 // -----------------------------------------------------------------------
-//    Prueba de funciones
+//    Prueba de funciones 2
 // -----------------------------------------------------------------------
-
 
     Instruccion* datosInstruccion;
 
@@ -212,3 +237,4 @@ int main(int argc, char* argv[]){
 
     return 0;
 }
+

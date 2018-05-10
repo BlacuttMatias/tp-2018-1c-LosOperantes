@@ -987,6 +987,13 @@ bool existeArchivo(char *filename){
     }
 }
 
+/* ------------------------------------------------------------------------------------------------- */
+/* ------------------------------------------------------------------------------------------------- */
+
+/* ---------------------------------------- */
+/*  Funciones de Instancia 					*/
+/* ---------------------------------------- */
+
 //funcion para carga de entradas
 void cargarTablaEntradas(t_list *tablaEntradas,Instruccion* estructuraInstruccion){
 	t_entrada* nuevaEntrada = NULL;
@@ -1020,12 +1027,49 @@ void persistirEntrada(t_entrada* unaEntrada){
 
 	char *valorIdentificado = unaEntrada->valor;
 
-    // Gravo el Valor de la Entrada en el Archivo
+    // Grabo el Valor de la Entrada en el Archivo
 	fputs(valorIdentificado, archivoTexto );
 
 	fclose ( archivoTexto );
     free(nombre_formato_archivo);
 }
+
+void error(const char *s)
+{
+  /* perror() devuelve la cadena S y el error (en cadena de caracteres) que tenga errno */
+  perror (s);
+  exit(EXIT_FAILURE);
+}
+
+void procesoArchivo(char *archivo)
+{
+  /* Para "procesar", o al menos, hacer algo con el archivo, vamos a decir su tamaño en bytes */
+  FILE *fich;
+  int ftam;
+
+  fich=fopen(archivo, "r");
+  if (fich)
+    {
+      fseek(fich, 0L, SEEK_END);
+      fclose(fich);
+      /* Si todo va bien, decimos el tamaño */
+      printf ("%30s (%ld bytes)\n", archivo, ftell(fich));
+    }
+  else
+    /* Si ha pasado algo, sólo decimos el nombre */
+    printf ("%30s (No info.)\n", archivo);
+}
+
+void dump(t_list* tablaEntradas){
+
+
+		list_iterate(tablaEntradas,(void*)persistirEntrada);
+
+}
+
+/* ------------------------------------------------------------------------------------------------- */
+/* ------------------------------------------------------------------------------------------------- */
+
 
 // Cargo la Lista de Procesos Conectados en el Coordinador
 void cargarListaProcesosConectados(t_list *listaProcesosConectados, Proceso* nuevoProceso){

@@ -106,7 +106,11 @@
 	bool persistirDatos(Instruccion* datosInstruccion, char* algoritmoAlmacenamiento);
 	void cargarTablaEntradas(t_list *tablaEntradas,Instruccion* estructuraInstruccion);
 	void persistirEntrada(t_entrada* unaEntrada);
-	
+	/* Función para devolver un error */
+	void error(const char *s);
+	void procesoArchivo(char *archivo);
+	void dump(t_list* tablaEntradas);
+
 
 
 /* ---------------------------------------- */

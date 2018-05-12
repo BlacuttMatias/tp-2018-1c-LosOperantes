@@ -231,7 +231,7 @@ void hiloConsolaInteractiva(void * unused) {
                             printf("[Error] Proceso ESI %s no se encuentra conectado.\n", parametrosConsolaOriginal[1]);
                         }else{
                             liberarRecursosProceso(diccionarioClavesBloqueadas, parametrosConsolaOriginal[1]);
-                            cargarProcesoCola(listaESIconectados, colaTerminados, socketProcesoaMatar);
+                            cargarProcesoCola(listaESIconectados, colaFinalizados, socketProcesoaMatar);
                             dictionary_remove(diccionarioRafagas, parametrosConsolaOriginal[1]);
                             eliminarProcesoLista(listaESIconectados,socketProcesoaMatar);
                             eliminarProcesoLista(listaReady, socketProcesoaMatar);

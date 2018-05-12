@@ -146,22 +146,42 @@ void hiloConsolaInteractiva(void * unused) {
                     // Si se ingreso un solo parametro
                     if(countParametrosConsola(comandoConsola) == 2){
 
-                        KeyBloqueada* registroKeyBloqueada = NULL;
-                        registroKeyBloqueada = malloc(sizeof(KeyBloqueada));
+                        // obtengo el Socket del Proceso a Bloquear
+                        int socketProcesoaBloquear = obtenerSocketProceso(listaESIconectados, parametrosConsolaOriginal[2]);
 
-                        // Cargo el Registro
-                        registroKeyBloqueada->operacion = 1;
-                        strcpy(registroKeyBloqueada->key , parametrosConsola[1]);
-                        registroKeyBloqueada->nombreProceso = malloc(strlen(parametrosConsola[2])+1);
-                        strcpy(registroKeyBloqueada->nombreProceso , parametrosConsola[2]);
-                        registroKeyBloqueada->nombreProceso[strlen(parametrosConsola[2])] = '\0';
-                        registroKeyBloqueada->dato = NULL;
-                        
+                        // Si el Proceso esta conectado
+                        if(socketProcesoaBloquear == 0){
+                            printf("[Error] Proceso ESI %s no se encuentra conectado.\n", parametrosConsolaOriginal[2]);
+                        }else{
 
-                        // Bloqueo el Recurso y lo cargo en la Lista de Claves Bloqueadas
-                        dictionary_put(diccionarioClavesBloqueadas, parametrosConsola[1], registroKeyBloqueada);
+                            // Si el Recurso esta bloqueado por otro Proceso, entonces agrego al proceso en la Cola de Bloqueados
+                            if(dictionary_has_key(diccionarioClavesBloqueadas, parametrosConsolaOriginal[1]) ){
 
-                        printf("Se agrego el Recurso %s en la Lista de Claves Bloqueadas asociado al Proceso ESI %s.\n", parametrosConsola[1], parametrosConsola[2]);
+                                // Cargar el Proceso en la Cola de Bloqueados
+                                cargarProcesoCola(listaESIconectados, colaBloqueados, socketProcesoaBloquear);
+
+                                printf("El Recurso %s ya se encontraba bloqueado por otro Proceso. El Proceso ESI %s se pasó a la Cola de Bloqueados.\n", parametrosConsolaOriginal[1], parametrosConsolaOriginal[2]);                                
+
+                            }else{ // Si el Recurso no esta bloqueado, lo bloqueo
+
+                                KeyBloqueada* registroKeyBloqueada = NULL;
+                                registroKeyBloqueada = malloc(sizeof(KeyBloqueada));
+
+                                // Cargo el Registro
+                                registroKeyBloqueada->operacion = 1;
+                                strcpy(registroKeyBloqueada->key , parametrosConsolaOriginal[1]);
+                                registroKeyBloqueada->nombreProceso = malloc(strlen(parametrosConsolaOriginal[2])+1);
+                                strcpy(registroKeyBloqueada->nombreProceso , parametrosConsolaOriginal[2]);
+                                registroKeyBloqueada->nombreProceso[strlen(parametrosConsolaOriginal[2])] = '\0';
+                                registroKeyBloqueada->dato = NULL;
+                                
+
+                                // Bloqueo el Recurso y lo cargo en la Lista de Claves Bloqueadas
+                                dictionary_put(diccionarioClavesBloqueadas, parametrosConsolaOriginal[1], registroKeyBloqueada);
+
+                                printf("Se agrego el Recurso %s en la Lista de Claves Bloqueadas asociado al Proceso ESI %s.\n", parametrosConsolaOriginal[1], parametrosConsolaOriginal[2]);
+                            }
+                        }
 
                     }else{
                         printf("[Error] Cantidad de parámetros incorrectos\n");
@@ -175,7 +195,7 @@ void hiloConsolaInteractiva(void * unused) {
                     if(countParametrosConsola(comandoConsola) == 1){
 
                         // Libero un Recurso de la Lista de Claves Bloqueadas
-                        dictionary_remove(diccionarioClavesBloqueadas, parametrosConsola[1]);
+                        dictionary_remove(diccionarioClavesBloqueadas, parametrosConsolaOriginal[1]);
 
                     }else{
                         printf("[Error] Cantidad de parámetros incorrectos\n");
@@ -190,7 +210,7 @@ void hiloConsolaInteractiva(void * unused) {
                     if(countParametrosConsola(comandoConsola) == 1){
 
                         // Lista los Procesos que quiere usar el Recurso indicado por consola
-                        listarRecursosBloqueados(listaClavesBloqueadasRequeridas, parametrosConsola[1]);
+                        listarRecursosBloqueados(listaClavesBloqueadasRequeridas, parametrosConsolaOriginal[1]);
                     }else{
                         printf("[Error] Cantidad de parámetros incorrectos\n");
                     }
@@ -208,13 +228,13 @@ void hiloConsolaInteractiva(void * unused) {
                     if(countParametrosConsola(comandoConsola) == 1){
 
                         // Serializado el Proceso y la Key
-                        Paquete paquete = srlz_datosKeyBloqueada('P', OBTENER_STATUS_CLAVE, "PLANIFICADOR", 1, parametrosConsola[1], "_");
+                        Paquete paquete = srlz_datosKeyBloqueada('P', OBTENER_STATUS_CLAVE, "PLANIFICADOR", 1, parametrosConsolaOriginal[1], "_");
 
                         // Envio el Paquetea al Coordinador
                         if(send(coordinador_fd,paquete.buffer,paquete.tam_buffer,0) != -1){
 
                             free(paquete.buffer);
-                            log_info(infoLogger, "Se le pide al COORDINADOR infomarcion sobre el Recurso %s.", parametrosConsola[1]);
+                            log_info(infoLogger, "Se le pide al COORDINADOR infomarcion sobre el Recurso %s.", parametrosConsolaOriginal[1]);
 
                             // Recibo la informacion de la Instancia 
                             Encabezado encabezado=recibir_header(&coordinador_fd);
@@ -224,13 +244,13 @@ void hiloConsolaInteractiva(void * unused) {
 
                             // Determino si el Recurso fue distribuido en alguna Instancia
                             if(strcmp(registroInstancia.nombreProceso, "NONE") == 0){
-                                printf("El Recurso %s no se encuentra distribuido aun\n", parametrosConsola[1]);
+                                printf("El Recurso %s no se encuentra distribuido aun\n", parametrosConsolaOriginal[1]);
                             }else{
-                                printf("El Recurso %s se encuentra distribuido en la Instancia %s\n", parametrosConsola[1],registroInstancia.nombreProceso);                                
+                                printf("El Recurso %s se encuentra distribuido en la Instancia %s\n", parametrosConsolaOriginal[1],registroInstancia.nombreProceso);                                
                             }
 
                         }else{
-                            printf("No se pudo pedir infomacion al COORDINADOR sobre el Recurso %s\n", parametrosConsola[1]);
+                            printf("No se pudo pedir infomacion al COORDINADOR sobre el Recurso %s\n", parametrosConsolaOriginal[1]);
                         }
                     }else{
                         printf("[Error] Cantidad de parámetros incorrectos\n");

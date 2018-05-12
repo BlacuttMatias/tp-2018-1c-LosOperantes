@@ -540,7 +540,7 @@ int obtenerSocketProceso(t_list* listaProcesosConectados, char* nombreProcesoBus
 
 	    void _each_elemento_(Proceso* registroProcesoAux)
 		{
-			if(strcmp(registroProcesoAux->nombreProceso, nombreProcesoBuscado) == 0){
+			if(registroProcesoAux->nombreProceso != NULL && strcmp(registroProcesoAux->nombreProceso, nombreProcesoBuscado) == 0){
 				socketBuscado =	registroProcesoAux->socketProceso;
 			}
 		}
@@ -1094,15 +1094,42 @@ int countParametrosConsola(char * string){
 // Libera Todos los Recursos de un determinado Proceso
 void liberarRecursosProceso(t_dictionary * dictionario, char* nombreProceso){
 
-	void elemento_destroy(Proceso* self){
-		//free(self); // Explota!!!
+	if(dictionary_size(dictionario) > 0){
+
+		void elemento_destroy(Proceso* self){
+			//free(self); // Explota!!!
+		}
+
+	    void _each_elemento_(char* key, Proceso* registroProcesoAux)
+		{
+			if(registroProcesoAux->nombreProceso != NULL && strcmp(registroProcesoAux->nombreProceso, nombreProceso) == 0) {
+				dictionary_remove_and_destroy(dictionario, key, (void*) elemento_destroy);
+			}
+		}
+	    dictionary_iterator(dictionario, (void*)_each_elemento_);
 	}
 
-    void _each_elemento_(char* key, Proceso* registroProcesoAux)
-	{
-		if(strcmp(registroProcesoAux->nombreProceso, nombreProceso) == 0) {
-			dictionary_remove_and_destroy(dictionario, key, (void*) elemento_destroy);
-		}
+}
+
+// Cargo las Claves bloqueadas por archivo de configuracion en el Diccionario de Claves Bloqueadas
+int cargarClavesInicialmenteBloqueadas(t_dictionary* diccionarioClavesBloqueadas, char** arregloClavesInicialmenteBloqueadas){
+
+	int indice = 0;
+	while(arregloClavesInicialmenteBloqueadas[indice] != NULL){
+
+        Proceso* registroKeyProcesoAux = NULL;
+        registroKeyProcesoAux = malloc(sizeof(Proceso));
+
+        // Cargo el Registro
+        registroKeyProcesoAux->socketProceso = 0;
+        registroKeyProcesoAux->tipoProceso = ESI;
+        registroKeyProcesoAux->nombreProceso = NULL;
+	    
+	    // Bloqueo el Recurso y lo cargo en la Lista de Claves Bloqueadas
+	    dictionary_put(diccionarioClavesBloqueadas, arregloClavesInicialmenteBloqueadas[indice], registroKeyProcesoAux);
+
+	    indice++;
 	}
-    dictionary_iterator(dictionario, (void*)_each_elemento_);
+
+	return indice;
 }

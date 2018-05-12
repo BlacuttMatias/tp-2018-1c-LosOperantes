@@ -184,6 +184,8 @@ int main(int argc, char* argv[]){
 
                                 }else{ // Si la ejecucion de la instruccion fallo
 
+                                    printf(" - FALLO\n");
+
                                     log_info(infoLogger,"Respuesta sobre la Ejecución FALLIDA de la Instruccion recibida por el Coordinador.");
                                 }
 
@@ -285,23 +287,22 @@ int main(int argc, char* argv[]){
 
                                 case ESI_MUERE:
 
-                                log_info(infoLogger, "planificador envió orden de morir");
-                                paquete= srlz_datosProceso('E', ESI_MUERE,nombreProceso, ESI, 0 );
-                                
+                                    log_info(infoLogger, "El PLANIFICADOR envió comando KILL");
+                                    paquete= srlz_datosProceso('E', ESI_MUERE,nombreProceso, ESI, 0 );
+                                    
 
-                                if(send(coordinador_fd, paquete.buffer, paquete.tam_buffer,0) != -1){
-                                    log_info(infoLogger,"se aviso al COORDINADOR fin de esi");
-                                }
-                                 else {
-                                    log_info(infoLogger,"no se pudo avisar al COORDINADOR fin de esi");
-                                 }
-                                 free(paquete.buffer);
-                                 return EXIT_FAILURE;
+                                    if(send(coordinador_fd, paquete.buffer, paquete.tam_buffer,0) != -1){
+                                        log_info(infoLogger,"Se avisó al COORDINADOR sobre el fin de esi");
+                                    }
+                                    else {
+                                        log_info(infoLogger,"no se pudo avisar al COORDINADOR fin de esi");
+                                    }
+                                    free(paquete.buffer);
+                                    return EXIT_FAILURE;
+                                break;
                         }
                     }
-
 				}
-
             }
         }
     }
@@ -318,4 +319,3 @@ int main(int argc, char* argv[]){
 
     return EXIT_SUCCESS;
 }
-

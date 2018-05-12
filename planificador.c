@@ -42,6 +42,7 @@
     int coordinador_fd;
     int rafagaActual;
     Proceso* procesoAnterior;
+    char** arregloClavesInicialmenteBloqueadas = NULL;
 
 /* ---------------------------------------- */
 /*  Consola interactiva                     */
@@ -164,20 +165,18 @@ void hiloConsolaInteractiva(void * unused) {
 
                             }else{ // Si el Recurso no esta bloqueado, lo bloqueo
 
-                                KeyBloqueada* registroKeyBloqueada = NULL;
-                                registroKeyBloqueada = malloc(sizeof(KeyBloqueada));
+                                Proceso* registroKeyProcesoAux = NULL;
+                                registroKeyProcesoAux = malloc(sizeof(Proceso));
 
                                 // Cargo el Registro
-                                registroKeyBloqueada->operacion = 1;
-                                strcpy(registroKeyBloqueada->key , parametrosConsolaOriginal[1]);
-                                registroKeyBloqueada->nombreProceso = malloc(strlen(parametrosConsolaOriginal[2])+1);
-                                strcpy(registroKeyBloqueada->nombreProceso , parametrosConsolaOriginal[2]);
-                                registroKeyBloqueada->nombreProceso[strlen(parametrosConsolaOriginal[2])] = '\0';
-                                registroKeyBloqueada->dato = NULL;
-                                
+                                registroKeyProcesoAux->socketProceso = 0;
+                                registroKeyProcesoAux->tipoProceso = ESI;
+                                registroKeyProcesoAux->nombreProceso = malloc(strlen(parametrosConsolaOriginal[2])+1);
+                                strcpy(registroKeyProcesoAux->nombreProceso , parametrosConsolaOriginal[2]);
+                                registroKeyProcesoAux->nombreProceso[strlen(parametrosConsolaOriginal[2])] = '\0';
 
                                 // Bloqueo el Recurso y lo cargo en la Lista de Claves Bloqueadas
-                                dictionary_put(diccionarioClavesBloqueadas, parametrosConsolaOriginal[1], registroKeyBloqueada);
+                                dictionary_put(diccionarioClavesBloqueadas, parametrosConsolaOriginal[1], registroKeyProcesoAux);
 
                                 printf("Se agrego el Recurso %s en la Lista de Claves Bloqueadas asociado al Proceso ESI %s.\n", parametrosConsolaOriginal[1], parametrosConsolaOriginal[2]);
                             }
@@ -432,7 +431,7 @@ void servidorPlanificador(void* puerto){
                                     eliminarProcesoLista(listaESIconectados, i);
                                     eliminarProcesoLista(listaReady, i);
                                     eliminarProcesoCola(colaReady, i);
-                                    
+
                                     log_info(infoLogger,"Actualizacion de las Estructuras Administrativas");
 
                                     // Activo la Planificacion de los Procesos
@@ -621,10 +620,18 @@ int main(int argc, char* argv[]){
     // Creo la lista de Todos los ESIs conectados al Planificador
     listaESIconectados = list_create();
 
-    // Carlo el Algoritmo de Planificacion del Sistema
+    // Cargo el Algoritmo de Planificacion del Sistema
     algoritmoPlanificacion = string_new();
     string_append(&algoritmoPlanificacion,config_get_string_value(cfg,"ALGORITMO_PLANIFICACION"));
     
+    // Obtenglo las Claves bloqueadas por archivo de configuracion
+    arregloClavesInicialmenteBloqueadas = string_get_string_as_array(config_get_string_value(cfg,"CLAVES_INICIALMENTE_BLOQUEADAS"));
+
+    // Cargo las Claves bloqueadas por archivo de configuracion en el Diccionario de Claves Bloqueadas
+    if(cargarClavesInicialmenteBloqueadas(diccionarioClavesBloqueadas, arregloClavesInicialmenteBloqueadas) != 0){
+        log_info(infoLogger, "Se cargaron las Claves bloqueadas definidas por el archivo de configuración");
+    }
+
     // Inicializo los estados del Planificador
     planificadorPausado = false;
     planificarProcesos = false;
@@ -674,6 +681,6 @@ int main(int argc, char* argv[]){
     list_destroy(listaClavesBloqueadasRequeridas);
 
     free(algoritmoPlanificacion);
-    puts("cierro bien");
+    free(arregloClavesInicialmenteBloqueadas);
     return EXIT_SUCCESS;
 }

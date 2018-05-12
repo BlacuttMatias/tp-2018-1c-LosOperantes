@@ -88,6 +88,7 @@
 	int countParametrosConsola(char * string);
 	void listarRecursosBloqueados(t_list* listaClavesBloqueadasRequeridas, char* key);
 	void liberarRecursosProceso(t_dictionary * dictionario, char* nombreProceso);
+	int cargarClavesInicialmenteBloqueadas(t_dictionary* diccionarioClavesBloqueadas, char** arregloClavesInicialmenteBloqueadas);
 
 /* ---------------------------------------- */
 /*  Funciones de Coordinador 				*/

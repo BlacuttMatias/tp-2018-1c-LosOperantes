@@ -217,7 +217,49 @@ void hiloConsolaInteractiva(void * unused) {
 
                 if(string_starts_with(comandoConsola,"KILL")){
                     comandoAceptado = true;
-                    printf("Comando no implementado...\n");
+
+
+                    // Si se ingreso un solo parametro
+                    if(countParametrosConsola(comandoConsola) == 1){
+                        // obtengo el Socket del Proceso a Matar
+                        int socketProcesoaMatar = obtenerSocketProceso(listaESIconectados, parametrosConsolaOriginal[1]);
+
+                        // Si el Proceso esta conectado
+                        if(socketProcesoaMatar == 0){
+                            printf("[Error] Proceso ESI %s no se encuentra conectado.\n", parametrosConsolaOriginal[1]);
+                        }else{
+                            liberarRecursosProceso(diccionarioClavesBloqueadas, parametrosConsolaOriginal[1]);
+                            cargarProcesoCola(listaESIconectados, colaTerminados, socketProcesoaMatar);
+                            dictionary_remove(diccionarioRafagas, parametrosConsolaOriginal[1]);
+                            eliminarProcesoLista(listaESIconectados,socketProcesoaMatar);
+                            eliminarProcesoLista(listaReady, socketProcesoaMatar);
+                            
+                            //elimino al proceso de ccualquier cola en la que pueda estar
+                            
+                            eliminarProcesoCola(colaReady, socketProcesoaMatar);
+                            eliminarProcesoCola(colaBloqueados, socketProcesoaMatar);
+                            eliminarProcesoCola(colaEjecucion, socketProcesoaMatar);
+                            
+                            //envio el msj al esi para que muera
+                            Paquete paquete= crearHeader('P',ESI_MUERE,1);
+                            if( send(socketProcesoaMatar,paquete.buffer,paquete.tam_buffer,1) != -1 ){
+                                log_info(infoLogger,"Se avios a esi de que muera");
+                            }else{
+                                log_info(infoLogger,"No se pudo avisar a esi de que muera");
+                                printf("\n\n NO SE PUDO ENVIAR ORDEN A ESI %s DE QUE MUERA \n\n",parametrosConsolaOriginal[1]);
+                            }
+
+                                         
+                            
+                                          
+                        }
+
+
+
+                    }else{
+                        printf("[Error] Cantidad de parámetros incorrectos\n");
+                    }
+                    
                 }
 
                 if(string_starts_with(comandoConsola,"STATUS")){

@@ -447,6 +447,21 @@ int obtenerTamanoProximaInstruccion(t_list* listaInstrucciones){
 //********************************************************************//
 
 
+// Dado un Socket de un Proceso, lo cargo en la Lista
+void cargarProcesoLista(t_list* listaUtilizar, t_list* listaProcesar, int socketProcesoCargar){
+
+	Proceso* registroProcesoAux2 = NULL;
+
+	bool _find_socket_(Proceso* registroProcesoAux)
+	{
+		return (registroProcesoAux->socketProceso == socketProcesoCargar);
+	}
+
+	registroProcesoAux2 = list_find(listaUtilizar,(void*)_find_socket_);
+
+	// Agrego el elemento en la Lista
+	list_add(listaProcesar, registroProcesoAux2);
+}
 
 
 // Dado un Socket de un Proceso, lo elimino de la Lista
@@ -850,25 +865,25 @@ void showContenidolistaReady(t_list* listaReady){
 }
 
 //**************************************************************************//
-// Mostrar el contenido de la Cola Ready
+// Mostrar el contenido de una Cola de Planificacion
 //**************************************************************************//
-void showContenidocolaReady(t_queue* colaReady){ 
+void showContenidoCola(t_queue* cola, char* nombreCola){
 
 	int indice = 0;
 	Proceso* registroProcesoAux = NULL;
 
-	if(queue_size(colaReady) > 0){
+	if(queue_size(cola) > 0){
 
 
-		for (indice = 0; indice  < queue_size(colaReady); indice=indice+1 ) {
+		for (indice = 0; indice  < queue_size(cola); indice=indice+1 ) {
 
 			// Obtengo un elemento
-			registroProcesoAux = queue_pop(colaReady);
+			registroProcesoAux = queue_pop(cola);
 
 
 			// Muestro el encabezaado
 			if(indice == 0) {
-				printf("\nCOLA READY\n");
+				printf("\nCOLA %s\n", nombreCola);
 				printf("------\n");
 			}
 
@@ -876,44 +891,10 @@ void showContenidocolaReady(t_queue* colaReady){
 
 
 			// Lo vuelvo a agregar a la cola
-			queue_push(colaReady, registroProcesoAux);
+			queue_push(cola, registroProcesoAux);
 		}
 	}else{
-		printf("\nCola Ready vacia\n");
-	}
-}
-
-//**************************************************************************//
-// Mostrar el contenido de la Cola Bloqueado
-//**************************************************************************//
-void showContenidocolaBloqueados(t_queue* colaBloqueados){ 
-
-	int indice = 0;
-	Proceso* registroProcesoAux = NULL;
-
-	if(queue_size(colaBloqueados) > 0){
-
-
-		for (indice = 0; indice  < queue_size(colaBloqueados); indice=indice+1 ) {
-
-			// Obtengo un elemento
-			registroProcesoAux = queue_pop(colaBloqueados);
-
-
-			// Muestro el encabezaado
-			if(indice == 0) {
-				printf("\nCOLA BLOQUEADOS\n");
-				printf("------\n");
-			}
-
-			printf("%s\n", registroProcesoAux->nombreProceso);
-
-
-			// Lo vuelvo a agregar a la cola
-			queue_push(colaBloqueados, registroProcesoAux);
-		}
-	}else{
-		printf("\nCola Bloqueados vacia\n");
+		printf("\nCola %s vacia\n", nombreCola);
 	}
 }
 

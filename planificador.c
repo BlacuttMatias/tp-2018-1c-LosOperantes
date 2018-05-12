@@ -602,13 +602,17 @@ void servidorPlanificador(void* puerto){
                     //puts("proceso seleccionado es nulo");
                 }else{
                     if(procesoSeleccionado != procesoAnterior){
+                        //chekeo que el procesi anterior siga conectado
+                        
                         printf(" proceso seleccionado %s y proceso anterior %s  \n" ,procesoSeleccionado->nombreProceso, procesoAnterior->nombreProceso);
-                        Rafagas* rafagasAux=NULL;
-                            rafagasAux= dictionary_get(diccionarioRafagas, procesoAnterior->nombreProceso);
-                            rafagasAux->estimacionRafagaAnterior= rafagasAux->proximaEstimacion;
-                            rafagasAux->rafagaAnterior= rafagaActual;
-                            rafagasAux->proximaEstimacion= estimarRafaga(rafagasAux->estimacionRafagaAnterior,rafagaActual,alfa);
-                            rafagaActual=0;
+                            if( obtenerSocketProceso(listaESIconectados, procesoAnterior->nombreProceso) != 0){
+                                Rafagas* rafagasAux=NULL;
+                                rafagasAux= dictionary_get(diccionarioRafagas, procesoAnterior->nombreProceso);
+                                rafagasAux->estimacionRafagaAnterior= rafagasAux->proximaEstimacion;
+                                rafagasAux->rafagaAnterior= rafagaActual;
+                                rafagasAux->proximaEstimacion= estimarRafaga(rafagasAux->estimacionRafagaAnterior,rafagaActual,alfa);
+                                rafagaActual=0;
+                        }
                         procesoAnterior= procesoSeleccionado;
                     }
                 }

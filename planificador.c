@@ -29,7 +29,7 @@
     t_queue* colaReady;
     t_queue* colaEjecucion;
     t_queue* colaBloqueados;
-    t_queue* colaTerminados;
+    t_queue* colaFinalizados;
     t_dictionary* diccionarioClavesBloqueadas;
     t_dictionary* diccionarioRafagas;
     t_list*  listaClavesBloqueadasRequeridas;    
@@ -115,8 +115,10 @@ void hiloConsolaInteractiva(void * unused) {
                     // Muestro por pantalla el contenido de las Listas y Colas
                     showContenidolistaProcesosConectados(listaESIconectados);
                     showContenidolistaReady(listaReady);
-                    showContenidocolaReady(colaReady);
-                    showContenidocolaBloqueados(colaBloqueados);
+                    showContenidoCola(colaReady, "READY");
+                    showContenidoCola(colaEjecucion, "EJECUCION");                    
+                    showContenidoCola(colaBloqueados, "BLOQUEADOS");
+                    showContenidoCola(colaFinalizados, "FINALIZADOS");
                     showContenidoDiccionario(diccionarioClavesBloqueadas, "CLAVES BLOQUEADAS");
                     showContenidolistaClavesBloqueadasRequeridas(listaClavesBloqueadasRequeridas);
                 }
@@ -370,8 +372,11 @@ void servidorPlanificador(void* puerto){
                                     strcpy( registroProcesoAux->nombreProceso ,registroProceso.nombreProceso);
                                     registroProcesoAux->nombreProceso[strlen(registroProceso.nombreProceso)] = '\0';
 
+                                    // Cargo los ESIs conectados en la Lista de ESIs conectados al Planificador
+                                    cargarListaProcesosConectados(listaESIconectados, registroProcesoAux);
+
                                     // Cargo el Proceso en la listaReady
-                                    list_add(listaReady, registroProcesoAux);
+                                    cargarProcesoLista(listaESIconectados, listaReady, i);
 
                                     //cargo el proceso en dictionary
                                     Rafagas* registroRafagaAux= malloc(sizeof(Rafagas));
@@ -380,8 +385,6 @@ void servidorPlanificador(void* puerto){
                                     registroRafagaAux->proximaEstimacion=config_get_int_value(cfg,"ESTIMACION_INICIAL");
                                     dictionary_put(diccionarioRafagas,registroProcesoAux->nombreProceso,registroRafagaAux);
 
-                                    // Cargo los ESIs conectados en la Lista de ESIs conectados al Planificador
-                                    cargarListaProcesosConectados(listaESIconectados, registroProcesoAux);
 
                                     // Activo la Planificacion de los Procesos
                                     planificarProcesos = true;
@@ -413,6 +416,11 @@ void servidorPlanificador(void* puerto){
                                         log_info(infoLogger,"Actualizacion de las Estructuras Administrativas");
                                     }
 
+                                    // Cargo el Proceso en la Cola de Ejecucion y lo saco de la Cola Ready
+                                    eliminarProcesoCola(colaEjecucion, i);
+                                    cargarProcesoCola(listaESIconectados, colaReady, i);
+                                    cargarProcesoLista(listaESIconectados, listaReady, i);
+
                                     // Activo la Planificacion de los Procesos
                                     planificarProcesos = true;
                                     break;
@@ -423,14 +431,16 @@ void servidorPlanificador(void* puerto){
                                     // Libero los Recursos que tenia asignado en Lista de Claves Bloqueadas
                                     liberarRecursosProceso(diccionarioClavesBloqueadas, obtenerNombreProceso(listaESIconectados, i));
 
-                                    // Cargar el Proceso en la Cola de Terminados
-                                    cargarProcesoCola(listaESIconectados, colaTerminados, i);
+                                    // Cargar el Proceso en la Cola de Finalizados
+                                    cargarProcesoCola(listaESIconectados, colaFinalizados, i);
 
                                     // Elimino el Proceso ESI de las estrucutras Administrativas
                                     dictionary_remove(diccionarioRafagas, obtenerNombreProceso(listaESIconectados,i));
                                     eliminarProcesoLista(listaESIconectados, i);
                                     eliminarProcesoLista(listaReady, i);
                                     eliminarProcesoCola(colaReady, i);
+                                    eliminarProcesoCola(colaEjecucion, i);
+                                    eliminarProcesoCola(colaBloqueados, i);
 
                                     log_info(infoLogger,"Actualizacion de las Estructuras Administrativas");
 
@@ -541,18 +551,15 @@ void servidorPlanificador(void* puerto){
                 procesoSeleccionado = obtenerProximoProcesoPlanificado(listaReady, colaReady, diccionarioRafagas, algoritmoPlanificacion);
 
                 //si cambia el proceso, guarda nuevas rafagas
-                if(procesoAnterior == NULL) 
-                    {procesoAnterior=procesoSeleccionado;
-                    puts("asigno actual al anterior");
+                if(procesoAnterior == NULL){
+                    procesoAnterior=procesoSeleccionado;
+                    //puts("asigno actual al anterior");
                 }
                    // puts("\n\n entro a if \n\n");
                 if(procesoSeleccionado == NULL){
-                    puts("proceso seleccionado es nulo");
-                }
-                else{
-
+                    //puts("proceso seleccionado es nulo");
+                }else{
                     if(procesoSeleccionado != procesoAnterior){
-                        puts("entro if");
                         printf(" proceso seleccionado %s y proceso anterior %s  \n" ,procesoSeleccionado->nombreProceso, procesoAnterior->nombreProceso);
                         Rafagas* rafagasAux=NULL;
                             rafagasAux= dictionary_get(diccionarioRafagas, procesoAnterior->nombreProceso);
@@ -561,11 +568,15 @@ void servidorPlanificador(void* puerto){
                             rafagasAux->proximaEstimacion= estimarRafaga(rafagasAux->estimacionRafagaAnterior,rafagaActual,alfa);
                             rafagaActual=0;
                         procesoAnterior= procesoSeleccionado;
-                        puts(" salgo if");
                     }
                 }
                 // Si existe un Proceso para planificar
                 if(procesoSeleccionado != NULL){
+
+                    // Cargo el Proceso en la Cola de Ejecucion y lo saco de la Cola Ready
+                    eliminarProcesoCola(colaReady, procesoSeleccionado->socketProceso);
+                    eliminarProcesoLista(listaReady, procesoSeleccionado->socketProceso);
+                    cargarProcesoCola(listaESIconectados, colaEjecucion, procesoSeleccionado->socketProceso);
 
 //printf("Proximo Procesos a Planificar: Nombre: %s - Socket: %d\n", procesoSeleccionado->nombreProceso, procesoSeleccionado->socketProceso);                    
                     // Armo el Paquete de la orden de Ejectuar la proxima Instruccion
@@ -606,7 +617,7 @@ int main(int argc, char* argv[]){
     colaReady = queue_create();
     colaEjecucion = queue_create();
     colaBloqueados = queue_create();
-    colaTerminados = queue_create();
+    colaFinalizados = queue_create();
 
     // Creo las Listas para la Planificacion
     listaReady = list_create();
@@ -673,7 +684,7 @@ int main(int argc, char* argv[]){
     queue_destroy(colaReady);
     queue_destroy(colaEjecucion);
     queue_destroy(colaBloqueados);
-    queue_destroy(colaTerminados);
+    queue_destroy(colaFinalizados);
     dictionary_destroy(diccionarioClavesBloqueadas);
     dictionary_destroy(diccionarioRafagas);
     list_destroy(listaReady);

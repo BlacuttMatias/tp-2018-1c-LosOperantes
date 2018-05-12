@@ -71,8 +71,7 @@
 /* ---------------------------------------- */
 
 	void showContenidolistaReady(t_list* listaReady);
-	void showContenidocolaReady(t_queue* colaReady);
-	void showContenidocolaBloqueados(t_queue* colaBloqueados);
+	void showContenidoCola(t_queue* cola, char* nombreCola);
 	void showContenidoDiccionario(t_dictionary * dictionario, char* nombreDiccionario);
 	void showContenidolistaClavesBloqueadasRequeridas(t_list* listaClavesBloqueadasRequeridas);
 
@@ -83,6 +82,7 @@
 	void eliminarProcesoLista(t_list* listaProcesosConectados, int socketProcesoEliminar);
 	void eliminarProcesoCola(t_queue* colaReady, int socketProcesoEliminar);
 	void cargarProcesoCola(t_list* listaUtilizar, t_queue* colaUtilizar, int socketProcesoConsultar);
+	void cargarProcesoLista(t_list* listaUtilizar, t_list* listaProcesar, int socketProcesoCargar);
 
 	int estimarRafaga(int estimacionAnterior, int rafagaAnterior, int alfa);
 	int countParametrosConsola(char * string);

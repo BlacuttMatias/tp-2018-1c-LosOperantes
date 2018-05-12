@@ -283,10 +283,11 @@ int main(int argc, char* argv[]){
                                 }
                                 break;
 
-                                case ESI_MORITE:
+                                case ESI_MUERE:
 
                                 log_info(infoLogger, "planificador envió orden de morir");
-                                paquete= crearHeader('E', FINALIZACION_EJECUCION_ESI, 1 );
+                                paquete= srlz_datosProceso('E', ESI_MUERE,nombreProceso, ESI, 0 );
+                                
 
                                 if(send(coordinador_fd, paquete.buffer, paquete.tam_buffer,0) != -1){
                                     log_info(infoLogger,"se aviso al COORDINADOR fin de esi");

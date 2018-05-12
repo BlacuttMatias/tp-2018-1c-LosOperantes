@@ -385,7 +385,12 @@ void servidorCoordinador(void* puerto){
 
                                     // Elimino el Proceso ESI de la listaProcesosConectados
                                     eliminarProcesoLista(listaProcesosConectados, i);
-                                    break;                                
+                                    break;  
+
+                                case ESI_MUERE:
+                                    eliminarProcesoLista(listaProcesosConectados, i);
+                                    //TODO
+                                    break;                              
                             }
                         }
 

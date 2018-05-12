@@ -20,6 +20,7 @@ enum cod_operacion {
 	NOTIFICAR_LIBERACION_RECURSO = 9,
 	OBTENER_STATUS_CLAVE = 10,
 	ESI_MORITE = 11,
+	IS_ALIVE = 12,	
 };
 
 // Defino los Tipos de Procesos

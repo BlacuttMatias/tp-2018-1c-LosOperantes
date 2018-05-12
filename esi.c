@@ -218,6 +218,20 @@ int main(int argc, char* argv[]){
                                     Instruccion proximaInstruccion;
                                     proximaInstruccion=pasarAEstructura(aux);
 
+                                    // Mostrando por pantalla la Instruccion a Ejecutar
+                                    switch(proximaInstruccion.operacion){
+                                        case GET:
+                                            printf("Ejecutando... GET %s %s\n",proximaInstruccion.key, proximaInstruccion.dato);
+                                            break;
+                                        case SET:
+                                            printf("Ejecutando... SET %s %s\n",proximaInstruccion.key, proximaInstruccion.dato);
+                                            break;
+                                        case STORE:
+                                            printf("Ejecutando... STORE %s %s\n",proximaInstruccion.key, proximaInstruccion.dato);
+                                            break;
+                                    }
+                                    
+
                                     // Armo el Paquete de Ejecucion de la Proxima Instruccion
                                     paquete = srlz_instruccion('E', EJECUTAR_INSTRUCCION,proximaInstruccion);
 

@@ -215,7 +215,18 @@ void servidorCoordinador(void* puerto){
                                     }else{
                                         log_error(infoLogger, "No se pudo enviar informacion al PLANIFICADOR sobre la Instancia");
                                     }
-                                    break;                                
+                                    break;   
+
+                                case IS_ALIVE: 
+
+                                    // Armo el Paquete del Resultado de la Ejecucion de la Instruccion
+                                    paquete = crearHeader('C', IS_ALIVE, PLANIFICADOR);
+
+                                    // Envio el Paquetea
+                                    if(send(i,paquete.buffer,paquete.tam_buffer,0) != -1){
+                                        free(paquete.buffer);
+                                    }
+                                    break;  
                             }
                         }
 

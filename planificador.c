@@ -92,22 +92,20 @@ void hiloConsolaInteractiva(void * unused) {
 
                     printf("Los comandos aceptados por esta consola son:\n\n");
 
-                    printf("\tPausar/Continuar \t- El Planificador no le dará nuevas órdenes de ejecución a ningún ESI mientras se encuentre pausado. \n\n");
+                    printf("\tpausar/continuar \t- El Planificador no le dará nuevas órdenes de ejecución a ningún ESI mientras se encuentre pausado. \n\n");
 
-                    printf("\n\tbloquear <clave> <ID> \t- Se bloqueará el proceso ESI hasta ser desbloqueado (ver más adelante), especificado por dicho <ID> en la cola del recurso <clave>. Vale recordar que cada línea del script a ejecutar es atómica, y no podrá ser interrumpida; si no que se bloqueará en la próxima oportunidad posible. Solo se podrán bloquear de esta manera ESIs que estén en el estado de listo o ejecutando. \n\n");
+                    printf("\n\tbloquear <clave> <ID> \t- Se bloqueará el proceso ESI hasta ser desbloqueado, especificado por dicho <ID> en la cola del recurso <clave>. \n\n");
 
-                    printf("\n\tdesbloquear <clave> \t- Se desbloqueara el proceso ESI con el ID especificado. Solo se bloqueará ESIs que fueron bloqueados con la consola. Si un ESI está bloqueado esperando un recurso, no podrá ser desbloqueado de esta forma. \n\n");
+                    printf("\n\tdesbloquear <clave> \t- Se desbloqueara el proceso ESI con el ID especificado. \n\n");
 
-                    printf("\n\tlistar <recurso> \t- Lista los procesos encolados esperando al recurso. \n\n");
+                    printf("\n\tlistar <clave> \t- Lista los procesos encolados esperando al recurso. \n\n");
 
                     printf("\n\tkill <ID> \t- finaliza el proceso. Recordando la atomicidad mencionada en “bloquear”. \n\n");
 
                     printf("\n\tstatus <clave> \t- Debido a que para la correcta coordinación de las sentencias de acuerdo a los algoritmos de distribución se requiere de cierta información sobre las instancias del sistema, el Coordinador proporcionará una consola que permita consultar esta información. \n\n");
 
-                    printf("\n\tdeadlock\t- Esta consola también permitirá analizar los deadlocks que existan en el sistema y a que ESI están asociados. Pudiendo resolverlos manualmente con la sentencia de kill previamente descrita.\n\n");
+                    printf("\n\tdeadlock\t- Permitirá analizar los deadlocks que existan en el sistema y a que ESI están asociados.\n\n");
                 }
-
-
 
                 // Comando interno para conocer el estado de las Estructuras Administrativas
                 if(string_starts_with(comandoConsola,"INFO")){
@@ -120,8 +118,6 @@ void hiloConsolaInteractiva(void * unused) {
                     showContenidocolaBloqueados(colaBloqueados);
                     showContenidoDiccionario(diccionarioClavesBloqueadas, "CLAVES BLOQUEADAS");
                     showContenidolistaClavesBloqueadasRequeridas(listaClavesBloqueadasRequeridas);
-                    
-                    
                 }
 
                 if(string_starts_with(comandoConsola,"PAUSAR")){
@@ -135,12 +131,24 @@ void hiloConsolaInteractiva(void * unused) {
                     planificadorPausado = false;
                     printf("Planificador Resumido...\n");
 
-                    // TODO Ver de mandar un mensaje de HI para activar la planificacion
+                    // Armo el Paquete
+                    Paquete paquete = crearHeader('P', IS_ALIVE, COORDINADOR);
+
+                    // Envio el Paquete al Coordinador para activar el Socket y poder Planificar
+                    if(send(coordinador_fd,paquete.buffer,paquete.tam_buffer,0) != -1){
+                        free(paquete.buffer);
+                    }
                 }
 
                 if(string_starts_with(comandoConsola,"BLOQUEAR")){
                     comandoAceptado = true;
-                    printf("Comando no implementado...\n");
+
+                    // Si se ingreso un solo parametro
+                    if(countParametrosConsola(comandoConsola) == 2){
+                        printf("Comando no implementado...\n");
+                    }else{
+                        printf("[Error] Cantidad de parámetros incorrectos\n");
+                    }
                 }
 
                 if(string_starts_with(comandoConsola,"DESBLOQUEAR")){
@@ -157,6 +165,7 @@ void hiloConsolaInteractiva(void * unused) {
                         // Convierto el parametro en minuscula
                         string_to_lower(parametrosConsola[1]);
 
+                        // Lista los Procesos que quiere usar el Recurso indicado por consola
                         listarRecursosBloqueados(listaClavesBloqueadasRequeridas, parametrosConsola[1]);
                     }else{
                         printf("[Error] Cantidad de parámetros incorrectos\n");
@@ -288,7 +297,7 @@ void servidorPlanificador(void* puerto){
                          // error o conexión cerrada por el cliente
                          if (nbytes == 0) {
                             // conexión cerrada
-                            printf("selectserver: socket %d se ha caído\n", i);
+                            //printf("selectserver: socket %d se ha caído\n", i);
                          } else {
                             perror("recv");
                          }
@@ -470,6 +479,10 @@ void servidorPlanificador(void* puerto){
                                     // TODO
                                     log_info(infoLogger,"Respuesta sobre la una Instancia que no existe recibida del COORDINADOR.");
                                     break;
+
+
+                                case IS_ALIVE: 
+                                    break;                                     
                                     
                             }
                         }
@@ -514,7 +527,7 @@ void servidorPlanificador(void* puerto){
                 // Si existe un Proceso para planificar
                 if(procesoSeleccionado != NULL){
 
-printf("Proximo Procesos a Planificar: Nombre: %s - Socket: %d\n", procesoSeleccionado->nombreProceso, procesoSeleccionado->socketProceso);                    
+//printf("Proximo Procesos a Planificar: Nombre: %s - Socket: %d\n", procesoSeleccionado->nombreProceso, procesoSeleccionado->socketProceso);                    
                     // Armo el Paquete de la orden de Ejectuar la proxima Instruccion
                     paquete = crearHeader('P', EJECUTAR_INSTRUCCION, 1);
 

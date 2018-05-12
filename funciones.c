@@ -122,6 +122,8 @@ KeyBloqueada dsrlz_datosKeyBloqueada(void* buffer){
 	if(solicitud.operacion==SET){	
 
 		memcpy(&(tamString)					 	,buffer+(posicion+=sizeof(char)*tamString)				,sizeof(int));
+
+		solicitud.dato = malloc(sizeof(char) * tamString+1);
 		memcpy(solicitud.dato					,buffer+(posicion+=sizeof(int))							,sizeof(char)*tamString);	
 		solicitud.dato[tamString] = '\0';
 

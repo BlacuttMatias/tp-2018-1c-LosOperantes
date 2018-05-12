@@ -145,7 +145,24 @@ void hiloConsolaInteractiva(void * unused) {
 
                     // Si se ingreso un solo parametro
                     if(countParametrosConsola(comandoConsola) == 2){
-                        printf("Comando no implementado...\n");
+
+                        KeyBloqueada* registroKeyBloqueada = NULL;
+                        registroKeyBloqueada = malloc(sizeof(KeyBloqueada));
+
+                        // Cargo el Registro
+                        registroKeyBloqueada->operacion = 1;
+                        strcpy(registroKeyBloqueada->key , parametrosConsola[1]);
+                        registroKeyBloqueada->nombreProceso = malloc(strlen(parametrosConsola[2])+1);
+                        strcpy(registroKeyBloqueada->nombreProceso , parametrosConsola[2]);
+                        registroKeyBloqueada->nombreProceso[strlen(parametrosConsola[2])] = '\0';
+                        registroKeyBloqueada->dato = NULL;
+                        
+
+                        // Bloqueo el Recurso y lo cargo en la Lista de Claves Bloqueadas
+                        dictionary_put(diccionarioClavesBloqueadas, parametrosConsola[1], registroKeyBloqueada);
+
+                        printf("Se agrego el Recurso %s en la Lista de Claves Bloqueadas asociado al Proceso ESI %s.\n", parametrosConsola[1], parametrosConsola[2]);
+
                     }else{
                         printf("[Error] Cantidad de parámetros incorrectos\n");
                     }
@@ -153,7 +170,17 @@ void hiloConsolaInteractiva(void * unused) {
 
                 if(string_starts_with(comandoConsola,"DESBLOQUEAR")){
                     comandoAceptado = true;
-                    printf("Comando no implementado...\n");
+
+                    // Si se ingreso un solo parametro
+                    if(countParametrosConsola(comandoConsola) == 1){
+
+                        // Libero un Recurso de la Lista de Claves Bloqueadas
+                        dictionary_remove(diccionarioClavesBloqueadas, parametrosConsola[1]);
+
+                    }else{
+                        printf("[Error] Cantidad de parámetros incorrectos\n");
+                    }
+
                 }
 
                 if(string_starts_with(comandoConsola,"LISTAR")){
@@ -161,9 +188,6 @@ void hiloConsolaInteractiva(void * unused) {
 
                     // Si se ingreso un solo parametro
                     if(countParametrosConsola(comandoConsola) == 1){
-
-                        // Convierto el parametro en minuscula
-                        string_to_lower(parametrosConsola[1]);
 
                         // Lista los Procesos que quiere usar el Recurso indicado por consola
                         listarRecursosBloqueados(listaClavesBloqueadasRequeridas, parametrosConsola[1]);
@@ -182,9 +206,6 @@ void hiloConsolaInteractiva(void * unused) {
                     
                     // Si se ingreso un solo parametro
                     if(countParametrosConsola(comandoConsola) == 1){
-
-                        // Convierto el parametro en minuscula
-                        string_to_lower(parametrosConsola[1]);
 
                         // Serializado el Proceso y la Key
                         Paquete paquete = srlz_datosKeyBloqueada('P', OBTENER_STATUS_CLAVE, "PLANIFICADOR", 1, parametrosConsola[1], "_");

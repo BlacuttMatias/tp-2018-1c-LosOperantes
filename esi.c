@@ -180,6 +180,8 @@ int main(int argc, char* argv[]){
                                     // Se elimina la Instruccion Ejecutada de la Lista
                                     eliminarUltimaInstruccion(listaInstrucciones);
 
+                                    printf(" - OK\n");
+
                                 }else{ // Si la ejecucion de la instruccion fallo
 
                                     log_info(infoLogger,"Respuesta sobre la Ejecución FALLIDA de la Instruccion recibida por el Coordinador.");
@@ -221,13 +223,13 @@ int main(int argc, char* argv[]){
                                     // Mostrando por pantalla la Instruccion a Ejecutar
                                     switch(proximaInstruccion.operacion){
                                         case GET:
-                                            printf("Ejecutando... GET %s %s\n",proximaInstruccion.key, proximaInstruccion.dato);
+                                            printf("Ejecutando... GET %s %s ",proximaInstruccion.key, proximaInstruccion.dato);
                                             break;
                                         case SET:
-                                            printf("Ejecutando... SET %s %s\n",proximaInstruccion.key, proximaInstruccion.dato);
+                                            printf("Ejecutando... SET %s %s ",proximaInstruccion.key, proximaInstruccion.dato);
                                             break;
                                         case STORE:
-                                            printf("Ejecutando... STORE %s %s\n",proximaInstruccion.key, proximaInstruccion.dato);
+                                            printf("Ejecutando... STORE %s %s ",proximaInstruccion.key, proximaInstruccion.dato);
                                             break;
                                     }
                                     

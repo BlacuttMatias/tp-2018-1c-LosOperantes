@@ -629,12 +629,26 @@ void cargarProcesoCola(t_list* listaUtilizar, t_queue* colaUtilizar, int socketP
 	queue_push(colaUtilizar, registroProcesoAux2);
 }
 
+
+//**************************************************************************//
+// Mostrar el contenido de un Dirtionary
+//**************************************************************************//
+Instancia* obtenerInstanciaAsignada(t_dictionary * dictionario, char* key){ 
+
+	Instancia* instancia = NULL;
+
+	if(dictionary_size(dictionario) > 0){	
+		instancia = dictionary_get(dictionario, key);
+	}
+
+	return instancia;
+}
+
 //**************************************************************************//
 // El Coordinador procesa la instruccion y elige la Instancia que lo va a ejecutar
 //**************************************************************************//
-Instancia* obtenerInstanciaAsignada(t_list* listaInstanciasConectadas, Instruccion* datosInstruccion, char* algoritmoDistribucion){
+Instancia* obtenerInstanciaNueva(t_list* listaInstanciasConectadas, Instruccion* datosInstruccion, char* algoritmoDistribucion){
 	int algoritmo=8;
-	int ultimaPosicion;						//para algoritmo EL
 	int cantidadElem,dividendo,resto;						//para algoritmo EK
 	char key;
 	Instancia* instanciaElegida = NULL;
@@ -642,7 +656,8 @@ Instancia* obtenerInstanciaAsignada(t_list* listaInstanciasConectadas, Instrucci
 	bool comparacion(Instancia* instancia1, Instancia* instancia2){
 		if (instancia1->entradasLibres >= instancia2->entradasLibres){return true;}
 		else {return false;}
-	}
+	}			
+
 	if(!strcmp(algoritmoDistribucion,"LSU")){
 		algoritmo=LSU;
 	}	else{
@@ -658,20 +673,16 @@ Instancia* obtenerInstanciaAsignada(t_list* listaInstanciasConectadas, Instrucci
 	switch(algoritmo){
 
 		case EL:
-			puts("EL");
-			//consigo la ultima posicion de la lista (asumo que los primeros elementos en la lista
-			//fueron los mas recientemente usados. y al final los menos usados
-			ultimaPosicion = list_size(listaInstanciasConectadas);
-			ultimaPosicion = ultimaPosicion - 1;
-			//saco la instancia en posicion ultima, que es la menos usada o mas recientemente agregada
-			instanciaElegida = list_remove(listaInstanciasConectadas, ultimaPosicion);
-			//ahora que se acaba de usar, la pongo primera en la lista
-			list_add_in_index(listaInstanciasConectadas,0,instanciaElegida);
+			//saco la primer instancia de la lista
+			instanciaElegida = list_remove(listaInstanciasConectadas, 0);
+
+			//ahora la pongo al final de la lista
+			list_add(listaInstanciasConectadas,instanciaElegida);
 
 			break;
 
 		case LSU:
-			puts("LSU");
+
 			list_sort(listaInstanciasConectadas, (void*)comparacion);
 			instanciaElegida = list_remove(listaInstanciasConectadas,0);
 			list_add(listaInstanciasConectadas,instanciaElegida);
@@ -683,8 +694,7 @@ Instancia* obtenerInstanciaAsignada(t_list* listaInstanciasConectadas, Instrucci
 			break;
 
 		case KE:
-		//calculo elementos de la lista
-		puts("KE");
+			//calculo elementos de la lista
 			cantidadElem= list_size(listaInstanciasConectadas);
 			key= datosInstruccion->key[0];
 			key= tolower(key);
@@ -696,20 +706,18 @@ Instancia* obtenerInstanciaAsignada(t_list* listaInstanciasConectadas, Instrucci
 			if(resto!=0){dividendo = dividendo+1;}
 			instanciaElegida = list_get(listaInstanciasConectadas, (key-'a')/dividendo);
 
-
-
 			break;
 
 		default:
 			puts("default");
-			log_error (infoLogger,"algoritmo de distribucion no reconocido");
+			log_error (infoLogger,"Algoritmo de distribución no reconocido");
 	break;
 	}
 
 
-	puts("\n\n\n");
-	showContenidolistaProcesosConectados(listaInstanciasConectadas);
-	puts("\n\n\n");
+//	puts("\n\n\n");
+//	showContenidolistaInstanciasConectadas(listaInstanciasConectadas);
+//	puts("\n\n\n");
 // TODO
 
 	return instanciaElegida;
@@ -743,6 +751,36 @@ void showContenidolistaProcesosConectados(t_list* listaProcesosConectados){
 	    list_iterate(listaProcesosConectados, (void*)_each_elemento_);
 	}else{
 		printf("\nLista ProcesosConectados vacia\n");
+	}
+}
+
+//**************************************************************************//
+// Mostrar el contenido de la Lista de Instancias Conectados
+//**************************************************************************//
+void showContenidolistaInstanciasConectadas(t_list* listaInstanciasConectadas){
+
+	int indice = 0;
+
+	if(list_size(listaInstanciasConectadas) > 0){
+
+	    void _each_elemento_(Instancia* registroProcesoAux)
+		{
+			indice = indice + 1;
+
+			// Muestro el encabezaado
+			if(indice == 1) {
+				printf("\nLISTA INSTANCIAS CONECTADAS\n");
+				printf("Proceso \t Socket\n");
+				printf("------\n");
+
+			}
+
+			printf("%s\t %d\n", registroProcesoAux->nombreProceso,registroProcesoAux->socketProceso);
+
+		}
+	    list_iterate(listaInstanciasConectadas, (void*)_each_elemento_);
+	}else{
+		printf("\nLista InstanciasConectadas vacia\n");
 	}
 }
 
@@ -1054,8 +1092,21 @@ void dump(t_list* tablaEntradas){
 
 // Cargo la Lista de Procesos Conectados en el Coordinador
 void cargarListaProcesosConectados(t_list *listaProcesosConectados, Proceso* nuevoProceso){
-
 	list_add(listaProcesosConectados, nuevoProceso);
+}
+
+// Cargo la Lista de Instancias Conectadas en el Coordinador
+void cargarListaInstanciasConectadas(t_list *listaInstanciasConectadas, Proceso* nuevoProceso){
+
+	Instancia* instancia= malloc(sizeof(Instancia));
+	instancia->nombreProceso= malloc(strlen(nuevoProceso->nombreProceso)+1);
+	strcpy(instancia->nombreProceso,nuevoProceso->nombreProceso);
+	instancia->nombreProceso[strlen(nuevoProceso->nombreProceso)] = '\0';
+
+	instancia->socketProceso=nuevoProceso->socketProceso;
+	instancia->entradasLibres=1;
+
+    list_add(listaInstanciasConectadas, instancia);
 }
 
 // Devuelve la cantidad de parametros que contiene un ingreso por consola

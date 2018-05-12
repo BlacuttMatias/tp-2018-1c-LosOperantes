@@ -24,6 +24,7 @@
 
     t_list* listaProcesosConectados;
     t_list* listaInstanciasConectadas;
+    t_dictionary* diccionarioClavesInstancias;    
     int fd_planificador;
 
 /* ---------------------------------------- */
@@ -259,6 +260,9 @@ void servidorCoordinador(void* puerto){
                                     // Cargo el Proceso en la Lista de Procesos conectados al Planificador
                                     cargarListaProcesosConectados(listaProcesosConectados, registroProcesoAux);
 
+                                    // Cargo el Proceso en la Lista de Instancias conectadas al Planificador
+                                    cargarListaInstanciasConectadas(listaInstanciasConectadas, registroProcesoAux);
+
                                     // Muestro por pantalla el contenido de listaProcesosConectados
                                     showContenidolistaProcesosConectados(listaProcesosConectados);
                                     break;
@@ -347,17 +351,35 @@ void servidorCoordinador(void* puerto){
                                             }
                                         }
 
+
+                                        Instancia* proximaInstancia;
+
+                                        // Si el Recurso ya fue atendido por una Instancia
+                                        if(dictionary_has_key(diccionarioClavesInstancias, registroInstruccion.key) ){
+
+                                            // Obtener la Instancia ya asignado al Recurso
+                                            proximaInstancia = obtenerInstanciaAsignada(diccionarioClavesInstancias,registroInstruccion.key);
+
+                                            log_info(infoLogger, "Se reconoció que el Recurso %s lo tiene asignado la Instancia %s", registroInstruccion.key, proximaInstancia->nombreProceso);
+
+                                        }else{ // Si el Recurso nunca fue atendido por una Instancia
+
+                                            // Defino el Algoritmo de Distribucion a utlizar
+                                            char* algoritmoDistribucion = string_new();
+                                            string_append(&algoritmoDistribucion,config_get_string_value(cfg,"ALGORITMO_DISTRIBUCION"));
+
+                                            // Obtengo la Instancia segun el Algoritmo de Distribucion
+                                            proximaInstancia = obtenerInstanciaNueva(listaInstanciasConectadas,&registroInstruccion,algoritmoDistribucion);
+
+
+                                            log_info(infoLogger, "Se aplico el Algoritmo de Distribución %s y se obtuvo la Instancia %s", algoritmoDistribucion, proximaInstancia->nombreProceso);
+
+                                            // Guardo en el Dictionary que Instancia posee un Key
+                                            dictionary_put(diccionarioClavesInstancias, registroInstruccion.key, proximaInstancia);  
+                                            free(algoritmoDistribucion);
+                                        }
+
                                         // TODO
-
-                                        // Defino el Algoritmo de Distribucion a utlizar
-                                        char* algoritmoDistribucion = string_new();
-                                        string_append(&algoritmoDistribucion,"CIRCULAR");
-                                        char* instanciaElegida = string_new();
-
-                                        //instanciaElegida = procesarSolicitudEjecucion(datosInstruccion, algoritmoDistribucion);
-
-                                        free(algoritmoDistribucion);
-                                        free(instanciaElegida);
 
 
                                         // Genero el Log de Operaciones
@@ -406,57 +428,6 @@ void servidorCoordinador(void* puerto){
 
 
 int main(int argc, char* argv[]){
-
-	/*
-    //probando algoritmos de distribucion
-    Instancia* proximaInstancia;
-    listaInstanciasConectadas = list_create();
-    //hago lista de instancias
-    puts("inicio mallocs");
-    Instancia* instancia1= malloc(sizeof(Instancia));
-        instancia1->nombreProceso= malloc(strlen("instancia 1"));
-        strcpy(instancia1->nombreProceso,"instancia 1");
-        instancia1->socketProceso=1;
-        instancia1->entradasLibres=1;
-    Instancia* instancia2= malloc(sizeof(Instancia));
-        instancia2->nombreProceso= malloc(strlen("instancia 1"));
-        strcpy(instancia2->nombreProceso,"instancia 2");
-        instancia2->socketProceso=2;
-        instancia2->entradasLibres=60;
-    Instancia* instancia3= malloc(sizeof(Instancia));
-        instancia3->nombreProceso= malloc(strlen("instancia 1"));
-        strcpy(instancia3->nombreProceso,"instancia 3");
-        instancia3->socketProceso=3;
-        instancia3->entradasLibres=40;
-    Instancia* instancia4= malloc(sizeof(Instancia));
-        instancia4->nombreProceso= malloc(strlen("instancia 1"));
-        strcpy(instancia4->nombreProceso,"instancia 4");
-        instancia4->socketProceso=4;
-        instancia4->entradasLibres=40;
-    Instancia* instancia5= malloc(sizeof(Instancia));
-        instancia5->nombreProceso= malloc(strlen("instancia 1"));
-        strcpy(instancia5->nombreProceso,"instancia 5");
-        instancia5->socketProceso=5;
-        instancia5->entradasLibres=60;
-        puts("declare instancias");
-    list_add(listaInstanciasConectadas,instancia1);
-    list_add(listaInstanciasConectadas,instancia2);
-    list_add(listaInstanciasConectadas,instancia3);
-    list_add(listaInstanciasConectadas,instancia4);
-    list_add(listaInstanciasConectadas,instancia5);
-    puts("agrego a lista");
-    Instruccion aux;
-       aux.operacion=1;
-       strcpy(aux.key, "ybcd");
-       aux.dato= malloc(strlen("gfgh"));
-       strcpy(aux.dato,"efgh");
-       puts("\n hago proximaInstancia \n");     //hay 26 letras en el alfabeto//
-    char* algoritmo= malloc(strlen("LSU"));
-    strcpy(algoritmo,"KE");
-    proximaInstancia = obtenerInstanciaAsignada(listaInstanciasConectadas,&aux,algoritmo);
-    printf("se eligio %s ",proximaInstancia->nombreProceso);
-    
-   return 0; */
 	
 	/* Creo la instancia del Archivo de Configuracion y del Log */
 	cfg = config_create("config/config.cfg");
@@ -471,7 +442,8 @@ int main(int argc, char* argv[]){
     // Creo la lista de Todas las Instancias Conectadas y la Cantidad de Entradas Libres
     listaInstanciasConectadas = list_create();
 
-
+    // Creo el Diccionario con las Claves y que Instancia la tiene
+    diccionarioClavesInstancias = dictionary_create();
 
 // -----------------------------------------------------------------------
 
@@ -488,6 +460,7 @@ int main(int argc, char* argv[]){
 
     list_destroy(listaProcesosConectados);
     list_destroy(listaInstanciasConectadas);
+    dictionary_destroy(diccionarioClavesInstancias);
 
     return EXIT_SUCCESS;
 }

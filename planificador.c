@@ -39,6 +39,7 @@
     bool planificadorPausado;
     bool planificarProcesos;
     char* algoritmoPlanificacion = NULL;
+    int alfa;
     int coordinador_fd;
     int rafagaActual;
     Proceso* procesoAnterior;
@@ -590,7 +591,7 @@ void servidorPlanificador(void* puerto){
                 planificarProcesos = false;                                    
 
                 // Obtengo el Proximo Proceso a planificar
-                procesoSeleccionado = obtenerProximoProcesoPlanificado(listaReady, colaReady, diccionarioRafagas, algoritmoPlanificacion);
+                procesoSeleccionado = obtenerProximoProcesoPlanificado(listaReady, colaReady, diccionarioRafagas, algoritmoPlanificacion, alfa);
 
                 //si cambia el proceso, guarda nuevas rafagas
                 if(procesoAnterior == NULL){

@@ -937,61 +937,131 @@ void showContenidoCola(t_queue* cola, char* nombreCola){
 }
 
 int estimarRafaga (int estimacionAnterior, int rafagaAnterior, int alfa){
-	return (estimacionAnterior*alfa/100 + ((100 - alfa)/100) * rafagaAnterior);
-}
+		return alfa/100 * rafagaAnterior + (1 - alfa/100) * estimacionAnterior;
+	}
 
-// Coordina la Planificacion de Todos los Procesos
-Proceso* obtenerProximoProcesoPlanificado(t_list* listaReady, t_queue* colaReady,t_dictionary* diccionarioRafagas, char* algoritmoPlanificacion){
+Proceso* obtenerProximoProcesoPlanificado(t_list* listaReady, t_queue* colaReady,t_dictionary* diccionarioRafagas, char* algoritmoPlanificacion, int alfa){
 
 	Proceso* proximoProcesoPlanificado = NULL;
-	//ejemplo para conseguir rafaga
-	/*Proceso* unProceso;
-	Rafagas* unasRafagas;
-	unProceso= list_get(listaReady,0);
-	unasRafagas= dictionary_get(diccionarioRafagas, unProceso->nombreProceso);
-	int estimacionRafaga=unasRafagas->proximaEstimacion;
-*/
+	t_list* listaProcesosConRafagas = list_create();
 
+	typedef struct
+	{
+		char* nombreProceso;
+		int proximaEstimacion;
+	}ProcesoConRafaga;
 
-	
+	//se usa con un list_iterate() de la listaReady
+		//lo que hace es recibir un Proceso, calcular la nueva rafaga de cada proceso y meter estas en el diccionario
+		//tambien se crea van adiriendo cada proceso con su rafaga a una lista de tipo ProcesoConRafaga
+		void actualizarDiccionario(Proceso* registroProcesoAux){
 
+			Rafagas* registroRafagaAux;
+
+			//obtengo la rafaga de un Proceso del diccionario
+			registroRafagaAux = dictionary_get(diccionarioRafagas,registroProcesoAux->nombreProceso);
+
+			//modifico ese valor del diccionario con su nueva rafaga
+			registroRafagaAux->proximaEstimacion = estimarRafaga(registroRafagaAux->estimacionRafagaAnterior, registroRafagaAux->rafagaAnterior, alfa);
+			registroRafagaAux->estimacionRafagaAnterior = registroRafagaAux->proximaEstimacion;
+
+			//agrego el proceso con su rafaga en una lista
+			ProcesoConRafaga* registroProcesoConRafagaAux = malloc(sizeof(ProcesoConRafaga));
+
+			registroProcesoConRafagaAux->nombreProceso = malloc(strlen(registroProcesoAux->nombreProceso)+1);
+			strcpy(registroProcesoConRafagaAux->nombreProceso, registroProcesoAux->nombreProceso);
+			registroProcesoConRafagaAux->nombreProceso[strlen(registroProcesoAux->nombreProceso)] = '\0';
+
+			registroProcesoConRafagaAux->proximaEstimacion = registroRafagaAux->proximaEstimacion;
+
+			list_add(listaProcesosConRafagas ,registroProcesoConRafagaAux);
+
+		}
+
+		//se usa para la funcion list_sort(), para que ordene una lista de ProcesosConRafagas de menor a mayor, por su estimacion
+
+		bool compararRafagaDeProcesos(ProcesoConRafaga* registroProcesoConRafaga1, ProcesoConRafaga* registroProcesoConRafaga2){
+			if (registroProcesoConRafaga1->proximaEstimacion < registroProcesoConRafaga2->proximaEstimacion) return true;
+			else return false;
+		}
+
+		//se usa en un list_iterate() de ProcesosConRafagas, lo que hace es tomar el nombre de un ProcesoConRafagas,
+		//buscar ese nombre en la listaReady, y poner ese elemento tipo Proceso en la colaReady
+
+		void ponerProcesoDeLaListaDeReadyEnLaCola(ProcesoConRafaga* registroProcesoConRafagaAux){
+
+			//es para encontrar en la listaReady, el proceso que coincida con el ProcesoConRafaga. Para eso verifica si los dos tienen el mismo nombre
+			bool compararProcesoPorSuNombre(Proceso* registroProcesoAux){
+				return (!strcmp(registroProcesoAux->nombreProceso, registroProcesoConRafagaAux->nombreProceso));
+			}
+
+			queue_push(colaReady, list_find(listaReady, (void*)compararProcesoPorSuNombre));
+
+		}
+
+		void liberarProcesoConRafaga(ProcesoConRafaga* registroProcesoConRafagaAux){
+			free(registroProcesoConRafagaAux->nombreProceso);
+			free(registroProcesoConRafagaAux);
+		}
+
+		void liberarProceso(Proceso* registroProcesoAux){
+			free(registroProcesoAux->nombreProceso);
+			free(registroProcesoAux);
+		}
 
 	// Si hay elementos en la ListaReady
 	if(list_size(listaReady) > 0){
 
-		// TODO Aplicar los Algoritmos de Planificacion. Ahora solo agarra la ListaReady y ejecuta una clase de FIFO
+		//limpio la cola de ready para luego llenarla con los procesos en el orden que lo establezcan los algoritmos
+		if (queue_size(colaReady) >0) queue_clean_and_destroy_elements(colaReady, (void*)liberarProceso);
 
 		// Ordeno la ColaReady segun el Algoritmo de Planificacion
-		if(string_starts_with(algoritmoPlanificacion,"SJF-SD")){
-			// TODO Aca se deberia cargar la ColaReady siguiendo el Algoritmo
-		}	
+		if(string_starts_with(algoritmoPlanificacion,"SJF-SD") || string_starts_with(algoritmoPlanificacion,"SJF-CD")){
 
-		if(string_starts_with(algoritmoPlanificacion,"SJF-CD")){
-			// TODO Aca se deberia cargar la ColaReady siguiendo el Algoritmo
-		}	
+			//actualiza el diccionario con las nuevas estimaciones y carga una lista auxiliar (listaProcesosConRafagas) con todos los procesos y sus estimaciones
+			list_iterate(listaReady, (void*)actualizarDiccionario);
 
+			//ordena la lista auxiliar por procesos con rafaga mas corta, osea, de menor a mayor
+			list_sort(listaProcesosConRafagas, (void*)compararRafagaDeProcesos);
+
+			//carga los procesos en la colaReady
+			list_iterate(listaProcesosConRafagas, (void*)ponerProcesoDeLaListaDeReadyEnLaCola);
+
+		}
 
 		if(string_starts_with(algoritmoPlanificacion,"HRRN")){
-			// TODO Aca se deberia cargar la ColaReady siguiendo el Algoritmo
-		}	
 
 
-		// Cargo la ColaReady FIFO para TESTEAR
+
+		}
+
+		/*// Cargo la ColaReady FIFO para TESTEAR
 	    void _each_elemento_(Proceso* registroProcesoAux)
 		{
 			// Agrego el Registro a la cola
 			queue_push(colaReady, registroProcesoAux);
 		}
 	    list_iterate(listaReady, (void*)_each_elemento_);
-
+*/
 		// Extraigo un elemento de la ColaReady
 		proximoProcesoPlanificado = queue_pop(colaReady);
 
-		return proximoProcesoPlanificado;		
+		list_clean_and_destroy_elements(listaProcesosConRafagas, (void*)liberarProcesoConRafaga);
+		list_destroy(listaProcesosConRafagas);
+
+		return proximoProcesoPlanificado;
 	}else{
-		return NULL;		
+		return NULL;
 	}
+
+
+
+
+
+
 }
+
+
 
 //Funcion para determinar si un archivo local existe
 bool existeArchivo(char *filename){

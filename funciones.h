@@ -75,7 +75,7 @@
 	void showContenidoDiccionario(t_dictionary * dictionario, char* nombreDiccionario);
 	void showContenidolistaClavesBloqueadasRequeridas(t_list* listaClavesBloqueadasRequeridas);
 
-	Proceso* obtenerProximoProcesoPlanificado(t_list* listaReady, t_queue* colaReady, t_dictionary* diccionarioRafagas, char* algoritmoPlanificacion);
+	Proceso* obtenerProximoProcesoPlanificado(t_list* listaReady, t_queue* colaReady, t_dictionary* diccionarioRafagas, char* algoritmoPlanificacion, int alfa);
 	char* obtenerNombreProceso(t_list* listaProcesosConectados, int socketProcesoConsultar);
 	int obtenerSocketProceso(t_list* listaProcesosConectados, char* nombreProcesoBuscado);
 	Proceso* obtenerRegistroProceso(t_list* listaProcesosConectados, int socketProcesoConsultar);

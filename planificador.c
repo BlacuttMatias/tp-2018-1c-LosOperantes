@@ -682,6 +682,8 @@ int main(int argc, char* argv[]){
     algoritmoPlanificacion = string_new();
     string_append(&algoritmoPlanificacion,config_get_string_value(cfg,"ALGORITMO_PLANIFICACION"));
     
+    alfa=config_get_int_value(cfg,"ALFA");
+
     // Obtenglo las Claves bloqueadas por archivo de configuracion
     arregloClavesInicialmenteBloqueadas = string_get_string_as_array(config_get_string_value(cfg,"CLAVES_INICIALMENTE_BLOQUEADAS"));
 

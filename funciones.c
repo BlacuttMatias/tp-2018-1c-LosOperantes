@@ -990,12 +990,25 @@ Proceso* obtenerProximoProcesoPlanificado(t_list* listaReady, t_queue* colaReady
 
 		void ponerProcesoDeLaListaDeReadyEnLaCola(ProcesoConRafaga* registroProcesoConRafagaAux){
 
-			//es para encontrar en la listaReady, el proceso que coincida con el ProcesoConRafaga. Para eso verifica si los dos tienen el mismo nombre
-			bool compararProcesoPorSuNombre(Proceso* registroProcesoAux){
-				return (!strcmp(registroProcesoAux->nombreProceso, registroProcesoConRafagaAux->nombreProceso));
-			}
+				//es para encontrar en la listaReady, el proceso que coincida con el ProcesoConRafaga. Para eso verifica si los dos tienen el mismo nombre
+				bool compararProcesoPorSuNombre(Proceso* registroProcesoAux){
+					return (!strcmp(registroProcesoAux->nombreProceso, registroProcesoConRafagaAux->nombreProceso));
+				}
 
-			queue_push(colaReady, list_find(listaReady, (void*)compararProcesoPorSuNombre));
+				//encuentro ese proceso en la lista de ready y creo un nuevo registro Proceso con los
+				//mismos datos que el encontrado para ponerlo en la cola de ready
+
+				Proceso* registroProcesoAuxDeLaLista = list_find(listaReady, (void*)compararProcesoPorSuNombre);
+				Proceso* nuevoRegistroProcesoParaLaCola = malloc(sizeof(Proceso));
+
+				nuevoRegistroProcesoParaLaCola->nombreProceso = malloc(strlen(registroProcesoAuxDeLaLista->nombreProceso)+1);
+				strcpy(nuevoRegistroProcesoParaLaCola->nombreProceso, registroProcesoAuxDeLaLista->nombreProceso);
+				nuevoRegistroProcesoParaLaCola->nombreProceso[strlen(registroProcesoAuxDeLaLista->nombreProceso)] = '\0';
+
+				nuevoRegistroProcesoParaLaCola->socketProceso = registroProcesoAuxDeLaLista->socketProceso;
+				nuevoRegistroProcesoParaLaCola->tipoProceso = registroProcesoAuxDeLaLista->tipoProceso;
+
+				queue_push(colaReady, nuevoRegistroProcesoParaLaCola);
 
 		}
 
@@ -1053,11 +1066,6 @@ Proceso* obtenerProximoProcesoPlanificado(t_list* listaReady, t_queue* colaReady
 	}else{
 		return NULL;
 	}
-
-
-
-
-
 
 }
 

@@ -740,12 +740,11 @@ void showContenidolistaProcesosConectados(t_list* listaProcesosConectados){
 			// Muestro el encabezaado
 			if(indice == 1) {
 				printf("\nLISTA PROCESOS CONECTADOS\n");
-				printf("Proceso \t Tipo de Proceso \t Socket\n");
-				printf("------\n");
-
+				printf("Proceso         \t Socket\n");
+				printf("-------------------------------------\n");
 			}
 
-			printf("%s\t %d\t %d\n", registroProcesoAux->nombreProceso,registroProcesoAux->tipoProceso,registroProcesoAux->socketProceso);
+			printf("%15s \t %d\n", registroProcesoAux->nombreProceso,registroProcesoAux->socketProceso);
 
 		}
 	    list_iterate(listaProcesosConectados, (void*)_each_elemento_);
@@ -945,11 +944,6 @@ Proceso* obtenerProximoProcesoPlanificado(t_list* listaReady, t_queue* colaReady
 	Proceso* proximoProcesoPlanificado = NULL;
 	t_list* listaProcesosConRafagas = list_create();
 
-	typedef struct
-	{
-		char* nombreProceso;
-		int proximaEstimacion;
-	}ProcesoConRafaga;
 
 	//se usa con un list_iterate() de la listaReady
 		//lo que hace es recibir un Proceso, calcular la nueva rafaga de cada proceso y meter estas en el diccionario
@@ -1013,13 +1007,13 @@ Proceso* obtenerProximoProcesoPlanificado(t_list* listaReady, t_queue* colaReady
 		}
 
 		void liberarProcesoConRafaga(ProcesoConRafaga* registroProcesoConRafagaAux){
-			free(registroProcesoConRafagaAux->nombreProceso);
-			free(registroProcesoConRafagaAux);
+			//free(registroProcesoConRafagaAux->nombreProceso);
+			//free(registroProcesoConRafagaAux);
 		}
 
 		void liberarProceso(Proceso* registroProcesoAux){
-			free(registroProcesoAux->nombreProceso);
-			free(registroProcesoAux);
+			//free(registroProcesoAux->nombreProceso);
+			//free(registroProcesoAux);
 		}
 
 	// Si hay elementos en la ListaReady
@@ -1031,8 +1025,10 @@ Proceso* obtenerProximoProcesoPlanificado(t_list* listaReady, t_queue* colaReady
 		// Ordeno la ColaReady segun el Algoritmo de Planificacion
 		if(string_starts_with(algoritmoPlanificacion,"SJF-SD") || string_starts_with(algoritmoPlanificacion,"SJF-CD")){
 
+
 			//actualiza el diccionario con las nuevas estimaciones y carga una lista auxiliar (listaProcesosConRafagas) con todos los procesos y sus estimaciones
 			list_iterate(listaReady, (void*)actualizarDiccionario);
+
 
 			//ordena la lista auxiliar por procesos con rafaga mas corta, osea, de menor a mayor
 			list_sort(listaProcesosConRafagas, (void*)compararRafagaDeProcesos);
@@ -1044,18 +1040,10 @@ Proceso* obtenerProximoProcesoPlanificado(t_list* listaReady, t_queue* colaReady
 
 		if(string_starts_with(algoritmoPlanificacion,"HRRN")){
 
-
+			// TODO
 
 		}
 
-		/*// Cargo la ColaReady FIFO para TESTEAR
-	    void _each_elemento_(Proceso* registroProcesoAux)
-		{
-			// Agrego el Registro a la cola
-			queue_push(colaReady, registroProcesoAux);
-		}
-	    list_iterate(listaReady, (void*)_each_elemento_);
-*/
 		// Extraigo un elemento de la ColaReady
 		proximoProcesoPlanificado = queue_pop(colaReady);
 
@@ -1066,10 +1054,7 @@ Proceso* obtenerProximoProcesoPlanificado(t_list* listaReady, t_queue* colaReady
 	}else{
 		return NULL;
 	}
-
 }
-
-
 
 //Funcion para determinar si un archivo local existe
 bool existeArchivo(char *filename){

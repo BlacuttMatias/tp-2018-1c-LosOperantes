@@ -31,7 +31,7 @@ int main(int argc, char* argv[]){
 
 
 	////////////////////////////////////////////
-	/*
+	
 	  // Con un puntero a DIR abro el directorio 
 	  DIR *dir;
 	  // en *ent habrá información sobre el archivo que se está "sacando" a cada momento 

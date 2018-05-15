@@ -1146,8 +1146,8 @@ void procesoArchivo(char *archivo,t_list* tablaEntradas){
 
 	char* contenido_fichero = string_new(); // aca se guarda el contenido de cada fichero es decir el valor almacenado en cada key
 
-//	t_entrada* nuevaEntrada = NULL;
-//	nuevaEntrada = malloc(sizeof(t_entrada)); //prueba con entrada NO FUNCIONA
+	t_entrada* nuevaEntrada = NULL;
+	nuevaEntrada = malloc(sizeof(t_entrada)); //prueba con entrada  FUNCIONA
 
 
 	char* nombre_sin_formato = string_new();
@@ -1159,6 +1159,9 @@ void procesoArchivo(char *archivo,t_list* tablaEntradas){
 
 	FILE *fichero;
 	fichero = fopen(carpeta_archivo, "r");
+	fseek(fichero,0,SEEK_END);
+	int tamanio= ftell(fichero) + 1;
+	fseek(fichero,0,SEEK_SET);
 
 	printf( "Fichero: %s -> ", archivo );
     	if( fichero )
@@ -1168,7 +1171,7 @@ void procesoArchivo(char *archivo,t_list* tablaEntradas){
     }
 
     printf( "Contenido/clave-key con formato del fichero: %s\n\n", archivo ); //muestro key con formato ".txt"
-    printf( "Valor: %s\n", fgets(contenido_fichero,81, fichero) ); // HAY QUE ARREGLAR EL 81, DEBERIA SER SOLO EL TAMAÑO DEL VALOR QUE ESTA ADENTRO DEL TXT
+    printf( "Valor: %s\n", fgets(contenido_fichero,tamanio, fichero) ); 
     printf ("Clave/key: %s\n\n",nombre_sin_formato); //muestro key sin formato ".txt"
 
     	//carga de valor/dato
@@ -1179,7 +1182,7 @@ void procesoArchivo(char *archivo,t_list* tablaEntradas){
     	//carga de clave/key
     	strcpy(nuevaInstruccion->key,nombre_sin_formato);
 
-
+		/*
     	cargarTablaEntradas(tablaEntradas,nuevaInstruccion); //cargo la tabla de entradas con esta nueva instruccion
 
 
@@ -1187,16 +1190,19 @@ void procesoArchivo(char *archivo,t_list* tablaEntradas){
 
     		//muestro entrada "elementoDeTabla" para testear que esté todo correcto
     	  	printf("Clave:%s - Valor:%s - Numero:%d - Tamanio:%d - Posicion en tabla:%d \n",elementoDeTabla->clave,elementoDeTabla->valor,elementoDeTabla->numeroDeEntrada,elementoDeTabla->tamanioValorAlmacenado,list_size(tablaEntradas)); //prueba imprimir por pantalla el elemento obtenido
-
-
-//SI FUESE UNA ENTRADA ---------------------------------------------- NO FUNCIONA
-// 	nuevaEntrada->clave = malloc(strlen(nombre_sin_formato)+1);
-//	strcpy(nuevaEntrada->clave, nombre_sin_formato);
-//	nuevaEntrada->clave[strlen(nombre_sin_formato)] = '\0';
-//	nuevaEntrada->valor = malloc(strlen(contenido_fichero)+1);
-//	strcpy(nuevaEntrada->valor,contenido_fichero);
-//	nuevaEntrada->valor[strlen(contenido_fichero)] = '\0';
-//	list_add(tablaEntradas,nuevaEntrada);
+		*/
+//------------------------------------------------------------------------orueba con entrada//
+ 	nuevaEntrada->clave = malloc(strlen(nombre_sin_formato)+1);
+	strcpy(nuevaEntrada->clave, nombre_sin_formato);
+	nuevaEntrada->clave[strlen(nombre_sin_formato)] = '\0';
+	nuevaEntrada->valor = malloc(strlen(contenido_fichero)+1);
+	strcpy(nuevaEntrada->valor,contenido_fichero);
+	nuevaEntrada->valor[strlen(contenido_fichero)] = '\0';
+	list_add(tablaEntradas,nuevaEntrada);
+	//muestro entrada "elementoDeTabla" para testear que esté todo correcto
+    
+	elementoDeTabla = list_get(tablaEntradas,list_size(tablaEntradas)-1);
+	printf("Clave:%s - Valor:%s - Numero:%d - Tamanio:%d - Posicion en tabla:%d \n",elementoDeTabla->clave,elementoDeTabla->valor,elementoDeTabla->numeroDeEntrada,elementoDeTabla->tamanioValorAlmacenado,list_size(tablaEntradas)); //prueba imprimir por pantalla el elemento obtenido
 // ------------------------------------------------------------------
 
     if( !fclose(fichero) )

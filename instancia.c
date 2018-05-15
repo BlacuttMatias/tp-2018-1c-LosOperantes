@@ -71,6 +71,9 @@ int main(int argc, char* argv[]){
 	//PRUEBA TABLA ENTRADAS IMPLEMENTACION CON LISTAS + nueva funcion cargarTablaEntradas
 	t_list* tablaEntradas = list_create(); //creo lista tabla de entradas
 	
+	
+//**PARA TESTEAR EL RECUPERO DE INFORMACION SI LA INSTANCIA MUERE HAY QUE COMENTAR ESTE PEDAZO DE CODIGO****** //
+	
 	//hardcodeo una instruccion
 	Instruccion* nuevaInstruccion = NULL;
 	Instruccion* otraInstruccion = NULL;
@@ -113,7 +116,8 @@ int main(int argc, char* argv[]){
 
   	//testeo de dump
   	dump(tablaEntradas);
-  	
+	
+//**PARA TESTEAR EL RECUPERO DE INFORMACION SI LA INSTANCIA MUERE HAY QUE COMENTAR ESTE PEDAZO DE CODIGO****** //
   	
 
 	printf("Iniciando INSTANCIA\n");

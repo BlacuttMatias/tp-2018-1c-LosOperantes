@@ -1169,7 +1169,7 @@ void procesoArchivo(char *archivo,t_list* tablaEntradas){
 
     		elementoDeTabla = list_get(tablaEntradas,list_size(tablaEntradas)-1);
 
-    		//muestro entrada hardcodeada
+    		//muestro entrada "elementoDeTabla" para testear que esté todo correcto
     	  	printf("Clave:%s - Valor:%s - Numero:%d - Tamanio:%d - Posicion en tabla:%d \n",elementoDeTabla->clave,elementoDeTabla->valor,elementoDeTabla->numeroDeEntrada,elementoDeTabla->tamanioValorAlmacenado,list_size(tablaEntradas)); //prueba imprimir por pantalla el elemento obtenido
 
 

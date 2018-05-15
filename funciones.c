@@ -1123,23 +1123,42 @@ void error(const char *s)
   exit(EXIT_FAILURE);
 }
 
-void procesoArchivo(char *archivo)
-{
-  /* Para "procesar", o al menos, hacer algo con el archivo, vamos a decir su tamaño en bytes */
-  FILE *fich;
-  int ftam;
+void procesoArchivo(char *archivo){
 
-  fich=fopen(archivo, "r");
-  if (fich)
+	char *carpeta_archivo = string_new();
+	string_append_with_format(&carpeta_archivo, "entradas/%s", archivo);
+	char* linea = string_new();
+
+  FILE *fichero;
+  fichero = fopen(carpeta_archivo, "r");
+
+  printf( "Fichero: %s -> ", archivo );
+    if( fichero )
+       printf( "existe (ABIERTO)\n" );
+    else
     {
-      fseek(fich, 0L, SEEK_END);
-      fclose(fich);
-      /* Si todo va bien, decimos el tamaño */
-      printf ("%30s (%ld bytes)\n", archivo, ftell(fich));
+       printf( "Error (NO ABIERTO)\n" );
     }
-  else
-    /* Si ha pasado algo, sólo decimos el nombre */
-    printf ("%30s (No info.)\n", archivo);
+
+    printf( "Contenido/valor del fichero: %s\n\n", archivo );
+    printf( "%s\n", fgets(linea, 81, fichero) );
+
+    if( !fclose(fichero) )
+       printf( "\nFichero cerrado-----\n" );
+    else
+    {
+       printf( "\nError: fichero NO CERRADO\n" );
+    }
+
+	t_entrada* nuevaEntrada = NULL;
+	nuevaEntrada=malloc(sizeof(t_entrada));
+
+//	memcpy(nuevaEntrada->clave,archivo,strlen(archivo)-4);
+//	strcpy(nuevaEntrada->valor , linea);
+
+
+  printf ("%30s \n", archivo);
+
 }
 
 void dump(t_list* tablaEntradas){

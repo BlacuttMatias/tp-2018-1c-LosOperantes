@@ -302,8 +302,24 @@ Instruccion pasarAEstructura(Instruccion* puntero) {
 //**************************************************************************//
 // Persistir Datos en la Instancia
 //**************************************************************************//
-bool persistirDatos(Instruccion* datosInstruccion, char* algoritmoDistricucion){
+bool persistirDatos(Instruccion* datosInstruccion, char* algoritmoDistribucion){
+	if(string_starts_with(algoritmoDistribucion, "CIRCULAR")){
+			//TODO
 
+
+
+	}	else {if(string_starts_with(algoritmoDistribucion, "BSU")){
+			//TODO
+
+
+
+	} else {if (string_starts_with(algoritmoDistribucion, "LRU")){
+			//TODO
+
+
+
+
+	}	else {printf("\n no se pudo leer el algoritmo de reemplazo %s \n", algoritmoDistribucion);}}}
 	// Dependiendo el algoritmoDistricucion, persistir los datos localmente
 
 	return true;
@@ -1174,7 +1190,9 @@ void procesoArchivo(char *archivo,t_list* tablaEntradas){
 
 
 //SI FUESE UNA ENTRADA ---------------------------------------------- NO FUNCIONA
+// 	nuevaEntrada->clave = malloc(strlen(nombre_sin_formato)+1);
 //	strcpy(nuevaEntrada->clave, nombre_sin_formato);
+//	nuevaEntrada->clave[strlen(nombre_sin_formato)] = '\0';
 //	nuevaEntrada->valor = malloc(strlen(contenido_fichero)+1);
 //	strcpy(nuevaEntrada->valor,contenido_fichero);
 //	nuevaEntrada->valor[strlen(contenido_fichero)] = '\0';

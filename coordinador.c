@@ -51,6 +51,7 @@ void servidorCoordinador(void* puerto){
     Proceso registroProceso;
     Instruccion registroInstruccion;
     KeyBloqueada registroKeyBloqueada;
+    Instancia* proximaInstancia;
     int indice = 0;
     int socketESI = 0;
 
@@ -323,6 +324,19 @@ void servidorCoordinador(void* puerto){
                                         // Serializado el Proceso y la Key
                                         paquete = srlz_datosKeyBloqueada('C', NOTIFICAR_USO_RECURSO, obtenerNombreProceso(listaProcesosConectados, i), registroInstruccion.operacion, registroInstruccion.key, registroInstruccion.dato);
 
+
+                                        // Si el Recurso no fue creado en el diccionarioClavesInstancias (primera vez), lo creo
+                                        if(!dictionary_has_key(diccionarioClavesInstancias, registroInstruccion.key) ){
+
+                                            // Creo Registro Nuevo
+                                            proximaInstancia->nombreProceso = NULL;
+                                            proximaInstancia->socketProceso = 0;
+                                            proximaInstancia->entradasLibres = 0;
+
+                                            // Guardo en el Dictionary la Key
+                                            dictionary_put(diccionarioClavesInstancias, registroInstruccion.key, proximaInstancia);
+                                        }
+
                                         // Envio el Paquetea al Planificador
                                         if(send(fd_planificador,paquete.buffer,paquete.tam_buffer,0) != -1){
 
@@ -338,6 +352,33 @@ void servidorCoordinador(void* puerto){
                                         // Le aviso al Planificador para que Libere el Recurso
                                         if(registroInstruccion.operacion == STORE){
                                             
+
+                                            // Si el Recurso no fue creado previamente, entonces se cancela el ESI por "Error de Clave no Identificada"
+                                            if(!dictionary_has_key(diccionarioClavesInstancias, registroInstruccion.key) ){
+
+                                                // Armo el Paquete del Resultado de la Ejecucion de la Instruccion
+                                                paquete = crearHeader('C', RESPUESTA_EJECUTAR_INSTRUCCION, EJECUCION_FALLIDA);
+
+                                                // Envio el Paquetea a ESI
+                                                if(send(i,paquete.buffer,paquete.tam_buffer,0) != -1){
+
+                                                    free(paquete.buffer);
+                                                    log_info(infoLogger, "Se cancela el ESI %s por Error de Clave %s no Identificada", obtenerNombreProceso(listaProcesosConectados, i), registroKeyBloqueada.key);
+                                                }else{
+                                                    log_error(infoLogger, "No se pudo notificar al ESI %s por Error de Clave %s no Identificada", obtenerNombreProceso(listaProcesosConectados, i), registroKeyBloqueada.key);
+                                                }
+
+
+                                            }else{
+
+
+
+
+                                            }
+
+
+
+
                                             // Serializado el Proceso y la Key
                                             paquete = srlz_datosKeyBloqueada('C', NOTIFICAR_LIBERACION_RECURSO, obtenerNombreProceso(listaProcesosConectados, i), registroInstruccion.operacion, registroInstruccion.key, registroInstruccion.dato);
 
@@ -351,14 +392,44 @@ void servidorCoordinador(void* puerto){
                                             }
                                         }
 
+                                        if(registroInstruccion.operacion == SET){
 
-                                        Instancia* proximaInstancia;
+                                            // Se verifica que la clave este bloqueada previamente. Si no esta bloqueada, se cancela el ESI por "Error de Clave no Bloqueada"
+
+                                            // TODO
+                                        }
+
+
+// Falta contemplar el caso Script que Aborta por desconexión de la instancia
+// TODO
 
                                         // Si el Recurso ya fue atendido por una Instancia
                                         if(dictionary_has_key(diccionarioClavesInstancias, registroInstruccion.key) ){
 
                                             // Obtener la Instancia ya asignado al Recurso
                                             proximaInstancia = obtenerInstanciaAsignada(diccionarioClavesInstancias,registroInstruccion.key);
+
+                                            // Si el Recurso habia tenido un GET pero todavia nunca se asigno una Instancia
+                                            if(proximaInstancia == NULL){
+
+                                                // Defino el Algoritmo de Distribucion a utlizar
+                                                char* algoritmoDistribucion = string_new();
+                                                string_append(&algoritmoDistribucion,config_get_string_value(cfg,"ALGORITMO_DISTRIBUCION"));
+
+                                                // Obtengo la Instancia segun el Algoritmo de Distribucion
+                                                proximaInstancia = obtenerInstanciaNueva(listaInstanciasConectadas,&registroInstruccion,algoritmoDistribucion);
+
+                                                log_info(infoLogger, "Se aplico el Algoritmo de Distribución %s y se obtuvo la Instancia %s", algoritmoDistribucion, proximaInstancia->nombreProceso);
+
+                                                // Guardo en el Dictionary que Instancia posee un Key
+                                                //dictionary_put(diccionarioClavesInstancias, registroInstruccion.key, proximaInstancia);  
+
+                                                // Aca hay que actualizar el diccionario con la Instancia nueva
+                                                // TODO
+
+
+                                                free(algoritmoDistribucion);
+                                            }
 
                                             log_info(infoLogger, "Se reconoció que el Recurso %s lo tiene asignado la Instancia %s", registroInstruccion.key, proximaInstancia->nombreProceso);
 
@@ -410,6 +481,8 @@ void servidorCoordinador(void* puerto){
                                     break;  
 
                                 case ESI_MUERE:
+
+                                    // Elimino el Proceso ESI de la listaProcesosConectados
                                     eliminarProcesoLista(listaProcesosConectados, i);
                                     //TODO
                                     break;                              

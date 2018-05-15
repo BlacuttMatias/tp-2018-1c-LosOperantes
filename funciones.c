@@ -1123,43 +1123,73 @@ void error(const char *s)
   exit(EXIT_FAILURE);
 }
 
-void procesoArchivo(char *archivo){
+void procesoArchivo(char *archivo,t_list* tablaEntradas){
 
 	char *carpeta_archivo = string_new();
-	string_append_with_format(&carpeta_archivo, "entradas/%s", archivo);
-	char* linea = string_new();
+	string_append_with_format(&carpeta_archivo, "entradas/%s", archivo); // para que lea ficheros de la carpeta "entradas"
 
-  FILE *fichero;
-  fichero = fopen(carpeta_archivo, "r");
+	char* contenido_fichero = string_new(); // aca se guarda el contenido de cada fichero es decir el valor almacenado en cada key
 
-  printf( "Fichero: %s -> ", archivo );
-    if( fichero )
+//	t_entrada* nuevaEntrada = NULL;
+//	nuevaEntrada = malloc(sizeof(t_entrada)); //prueba con entrada NO FUNCIONA
+
+
+	char* nombre_sin_formato = string_new();
+	nombre_sin_formato = string_substring(archivo,0,(string_length(archivo)-4)); //obtengo la key sacando ultimos 4 caracteres ya que es el nombre sin el formato ".txt"
+
+	Instruccion* nuevaInstruccion = NULL;
+	nuevaInstruccion = malloc(sizeof(Instruccion)); //prueba con instruccion FUNCIONA
+	t_entrada* elementoDeTabla;
+
+	FILE *fichero;
+	fichero = fopen(carpeta_archivo, "r");
+
+	printf( "Fichero: %s -> ", archivo );
+    	if( fichero )
        printf( "existe (ABIERTO)\n" );
-    else
-    {
+    else{
        printf( "Error (NO ABIERTO)\n" );
     }
 
-    printf( "Contenido/valor del fichero: %s\n\n", archivo );
-    printf( "%s\n", fgets(linea, 81, fichero) );
+    printf( "Contenido/clave-key con formato del fichero: %s\n\n", archivo ); //muestro key con formato ".txt"
+    printf( "Valor: %s\n", fgets(contenido_fichero,81, fichero) ); // HAY QUE ARREGLAR EL 81, DEBERIA SER SOLO EL TAMAÑO DEL VALOR QUE ESTA ADENTRO DEL TXT
+    printf ("Clave/key: %s\n\n",nombre_sin_formato); //muestro key sin formato ".txt"
+
+    	//carga de valor/dato
+    	nuevaInstruccion->dato = malloc(strlen(contenido_fichero)+1);
+    	strcpy(nuevaInstruccion->dato, contenido_fichero);
+    	nuevaInstruccion->dato[strlen(contenido_fichero)] = '\0';
+
+    	//carga de clave/key
+    	strcpy(nuevaInstruccion->key,nombre_sin_formato);
+
+
+    	cargarTablaEntradas(tablaEntradas,nuevaInstruccion); //cargo la tabla de entradas con esta nueva instruccion
+
+
+    		elementoDeTabla = list_get(tablaEntradas,list_size(tablaEntradas)-1);
+
+    		//muestro entrada hardcodeada
+    	  	printf("Clave:%s - Valor:%s - Numero:%d - Tamanio:%d - Posicion en tabla:%d \n",elementoDeTabla->clave,elementoDeTabla->valor,elementoDeTabla->numeroDeEntrada,elementoDeTabla->tamanioValorAlmacenado,list_size(tablaEntradas)); //prueba imprimir por pantalla el elemento obtenido
+
+
+//SI FUESE UNA ENTRADA ---------------------------------------------- NO FUNCIONA
+//	strcpy(nuevaEntrada->clave, nombre_sin_formato);
+//	nuevaEntrada->valor = malloc(strlen(contenido_fichero)+1);
+//	strcpy(nuevaEntrada->valor,contenido_fichero);
+//	nuevaEntrada->valor[strlen(contenido_fichero)] = '\0';
+//	list_add(tablaEntradas,nuevaEntrada);
+// ------------------------------------------------------------------
 
     if( !fclose(fichero) )
-       printf( "\nFichero cerrado-----\n" );
-    else
-    {
+       printf( "\n----Fichero cerrado----\n\n\n" );
+    else{
        printf( "\nError: fichero NO CERRADO\n" );
     }
 
-	t_entrada* nuevaEntrada = NULL;
-	nuevaEntrada=malloc(sizeof(t_entrada));
-
-//	memcpy(nuevaEntrada->clave,archivo,strlen(archivo)-4);
-//	strcpy(nuevaEntrada->valor , linea);
-
-
-  printf ("%30s \n", archivo);
 
 }
+
 
 void dump(t_list* tablaEntradas){
 

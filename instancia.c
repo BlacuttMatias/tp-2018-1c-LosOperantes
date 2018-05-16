@@ -51,13 +51,8 @@ int main(int argc, char* argv[]){
 	  struct dirent *ent;
 	  t_list* listaEntradas = list_create();
 
-<<<<<<< HEAD
 	  /* Empezaremos a leer en el directorio entradas */
 	  dir = opendir (config_get_string_value(cfg,"PUNTO_MONTAJE"));
-=======
-	  // Empezaremos a leer en el directorio entradas 
-	  dir = opendir ("entradas/");
->>>>>>> f5de06a80e0e3f1497eef7f01e12c1720791c68b
 
 	  // Miramos que no haya error 
 	  if (dir == NULL)

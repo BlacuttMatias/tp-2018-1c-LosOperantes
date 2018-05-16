@@ -302,8 +302,24 @@ Instruccion pasarAEstructura(Instruccion* puntero) {
 //**************************************************************************//
 // Persistir Datos en la Instancia
 //**************************************************************************//
-bool persistirDatos(Instruccion* datosInstruccion, char* algoritmoDistricucion){
+bool persistirDatos(Instruccion* datosInstruccion, char* algoritmoDistribucion){
+	if(string_starts_with(algoritmoDistribucion, "CIRCULAR")){
+			//TODO
 
+
+
+	}	else {if(string_starts_with(algoritmoDistribucion, "BSU")){
+			//TODO
+
+
+
+	} else {if (string_starts_with(algoritmoDistribucion, "LRU")){
+			//TODO
+
+
+
+
+	}	else {printf("\n no se pudo leer el algoritmo de reemplazo %s \n", algoritmoDistribucion);}}}
 	// Dependiendo el algoritmoDistricucion, persistir los datos localmente
 
 	return true;
@@ -1123,24 +1139,81 @@ void error(const char *s)
   exit(EXIT_FAILURE);
 }
 
-void procesoArchivo(char *archivo)
-{
-  /* Para "procesar", o al menos, hacer algo con el archivo, vamos a decir su tamaño en bytes */
-  FILE *fich;
-  int ftam;
+void procesoArchivo(char *archivo,t_list* tablaEntradas){
 
-  fich=fopen(archivo, "r");
-  if (fich)
-    {
-      fseek(fich, 0L, SEEK_END);
-      fclose(fich);
-      /* Si todo va bien, decimos el tamaño */
-      printf ("%30s (%ld bytes)\n", archivo, ftell(fich));
+	char *carpeta_archivo = string_new();
+	string_append_with_format(&carpeta_archivo, "entradas/%s", archivo); // para que lea ficheros de la carpeta "entradas"
+
+	char* contenido_fichero = string_new(); // aca se guarda el contenido de cada fichero es decir el valor almacenado en cada key
+
+	t_entrada* nuevaEntrada = NULL;
+	nuevaEntrada = malloc(sizeof(t_entrada)); //prueba con entrada  FUNCIONA
+
+
+	char* nombre_sin_formato = string_new();
+	nombre_sin_formato = string_substring(archivo,0,(string_length(archivo)-4)); //obtengo la key sacando ultimos 4 caracteres ya que es el nombre sin el formato ".txt"
+
+	Instruccion* nuevaInstruccion = NULL;
+	nuevaInstruccion = malloc(sizeof(Instruccion)); //prueba con instruccion FUNCIONA
+	t_entrada* elementoDeTabla;
+
+	FILE *fichero;
+	fichero = fopen(carpeta_archivo, "r");
+	fseek(fichero,0,SEEK_END);
+	int tamanio= ftell(fichero) + 1;
+	fseek(fichero,0,SEEK_SET);
+
+	printf( "Fichero: %s -> ", archivo );
+    	if( fichero )
+       printf( "existe (ABIERTO)\n" );
+    else{
+       printf( "Error (NO ABIERTO)\n" );
     }
-  else
-    /* Si ha pasado algo, sólo decimos el nombre */
-    printf ("%30s (No info.)\n", archivo);
+
+    printf( "Contenido/clave-key con formato del fichero: %s\n\n", archivo ); //muestro key con formato ".txt"
+    printf( "Valor: %s\n", fgets(contenido_fichero,tamanio, fichero) ); 
+    printf ("Clave/key: %s\n\n",nombre_sin_formato); //muestro key sin formato ".txt"
+
+    	//carga de valor/dato
+    	nuevaInstruccion->dato = malloc(strlen(contenido_fichero)+1);
+    	strcpy(nuevaInstruccion->dato, contenido_fichero);
+    	nuevaInstruccion->dato[strlen(contenido_fichero)] = '\0';
+
+    	//carga de clave/key
+    	strcpy(nuevaInstruccion->key,nombre_sin_formato);
+
+		/*
+    	cargarTablaEntradas(tablaEntradas,nuevaInstruccion); //cargo la tabla de entradas con esta nueva instruccion
+
+
+    		elementoDeTabla = list_get(tablaEntradas,list_size(tablaEntradas)-1);
+
+    		//muestro entrada "elementoDeTabla" para testear que esté todo correcto
+    	  	printf("Clave:%s - Valor:%s - Numero:%d - Tamanio:%d - Posicion en tabla:%d \n",elementoDeTabla->clave,elementoDeTabla->valor,elementoDeTabla->numeroDeEntrada,elementoDeTabla->tamanioValorAlmacenado,list_size(tablaEntradas)); //prueba imprimir por pantalla el elemento obtenido
+		*/
+//------------------------------------------------------------------------orueba con entrada//
+ 	nuevaEntrada->clave = malloc(strlen(nombre_sin_formato)+1);
+	strcpy(nuevaEntrada->clave, nombre_sin_formato);
+	nuevaEntrada->clave[strlen(nombre_sin_formato)] = '\0';
+	nuevaEntrada->valor = malloc(strlen(contenido_fichero)+1);
+	strcpy(nuevaEntrada->valor,contenido_fichero);
+	nuevaEntrada->valor[strlen(contenido_fichero)] = '\0';
+	list_add(tablaEntradas,nuevaEntrada);
+	//muestro entrada "elementoDeTabla" para testear que esté todo correcto
+    
+	elementoDeTabla = list_get(tablaEntradas,list_size(tablaEntradas)-1);
+	printf("Clave:%s - Valor:%s - Numero:%d - Tamanio:%d - Posicion en tabla:%d \n",elementoDeTabla->clave,elementoDeTabla->valor,elementoDeTabla->numeroDeEntrada,elementoDeTabla->tamanioValorAlmacenado,list_size(tablaEntradas)); //prueba imprimir por pantalla el elemento obtenido
+// ------------------------------------------------------------------
+
+    if( !fclose(fichero) )
+       printf( "\n----Fichero cerrado----\n\n\n" );
+    else{
+       printf( "\nError: fichero NO CERRADO\n" );
+    }
+
+
 }
+
 
 void dump(t_list* tablaEntradas){
 

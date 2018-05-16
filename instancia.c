@@ -44,32 +44,38 @@ int main(int argc, char* argv[]){
 
 
 	////////////////////////////////////////////
-
-	  /* Con un puntero a DIR abro el directorio */
+	
+	  // Con un puntero a DIR abro el directorio 
 	  DIR *dir;
-	  /* en *ent habrá información sobre el archivo que se está "sacando" a cada momento */
+	  // en *ent habrá información sobre el archivo que se está "sacando" a cada momento 
 	  struct dirent *ent;
+	  t_list* listaEntradas = list_create();
 
+<<<<<<< HEAD
 	  /* Empezaremos a leer en el directorio entradas */
 	  dir = opendir (config_get_string_value(cfg,"PUNTO_MONTAJE"));
+=======
+	  // Empezaremos a leer en el directorio entradas 
+	  dir = opendir ("entradas/");
+>>>>>>> f5de06a80e0e3f1497eef7f01e12c1720791c68b
 
-	  /* Miramos que no haya error */
+	  // Miramos que no haya error 
 	  if (dir == NULL)
 	    error("No se puede abrir el directorio");
 
-	  /* Una vez nos aseguramos de que no hay error... */
-	  /* Leyendo uno a uno todos los archivos que hay */
+	  // Una vez nos aseguramos de que no hay error... 
+	  // Leyendo uno a uno todos los archivos que hay 
 	  while ((ent = readdir (dir)) != NULL)
 	    {
-	      /* Nos devolverá el directorio actual (.) y el anterior (..), como hace ls */
+	      // Nos devolverá el directorio actual (.) y el anterior (..), como hace ls //
 	      if ( (strcmp(ent->d_name, ".")!=0) && (strcmp(ent->d_name, "..")!=0) )
 	    {
-	      /* Una vez tenemos el archivo, lo pasamos a una función para procesarlo. */
-	      procesoArchivo(ent->d_name);
+	      // Una vez tenemos el archivo, lo pasamos a una función para procesarlo. //
+	      procesoArchivo(ent->d_name, listaEntradas);
 	    }
 	    }
 	  closedir (dir);
-
+	
 
 
 	//////////////////////////////////////
@@ -79,6 +85,9 @@ int main(int argc, char* argv[]){
 	//PRUEBA TABLA ENTRADAS IMPLEMENTACION CON LISTAS + nueva funcion cargarTablaEntradas
 	t_list* tablaEntradas = list_create(); //creo lista tabla de entradas
 	
+	
+//**PARA TESTEAR EL RECUPERO DE INFORMACION SI LA INSTANCIA MUERE HAY QUE COMENTAR ESTE PEDAZO DE CODIGO****** //
+	/*
 	//hardcodeo una instruccion
 	Instruccion* nuevaInstruccion = NULL;
 	Instruccion* otraInstruccion = NULL;
@@ -121,7 +130,8 @@ int main(int argc, char* argv[]){
 
   	//testeo de dump
   	dump(tablaEntradas);
-  	
+	*/
+//**PARA TESTEAR EL RECUPERO DE INFORMACION SI LA INSTANCIA MUERE HAY QUE COMENTAR ESTE PEDAZO DE CODIGO****** //
   	
 
 	printf("Iniciando INSTANCIA\n");

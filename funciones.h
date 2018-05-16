@@ -113,6 +113,8 @@
 	void error(const char *s);
 	void procesoArchivo(char *archivo);
 	void dump(t_list* tablaEntradas);
+	int cantidadDirectoriosPath(char* pathDirectorio);
+	bool crearEstructuraDirectorios(char* pathArchivo);
 
 
 

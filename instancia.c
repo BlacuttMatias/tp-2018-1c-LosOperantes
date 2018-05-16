@@ -25,6 +25,19 @@
 
 int main(int argc, char* argv[]){
 
+
+    /* Creo la instancia del Archivo de Configuracion y del Log */
+    cfg = config_create("config/config.cfg");
+    infoLogger = log_create("log/instancia.log", "INSTANCIA", false, LOG_LEVEL_INFO);
+
+    log_info(infoLogger, "Iniciando INSTANCIA" );
+    
+
+    // Me aseguro que la estructura de directorios del Punto de Montaje este creada previamente
+    if(crearEstructuraDirectorios( config_get_string_value(cfg,"PUNTO_MONTAJE") ) ){
+        log_info(infoLogger, "Se creo la estructura del Punto de Montaje" );
+    }
+
 	// -----------------------------------------------------------------------
 	//    Prueba de funciones 1
 	// -----------------------------------------------------------------------
@@ -38,7 +51,7 @@ int main(int argc, char* argv[]){
 	  struct dirent *ent;
 
 	  /* Empezaremos a leer en el directorio entradas */
-	  dir = opendir ("entradas/");
+	  dir = opendir (config_get_string_value(cfg,"PUNTO_MONTAJE"));
 
 	  /* Miramos que no haya error */
 	  if (dir == NULL)
@@ -62,12 +75,7 @@ int main(int argc, char* argv[]){
 	//////////////////////////////////////
 
 
-	/* Creo la instancia del Archivo de Configuracion y del Log */
-	cfg = config_create("config/config.cfg");
-	infoLogger = log_create("log/instancia.log", "INSTANCIA", false, LOG_LEVEL_INFO);
 
-	log_info(infoLogger, "Iniciando INSTANCIA" );
-	
 	//PRUEBA TABLA ENTRADAS IMPLEMENTACION CON LISTAS + nueva funcion cargarTablaEntradas
 	t_list* tablaEntradas = list_create(); //creo lista tabla de entradas
 	

@@ -82,7 +82,7 @@ int main(int argc, char* argv[]){
 	
 	
 //**PARA TESTEAR EL RECUPERO DE INFORMACION SI LA INSTANCIA MUERE HAY QUE COMENTAR ESTE PEDAZO DE CODIGO****** //
-	/*
+	
 	//hardcodeo una instruccion
 	Instruccion* nuevaInstruccion = NULL;
 	Instruccion* otraInstruccion = NULL;
@@ -125,13 +125,13 @@ int main(int argc, char* argv[]){
 
   	//testeo de dump
   	dump(tablaEntradas);
-	*/
+	
 //**PARA TESTEAR EL RECUPERO DE INFORMACION SI LA INSTANCIA MUERE HAY QUE COMENTAR ESTE PEDAZO DE CODIGO****** //
   	
 
 //PRUEBA ARCHIVO BINARIO					/////
 	// creo el archivo binario
-	/*
+	
 	FILE* binario= fopen("storage.bin","wb+");
 	int entradas=5;
 	int espacioPorEntrada=15;
@@ -144,17 +144,21 @@ int main(int argc, char* argv[]){
 		fseek(vectorBin,sizeof(char)*contador,0);
 		fwrite(&cero,sizeof(int),1,vectorBin);
 	}
-	
+	//----------ESCRIBO Y LEO LA PRIMERA POSICION EN EL BINARIO----/
 	t_entrada* entrada= list_get(listaEntradas,0);
 	fseek(vectorBin,0,SEEK_SET);	
-	fseek(binario,0,SEEK_SET);
 	fwrite(&uno,sizeof(char),1,vectorBin);
-	fwrite(&entrada->valor  ,strlen(entrada->valor) ,1   ,binario);
-	int longString=strlen(entrada->valor);
-	char*buffer = malloc(longString);
-	fread(&buffer, longString,1,binario);
+	char *buffer;
+	escribirBinarioEnPosicion(binario,0,espacioPorEntrada, entrada->valor);
+	buffer= leerBinarioEnPosicion(binario,0,espacioPorEntrada);
+	
 	printf("\n el primer valor en el binario es:   %s  \n",buffer);	
-	*/
+	
+	//escribo en 2da posicion del binario y luego la leo
+	entrada= list_get(listaEntradas,1);
+	escribirBinarioEnPosicion(binario,1,espacioPorEntrada, entrada->valor);
+	buffer=leerBinarioEnPosicion(binario,1,espacioPorEntrada);
+	printf("\n el segundo valor en el binario es:   %s  \n",buffer);	
 				/*	entrada=list_get(listaEntradas,1);
 					fwrite(&uno,sizeof(int),1,vectorBin);
 					fseek(binario,espacioPorEntrada * 1, SEEK_SET);

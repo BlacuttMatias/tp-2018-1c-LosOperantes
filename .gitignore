@@ -50,6 +50,8 @@ files/*.tmp
 *.tmp
 
 entradas/*.txt
+*.bin
+vectorBin.txt
 
 # excluyo los binarios
 planificador

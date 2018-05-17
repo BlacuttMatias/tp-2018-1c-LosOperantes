@@ -300,32 +300,6 @@ Instruccion pasarAEstructura(Instruccion* puntero) {
 }
 
 //**************************************************************************//
-// Persistir Datos en la Instancia
-//**************************************************************************//
-bool persistirDatos(Instruccion* datosInstruccion, char* algoritmoDistribucion){
-	if(string_starts_with(algoritmoDistribucion, "CIRCULAR")){
-			//TODO
-
-
-
-	}	else {if(string_starts_with(algoritmoDistribucion, "BSU")){
-			//TODO
-
-
-
-	} else {if (string_starts_with(algoritmoDistribucion, "LRU")){
-			//TODO
-
-
-
-
-	}	else {printf("\n no se pudo leer el algoritmo de reemplazo %s \n", algoritmoDistribucion);}}}
-	// Dependiendo el algoritmoDistricucion, persistir los datos localmente
-
-	return true;
-}
-
-//**************************************************************************//
 // Procesar script de Instrucciones
 //**************************************************************************//
 bool procesarScript(char* pathScript, t_list* listaInstrucciones){
@@ -1113,31 +1087,118 @@ void cargarTablaEntradas(t_list *tablaEntradas,Instruccion* estructuraInstruccio
 	list_add(tablaEntradas,nuevaEntrada);
 }
 
-// persistir una entrada en disco
-void persistirEntrada(t_entrada* unaEntrada){
 
-    // Defino el Nombre del Archivo con el nombre de la entrada
-	char *nombre_formato_archivo = string_new();
-    string_append_with_format(&nombre_formato_archivo, "entradas/%s.txt", unaEntrada->clave);
+/* ------------------------------------------------------------------------------------------------- */
+/* ------------------------------------------------------------------------------------------------- */
 
-    FILE* archivoTexto;
-	archivoTexto = fopen(nombre_formato_archivo,"w+");
 
-	char *valorIdentificado = unaEntrada->valor;
-
-    // Grabo el Valor de la Entrada en el Archivo
-	fputs(valorIdentificado, archivoTexto );
-
-	fclose ( archivoTexto );
-    free(nombre_formato_archivo);
+// Cargo la Lista de Procesos Conectados en el Coordinador
+void cargarListaProcesosConectados(t_list *listaProcesosConectados, Proceso* nuevoProceso){
+	list_add(listaProcesosConectados, nuevoProceso);
 }
 
-void error(const char *s)
-{
-  /* perror() devuelve la cadena S y el error (en cadena de caracteres) que tenga errno */
-  perror (s);
-  exit(EXIT_FAILURE);
+// Cargo la Lista de Instancias Conectadas en el Coordinador
+void cargarListaInstanciasConectadas(t_list *listaInstanciasConectadas, Proceso* nuevoProceso){
+
+	Instancia* instancia= malloc(sizeof(Instancia));
+	instancia->nombreProceso= malloc(strlen(nuevoProceso->nombreProceso)+1);
+	strcpy(instancia->nombreProceso,nuevoProceso->nombreProceso);
+	instancia->nombreProceso[strlen(nuevoProceso->nombreProceso)] = '\0';
+
+	instancia->socketProceso=nuevoProceso->socketProceso;
+	instancia->entradasLibres=1;
+
+    list_add(listaInstanciasConectadas, instancia);
 }
+
+// Devuelve la cantidad de parametros que contiene un ingreso por consola
+int countParametrosConsola(char * string){ 
+	int cant_elementos = 0, i;
+
+	for(i=0; i<=strlen(string); i=i+1){
+		if(string[i] == ' ' ){
+			cant_elementos = cant_elementos + 1;
+		}
+	}
+
+	return cant_elementos;
+
+}
+
+// Libera Todos los Recursos de un determinado Proceso
+void liberarRecursosProceso(t_dictionary * dictionario, char* nombreProceso){
+
+	if(dictionary_size(dictionario) > 0){
+
+		void elemento_destroy(Proceso* self){
+			//free(self); // Explota!!!
+		}
+
+	    void _each_elemento_(char* key, Proceso* registroProcesoAux)
+		{
+			if(registroProcesoAux->nombreProceso != NULL && strcmp(registroProcesoAux->nombreProceso, nombreProceso) == 0) {
+				dictionary_remove_and_destroy(dictionario, key, (void*) elemento_destroy);
+			}
+		}
+	    dictionary_iterator(dictionario, (void*)_each_elemento_);
+	}
+
+}
+
+// Cargo las Claves bloqueadas por archivo de configuracion en el Diccionario de Claves Bloqueadas
+int cargarClavesInicialmenteBloqueadas(t_dictionary* diccionarioClavesBloqueadas, char** arregloClavesInicialmenteBloqueadas){
+
+	int indice = 0;
+	while(arregloClavesInicialmenteBloqueadas[indice] != NULL){
+
+        Proceso* registroKeyProcesoAux = NULL;
+        registroKeyProcesoAux = malloc(sizeof(Proceso));
+
+        // Cargo el Registro
+        registroKeyProcesoAux->socketProceso = 0;
+        registroKeyProcesoAux->tipoProceso = ESI;
+        registroKeyProcesoAux->nombreProceso = NULL;
+	    
+	    // Bloqueo el Recurso y lo cargo en la Lista de Claves Bloqueadas
+	    dictionary_put(diccionarioClavesBloqueadas, arregloClavesInicialmenteBloqueadas[indice], registroKeyProcesoAux);
+
+	    indice++;
+	}
+
+	return indice;
+}
+
+/******************INSTANCIA********************************************/
+
+
+/******************INSTANCIA********************************************/
+
+bool persistirDatos(Instruccion* datosInstruccion, char* algoritmoDistribucion){
+	if(string_starts_with(algoritmoDistribucion, "CIRCULAR")){
+			//TODO
+
+
+
+	}	else {if(string_starts_with(algoritmoDistribucion, "BSU")){
+			//TODO
+
+
+
+	} else {if (string_starts_with(algoritmoDistribucion, "LRU")){
+			//TODO
+
+
+
+
+	}	else {printf("\n no se pudo leer el algoritmo de reemplazo %s \n", algoritmoDistribucion);}}}
+	// Dependiendo el algoritmoDistricucion, persistir los datos localmente
+
+	return true;
+}
+
+
+
+
 
 void procesoArchivo(char *archivo,t_list* tablaEntradas){
 
@@ -1222,85 +1283,34 @@ void dump(t_list* tablaEntradas){
 
 }
 
-/* ------------------------------------------------------------------------------------------------- */
-/* ------------------------------------------------------------------------------------------------- */
+// persistir una entrada en disco
+void persistirEntrada(t_entrada* unaEntrada){
 
+    // Defino el Nombre del Archivo con el nombre de la entrada
+	char *nombre_formato_archivo = string_new();
+    string_append_with_format(&nombre_formato_archivo, "entradas/%s.txt", unaEntrada->clave);
 
-// Cargo la Lista de Procesos Conectados en el Coordinador
-void cargarListaProcesosConectados(t_list *listaProcesosConectados, Proceso* nuevoProceso){
-	list_add(listaProcesosConectados, nuevoProceso);
+    FILE* archivoTexto;
+	archivoTexto = fopen(nombre_formato_archivo,"w+");
+
+	char *valorIdentificado = unaEntrada->valor;
+
+    // Grabo el Valor de la Entrada en el Archivo
+	fputs(valorIdentificado, archivoTexto );
+
+	fclose ( archivoTexto );
+    free(nombre_formato_archivo);
 }
 
-// Cargo la Lista de Instancias Conectadas en el Coordinador
-void cargarListaInstanciasConectadas(t_list *listaInstanciasConectadas, Proceso* nuevoProceso){
-
-	Instancia* instancia= malloc(sizeof(Instancia));
-	instancia->nombreProceso= malloc(strlen(nuevoProceso->nombreProceso)+1);
-	strcpy(instancia->nombreProceso,nuevoProceso->nombreProceso);
-	instancia->nombreProceso[strlen(nuevoProceso->nombreProceso)] = '\0';
-
-	instancia->socketProceso=nuevoProceso->socketProceso;
-	instancia->entradasLibres=1;
-
-    list_add(listaInstanciasConectadas, instancia);
+void error(const char *s)
+{
+  /* perror() devuelve la cadena S y el error (en cadena de caracteres) que tenga errno */
+  perror (s);
+  exit(EXIT_FAILURE);
 }
 
-// Devuelve la cantidad de parametros que contiene un ingreso por consola
-int countParametrosConsola(char * string){ 
-	int cant_elementos = 0, i;
 
-	for(i=0; i<=strlen(string); i=i+1){
-		if(string[i] == ' ' ){
-			cant_elementos = cant_elementos + 1;
-		}
-	}
 
-	return cant_elementos;
-
-}
-
-// Libera Todos los Recursos de un determinado Proceso
-void liberarRecursosProceso(t_dictionary * dictionario, char* nombreProceso){
-
-	if(dictionary_size(dictionario) > 0){
-
-		void elemento_destroy(Proceso* self){
-			//free(self); // Explota!!!
-		}
-
-	    void _each_elemento_(char* key, Proceso* registroProcesoAux)
-		{
-			if(registroProcesoAux->nombreProceso != NULL && strcmp(registroProcesoAux->nombreProceso, nombreProceso) == 0) {
-				dictionary_remove_and_destroy(dictionario, key, (void*) elemento_destroy);
-			}
-		}
-	    dictionary_iterator(dictionario, (void*)_each_elemento_);
-	}
-
-}
-
-// Cargo las Claves bloqueadas por archivo de configuracion en el Diccionario de Claves Bloqueadas
-int cargarClavesInicialmenteBloqueadas(t_dictionary* diccionarioClavesBloqueadas, char** arregloClavesInicialmenteBloqueadas){
-
-	int indice = 0;
-	while(arregloClavesInicialmenteBloqueadas[indice] != NULL){
-
-        Proceso* registroKeyProcesoAux = NULL;
-        registroKeyProcesoAux = malloc(sizeof(Proceso));
-
-        // Cargo el Registro
-        registroKeyProcesoAux->socketProceso = 0;
-        registroKeyProcesoAux->tipoProceso = ESI;
-        registroKeyProcesoAux->nombreProceso = NULL;
-	    
-	    // Bloqueo el Recurso y lo cargo en la Lista de Claves Bloqueadas
-	    dictionary_put(diccionarioClavesBloqueadas, arregloClavesInicialmenteBloqueadas[indice], registroKeyProcesoAux);
-
-	    indice++;
-	}
-
-	return indice;
-}
 
 // Dado un Path, crea todos los directorios del mismo
 bool crearEstructuraDirectorios(char* pathArchivo){
@@ -1366,3 +1376,31 @@ int cantidadDirectoriosPath(char* pathDirectorio){
 
 	return contadorDirectorios;
 }
+
+char* leerBinarioEnPosicion(FILE* binario, int posicion, int tamEntrada){
+	char* buffer = string_new();
+	char letra='z';
+	fseek(binario,tamEntrada*posicion,SEEK_SET);
+	int contador=0;
+	//debuggeanding
+	while( letra !='\0'){
+		fread(&letra,sizeof(char),1,binario);
+		buffer[contador]=letra;
+		//printf("letra leida es %c \n",letra);
+		contador +=1;
+	} 
+	return buffer;
+}
+
+void escribirBinarioEnPosicion(FILE* binario, int posicion, int tamEntrada, char* valor){
+
+	fseek(binario, tamEntrada*posicion,SEEK_SET);
+	int tamanio= string_length(valor);
+	fwrite(valor,tamanio,1,binario);
+	char fin='\0';
+	fwrite(&fin,sizeof(char),1,binario);
+}
+
+
+
+/******************INSTANCIA********************************************/

@@ -116,7 +116,8 @@
 	int cantidadDirectoriosPath(char* pathDirectorio);
 	bool crearEstructuraDirectorios(char* pathArchivo);
 
-
+	char* leerBinarioEnPosicion(FILE* binario, int posicion, int espacioPorEntrada);
+	void escribirBinarioEnPosicion(FILE* binario, int posicion, int espacioPorEntrada, char* valor);
 
 /* ---------------------------------------- */
 #endif

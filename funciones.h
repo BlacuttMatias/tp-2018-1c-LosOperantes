@@ -118,6 +118,7 @@
 
 	char* leerBinarioEnPosicion(FILE* binario, int posicion, int espacioPorEntrada);
 	void escribirBinarioEnPosicion(FILE* binario, int posicion, int espacioPorEntrada, char* valor);
+	int buscarPosicionEnBin(FILE*binario,int espacioPorEntrada, char* valor);
 
 /* ---------------------------------------- */
 #endif

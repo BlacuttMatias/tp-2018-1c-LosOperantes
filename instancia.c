@@ -158,12 +158,16 @@ int main(int argc, char* argv[]){
 	entrada= list_get(listaEntradas,1);
 	escribirBinarioEnPosicion(binario,1,espacioPorEntrada, entrada->valor);
 	buffer=leerBinarioEnPosicion(binario,1,espacioPorEntrada);
-	printf("\n el segundo valor en el binario es:   %s  \n",buffer);	
-				/*	entrada=list_get(listaEntradas,1);
-					fwrite(&uno,sizeof(int),1,vectorBin);
-					fseek(binario,espacioPorEntrada * 1, SEEK_SET);
-					fwrite(&entrada->valor  ,strlen(entrada->valor) ,1   ,binario);
-					*/
+	printf("\n el segundo valor en el binario es:   %s  \n",buffer);
+
+	
+	//cargo el NumeroEntrada de las Estructuras de la lista, segun su posicion en el bin.
+	/*
+	int numeroDeEntrada = buscarPosicionEnBin(binario, espacioPorEntrada, entrada->valor);	
+	entrada->numeroDeEntrada=numeroDeEntrada;
+	printf("\n es posicion %d     y deberia ser posicion  1 tomando en cuenta la posicion 0\n",numeroDeEntrada);
+	*/
+
 
 
 	printf("Iniciando INSTANCIA\n");

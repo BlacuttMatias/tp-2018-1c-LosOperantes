@@ -1062,32 +1062,6 @@ bool existeArchivo(char *filename){
 /* ------------------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------------------- */
 
-/* ---------------------------------------- */
-/*  Funciones de Instancia 					*/
-/* ---------------------------------------- */
-
-//funcion para carga de entradas
-void cargarTablaEntradas(t_list *tablaEntradas,Instruccion* estructuraInstruccion){
-	t_entrada* nuevaEntrada = NULL;
-
-	int tamanioLista = list_size(tablaEntradas);
-
-	nuevaEntrada=malloc(sizeof(t_entrada));
-
-
-	nuevaEntrada->clave = estructuraInstruccion->key;
-
-	nuevaEntrada->valor = malloc(strlen(estructuraInstruccion->dato)+1);
-	strcpy(nuevaEntrada->valor,estructuraInstruccion->dato);
-	nuevaEntrada->valor[strlen(estructuraInstruccion->dato)] = '\0';
-
-	nuevaEntrada->numeroDeEntrada = tamanioLista+1;
-	nuevaEntrada->tamanioValorAlmacenado = strlen(estructuraInstruccion->dato);
-
-	list_add(tablaEntradas,nuevaEntrada);
-}
-
-
 /* ------------------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------------------- */
 
@@ -1194,6 +1168,30 @@ bool persistirDatos(Instruccion* datosInstruccion, char* algoritmoDistribucion){
 	// Dependiendo el algoritmoDistricucion, persistir los datos localmente
 
 	return true;
+}
+
+
+
+
+//funcion para carga de entradas
+void cargarTablaEntradas(t_list *tablaEntradas,Instruccion* estructuraInstruccion){
+	t_entrada* nuevaEntrada = NULL;
+
+	int tamanioLista = list_size(tablaEntradas);
+
+	nuevaEntrada=malloc(sizeof(t_entrada));
+
+
+	nuevaEntrada->clave = estructuraInstruccion->key;
+
+	nuevaEntrada->valor = malloc(strlen(estructuraInstruccion->dato)+1);
+	strcpy(nuevaEntrada->valor,estructuraInstruccion->dato);
+	nuevaEntrada->valor[strlen(estructuraInstruccion->dato)] = '\0';
+
+	nuevaEntrada->numeroDeEntrada = 999; //para luego verificar si se carga bien el nmEntrada. quedara 999 si se hizo mal
+	nuevaEntrada->tamanioValorAlmacenado = strlen(estructuraInstruccion->dato);
+
+	list_add(tablaEntradas,nuevaEntrada);
 }
 
 
@@ -1401,6 +1399,23 @@ void escribirBinarioEnPosicion(FILE* binario, int posicion, int tamEntrada, char
 	fwrite(&fin,sizeof(char),1,binario);
 }
 
+int buscarPosicionEnBin(FILE* binario, int espacioPorEntrada, char* valor){
+	int tamanio= fseek(binario,0,SEEK_END);
+	int entradas= tamanio/espacioPorEntrada;
+	if(tamanio%espacioPorEntrada != 0)
+		{printf("\n error al calcular cant.entradas\n");} 
+		else{printf("\n se calculo bien cant.entradas\n");}
+	int posicion=0;
+	char*buffer= string_new();
+	int i=0;
+	while(i<entradas){
+		buffer= leerBinarioEnPosicion(binario,i,espacioPorEntrada);
+		if(strcmp(buffer,valor) == 0){return i;}	
+	
+	}
+	//TODO
 
+	return 888;
+}
 
 /******************INSTANCIA********************************************/

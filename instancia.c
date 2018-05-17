@@ -129,6 +129,39 @@ int main(int argc, char* argv[]){
 //**PARA TESTEAR EL RECUPERO DE INFORMACION SI LA INSTANCIA MUERE HAY QUE COMENTAR ESTE PEDAZO DE CODIGO****** //
   	
 
+//PRUEBA ARCHIVO BINARIO					/////
+	// creo el archivo binario
+	/*
+	FILE* binario= fopen("storage.bin","wb+");
+	int entradas=5;
+	int espacioPorEntrada=15;
+	ftruncate(fileno(binario),entradas*espacioPorEntrada);
+	FILE* vectorBin = fopen("vectorBin.txt","w");
+	char cero='0';
+	int uno='1';
+	int contador=0;
+	for(contador=0;contador<entradas; contador +=1){
+		fseek(vectorBin,sizeof(char)*contador,0);
+		fwrite(&cero,sizeof(int),1,vectorBin);
+	}
+	
+	t_entrada* entrada= list_get(listaEntradas,0);
+	fseek(vectorBin,0,SEEK_SET);	
+	fseek(binario,0,SEEK_SET);
+	fwrite(&uno,sizeof(char),1,vectorBin);
+	fwrite(&entrada->valor  ,strlen(entrada->valor) ,1   ,binario);
+	int longString=strlen(entrada->valor);
+	char*buffer = malloc(longString);
+	fread(&buffer, longString,1,binario);
+	printf("\n el primer valor en el binario es:   %s  \n",buffer);	
+	*/
+				/*	entrada=list_get(listaEntradas,1);
+					fwrite(&uno,sizeof(int),1,vectorBin);
+					fseek(binario,espacioPorEntrada * 1, SEEK_SET);
+					fwrite(&entrada->valor  ,strlen(entrada->valor) ,1   ,binario);
+					*/
+
+
 	printf("Iniciando INSTANCIA\n");
 
 

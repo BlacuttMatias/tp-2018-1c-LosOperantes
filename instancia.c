@@ -162,11 +162,11 @@ int main(int argc, char* argv[]){
 
 	
 	//cargo el NumeroEntrada de las Estructuras de la lista, segun su posicion en el bin.
-	/*
+	
 	int numeroDeEntrada = buscarPosicionEnBin(binario, espacioPorEntrada, entrada->valor);	
 	entrada->numeroDeEntrada=numeroDeEntrada;
 	printf("\n es posicion %d     y deberia ser posicion  1 tomando en cuenta la posicion 0\n",numeroDeEntrada);
-	*/
+	
 	}
 
 

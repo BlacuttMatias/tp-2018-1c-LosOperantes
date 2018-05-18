@@ -1399,23 +1399,31 @@ void escribirBinarioEnPosicion(FILE* binario, int posicion, int tamEntrada, char
 	fwrite(&fin,sizeof(char),1,binario);
 }
 
+//DEVUELVE LA POSICION DEL BINARIO EN LA QUE SE ENCUENTRA EL VALOR BUSCADO. 
+//De no encontrarse retorna -1
+//De haber error, retorna -2
 int buscarPosicionEnBin(FILE* binario, int espacioPorEntrada, char* valor){
-	int tamanio= fseek(binario,0,SEEK_END);
+	fseek(binario,0,SEEK_END);
+	int tamanio= ftell(binario);
+	printf("\n tamanio archivo es %d",tamanio);
 	int entradas= tamanio/espacioPorEntrada;
 	if(tamanio%espacioPorEntrada != 0)
-		{printf("\n error al calcular cant.entradas\n");} 
-		else{printf("\n se calculo bien cant.entradas\n");}
+		{printf("\n error al calcular cant.entradas\n");
+		return -2} 
+		else{printf("\n se calculo bien cant.entradas igual a %d\n",entradas);}
 	int posicion=0;
 	char*buffer= string_new();
 	int i=0;
+	printf("\nse busca %s\n",valor);
 	while(i<entradas){
 		buffer= leerBinarioEnPosicion(binario,i,espacioPorEntrada);
+		//printf("\n se leyó %s\n",buffer);
 		if(strcmp(buffer,valor) == 0){return i;}	
+		i +=1;
 	
 	}
-	//TODO
 
-	return 888;
+	return -1;
 }
 
 /******************INSTANCIA********************************************/

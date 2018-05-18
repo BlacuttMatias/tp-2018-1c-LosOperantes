@@ -188,6 +188,15 @@ int main(int argc, char* argv[]){
         entrada->numeroDeEntrada=numeroDeEntrada;
         printf("\n es posicion %d     y deberia ser posicion  1 tomando en cuenta la posicion 0\n",numeroDeEntrada);
 
+			/*
+		int Bool=buscarPosicionesEnBin(binario,espacioPorEntrada,listaEntradas);
+		if(Bool){
+		puts("se encontraron todas las entradas en el bin\n");	}
+		else{
+		puts("no se encontro alguna entrada");	
+		}*/
+
+
         // Cierro los FD
         fclose(binario);      
         fclose(vectorBin);

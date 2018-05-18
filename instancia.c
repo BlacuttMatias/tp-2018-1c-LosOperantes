@@ -184,17 +184,19 @@ int main(int argc, char* argv[]){
         printf("\n el segundo valor en el binario es:   %s  \n",buffer);
 
         //cargo el NumeroEntrada de las Estructuras de la lista, segun su posicion en el bin.
+/*        
         int numeroDeEntrada = buscarPosicionEnBin(binario, espacioPorEntrada, entrada->valor);	
         entrada->numeroDeEntrada=numeroDeEntrada;
         printf("\n es posicion %d     y deberia ser posicion  1 tomando en cuenta la posicion 0\n",numeroDeEntrada);
+*/
 
-			/*
 		int Bool=buscarPosicionesEnBin(binario,espacioPorEntrada,listaEntradas);
+        
 		if(Bool){
-		puts("se encontraron todas las entradas en el bin\n");	}
+		  puts("se encontraron todas las entradas en el bin\n");	}
 		else{
-		puts("no se encontro alguna entrada");	
-		}*/
+		  puts("no se encontro alguna entrada");	
+		}
 
 
         // Cierro los FD

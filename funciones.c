@@ -1426,21 +1426,23 @@ int buscarPosicionEnBin(FILE* binario, int espacioPorEntrada, char* valor){
 		i +=1;
 
 	}
+	return -1;
+}
+
 int buscarPosicionesEnBin(FILE*binario, int espacioPorEntrada, t_list* entradas){
+
 	int tamanio= list_size(entradas);
 	t_entrada* entrada;
 	int i=0;
-	for(i=0;i+=1; i<tamanio){
+
+	for(i=0;i<tamanio;i++){
 		entrada = list_get(entradas,i);
 		entrada->numeroDeEntrada = buscarPosicionEnBin(binario,espacioPorEntrada, entrada->valor);
 	}
+
 	bool se_Encontro_Todo(t_entrada* unaEntrada){
 		return unaEntrada->numeroDeEntrada>=0;
 	}
 	return list_all_satisfy(entradas, (void*)se_Encontro_Todo);
 }
-
-	return -1;
-}
-
 /******************INSTANCIA********************************************/

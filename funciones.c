@@ -1409,7 +1409,7 @@ int buscarPosicionEnBin(FILE* binario, int espacioPorEntrada, char* valor){
 	int entradas= tamanio/espacioPorEntrada;
 	if(tamanio%espacioPorEntrada != 0)
 		{printf("\n error al calcular cant.entradas\n");
-		return -2} 
+		return -2;} 
 		else{printf("\n se calculo bien cant.entradas igual a %d\n",entradas);}
 	int posicion=0;
 	char*buffer= string_new();
@@ -1422,6 +1422,19 @@ int buscarPosicionEnBin(FILE* binario, int espacioPorEntrada, char* valor){
 		i +=1;
 	
 	}
+int buscarPosicionesEnBin(FILE*binario, int espacioPorEntrada, t_list* entradas){
+	int tamanio= list_size(entradas);
+	t_entrada* entrada;
+	int i=0;
+	for(i=0;i+=1; i<tamanio){
+		entrada = list_get(entradas,i);
+		entrada->numeroDeEntrada = buscarPosicionEnBin(binario,espacioPorEntrada, entrada->valor);
+	}
+	bool se_Encontro_Todo(t_entrada* unaEntrada){
+		return unaEntrada->numeroDeEntrada>=0;
+	}
+	return list_all_satisfy(entradas, (void*)se_Encontro_Todo);
+}
 
 	return -1;
 }

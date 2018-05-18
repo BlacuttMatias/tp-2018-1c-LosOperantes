@@ -38,6 +38,36 @@ int main(int argc, char* argv[]){
         log_info(infoLogger, "Se creo la estructura del Punto de Montaje" );
     }
 
+    // Defino la Cantidad de Entradas y el Tamaño de las Entradas
+    int entradas=5;
+    int espacioPorEntrada=15;
+    char cero='0';
+    int uno='1';
+    int contador=0;
+
+
+    // Creo el Storage.bin si no existe
+    if (!existeArchivo("storage.bin")){
+        FILE* binario= fopen("storage.bin","wb+");
+        ftruncate(fileno(binario),entradas*espacioPorEntrada);
+
+        // Cierro los FD
+        fclose(binario);
+    }
+
+    // Creo el Bitmap si no existe
+    if (!existeArchivo("vectorBin.txt")){
+        FILE* vectorBin = fopen("vectorBin.txt","w");
+
+        for(contador=0;contador<entradas; contador +=1){
+          fseek(vectorBin,sizeof(char)*contador,0);
+          fwrite(&cero,sizeof(int),1,vectorBin);
+        }
+
+        // Cierro los FD
+        fclose(vectorBin);        
+    }
+    
 	// -----------------------------------------------------------------------
 	//    Prueba de funciones 1
 	// -----------------------------------------------------------------------
@@ -45,31 +75,31 @@ int main(int argc, char* argv[]){
 
 	////////////////////////////////////////////
 	
-	  // Con un puntero a DIR abro el directorio 
-	  DIR *dir;
-	  // en *ent habrá información sobre el archivo que se está "sacando" a cada momento 
-	  struct dirent *ent;
-	  t_list* listaEntradas = list_create();
+    // Con un puntero a DIR abro el directorio 
+    DIR *dir;
+    // en *ent habrá información sobre el archivo que se está "sacando" a cada momento 
+    struct dirent *ent;
+    t_list* listaEntradas = list_create();
 
-	  /* Empezaremos a leer en el directorio entradas */
-	  dir = opendir (config_get_string_value(cfg,"PUNTO_MONTAJE"));
+    /* Empezaremos a leer en el directorio entradas */
+    dir = opendir (config_get_string_value(cfg,"PUNTO_MONTAJE"));
 
-	  // Miramos que no haya error 
-	  if (dir == NULL)
-	    error("No se puede abrir el directorio");
+    // Miramos que no haya error 
+    if (dir == NULL)
+        error("No se puede abrir el directorio");
 
-	  // Una vez nos aseguramos de que no hay error... 
-	  // Leyendo uno a uno todos los archivos que hay 
-	  while ((ent = readdir (dir)) != NULL)
-	    {
-	      // Nos devolverá el directorio actual (.) y el anterior (..), como hace ls //
-	      if ( (strcmp(ent->d_name, ".")!=0) && (strcmp(ent->d_name, "..")!=0) )
-	    {
-	      // Una vez tenemos el archivo, lo pasamos a una función para procesarlo. //
-	      procesoArchivo(ent->d_name, listaEntradas);
-	    }
-	    }
-	  closedir (dir);
+    // Una vez nos aseguramos de que no hay error... 
+    // Leyendo uno a uno todos los archivos que hay 
+    while ((ent = readdir (dir)) != NULL)
+    {
+        // Nos devolverá el directorio actual (.) y el anterior (..), como hace ls //
+        if ( (strcmp(ent->d_name, ".")!=0) && (strcmp(ent->d_name, "..")!=0) )
+        {
+            // Una vez tenemos el archivo, lo pasamos a una función para procesarlo. //
+            procesoArchivo(ent->d_name, listaEntradas);
+        }
+    }
+    closedir (dir);
 	
 
 
@@ -131,34 +161,25 @@ int main(int argc, char* argv[]){
 
 //PRUEBA ARCHIVO BINARIO					/////
 	// creo el archivo binario
-	if(list_size(listaEntradas)>1){
-	FILE* binario= fopen("storage.bin","wb+");
-	int entradas=5;
-	int espacioPorEntrada=15;
-	ftruncate(fileno(binario),entradas*espacioPorEntrada);
-	FILE* vectorBin = fopen("vectorBin.txt","w");
-	char cero='0';
-	int uno='1';
-	int contador=0;
-	for(contador=0;contador<entradas; contador +=1){
-		fseek(vectorBin,sizeof(char)*contador,0);
-		fwrite(&cero,sizeof(int),1,vectorBin);
-	}
+   if(list_size(listaEntradas)>1){
+       FILE* binario= fopen("storage.bin","wb+");
+       FILE* vectorBin = fopen("vectorBin.txt","w");
+
 	//----------ESCRIBO Y LEO LA PRIMERA POSICION EN EL BINARIO----/
-	t_entrada* entrada= list_get(listaEntradas,0);
-	fseek(vectorBin,0,SEEK_SET);	
-	fwrite(&uno,sizeof(char),1,vectorBin);
-	char *buffer;
-	escribirBinarioEnPosicion(binario,0,espacioPorEntrada, entrada->valor);
-	buffer= leerBinarioEnPosicion(binario,0,espacioPorEntrada);
-	
-	printf("\n el primer valor en el binario es:   %s  \n",buffer);	
-	
+      t_entrada* entrada= list_get(listaEntradas,0);
+      fseek(vectorBin,0,SEEK_SET);	
+      fwrite(&uno,sizeof(char),1,vectorBin);
+      char *buffer;
+      escribirBinarioEnPosicion(binario,0,espacioPorEntrada, entrada->valor);
+      buffer= leerBinarioEnPosicion(binario,0,espacioPorEntrada);
+
+      printf("\n el primer valor en el binario es:   %s  \n",buffer);	
+
 	//escribo en 2da posicion del binario y luego la leo
-	entrada= list_get(listaEntradas,1);
-	escribirBinarioEnPosicion(binario,1,espacioPorEntrada, entrada->valor);
-	buffer=leerBinarioEnPosicion(binario,1,espacioPorEntrada);
-	printf("\n el segundo valor en el binario es:   %s  \n",buffer);
+      entrada= list_get(listaEntradas,1);
+      escribirBinarioEnPosicion(binario,1,espacioPorEntrada, entrada->valor);
+      buffer=leerBinarioEnPosicion(binario,1,espacioPorEntrada);
+      printf("\n el segundo valor en el binario es:   %s  \n",buffer);
 
 	
 	//cargo el NumeroEntrada de las Estructuras de la lista, segun su posicion en el bin.
@@ -167,6 +188,10 @@ int main(int argc, char* argv[]){
 	entrada->numeroDeEntrada=numeroDeEntrada;
 	printf("\n es posicion %d     y deberia ser posicion  1 tomando en cuenta la posicion 0\n",numeroDeEntrada);
 	*/
+
+        // Cierro los FD
+        fclose(binario);      
+        fclose(vectorBin);          
 	}
 
 

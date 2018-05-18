@@ -131,7 +131,7 @@ int main(int argc, char* argv[]){
 
 //PRUEBA ARCHIVO BINARIO					/////
 	// creo el archivo binario
-	
+	if(list_size(listaEntradas)>1){
 	FILE* binario= fopen("storage.bin","wb+");
 	int entradas=5;
 	int espacioPorEntrada=15;
@@ -167,7 +167,7 @@ int main(int argc, char* argv[]){
 	entrada->numeroDeEntrada=numeroDeEntrada;
 	printf("\n es posicion %d     y deberia ser posicion  1 tomando en cuenta la posicion 0\n",numeroDeEntrada);
 	*/
-
+	}
 
 
 	printf("Iniciando INSTANCIA\n");

@@ -41,6 +41,8 @@ int main(int argc, char* argv[]){
     // Defino la Cantidad de Entradas y el Tamaño de las Entradas
     int entradas=5;
     int espacioPorEntrada=15;
+
+
     char cero='0';
     int uno='1';
     int contador=0;
@@ -59,15 +61,15 @@ int main(int argc, char* argv[]){
     if (!existeArchivo("vectorBin.txt")){
         FILE* vectorBin = fopen("vectorBin.txt","w");
 
-        for(contador=0;contador<entradas; contador +=1){
-          fseek(vectorBin,sizeof(char)*contador,0);
-          fwrite(&cero,sizeof(int),1,vectorBin);
+        for(contador=0;contador<entradas; contador=contador+1){
+          fseek(vectorBin,sizeof(char)*contador,SEEK_SET);
+          fwrite(&cero,sizeof(char),1,vectorBin);
         }
 
         // Cierro los FD
-        fclose(vectorBin);        
+        fclose(vectorBin);
     }
-    
+
 	// -----------------------------------------------------------------------
 	//    Prueba de funciones 1
 	// -----------------------------------------------------------------------
@@ -162,36 +164,33 @@ int main(int argc, char* argv[]){
 //PRUEBA ARCHIVO BINARIO					/////
 	// creo el archivo binario
    if(list_size(listaEntradas)>1){
-       FILE* binario= fopen("storage.bin","wb+");
-       FILE* vectorBin = fopen("vectorBin.txt","w");
+        FILE* binario= fopen("storage.bin","r+b");
+        FILE* vectorBin = fopen("vectorBin.txt","r+");
 
-	//----------ESCRIBO Y LEO LA PRIMERA POSICION EN EL BINARIO----/
-      t_entrada* entrada= list_get(listaEntradas,0);
-      fseek(vectorBin,0,SEEK_SET);	
-      fwrite(&uno,sizeof(char),1,vectorBin);
-      char *buffer;
-      escribirBinarioEnPosicion(binario,0,espacioPorEntrada, entrada->valor);
-      buffer= leerBinarioEnPosicion(binario,0,espacioPorEntrada);
+        //----------ESCRIBO Y LEO LA PRIMERA POSICION EN EL BINARIO----/
+        t_entrada* entrada= list_get(listaEntradas,0);
+        fseek(vectorBin,0,SEEK_SET);	
+        fwrite(&uno,1,sizeof(char),vectorBin);
+        char *buffer;
+        escribirBinarioEnPosicion(binario,0,espacioPorEntrada, entrada->valor);
+        buffer= leerBinarioEnPosicion(binario,0,espacioPorEntrada);
 
-      printf("\n el primer valor en el binario es:   %s  \n",buffer);	
+        printf("\n el primer valor en el binario es:   %s  \n",buffer);	
 
-	//escribo en 2da posicion del binario y luego la leo
-      entrada= list_get(listaEntradas,1);
-      escribirBinarioEnPosicion(binario,1,espacioPorEntrada, entrada->valor);
-      buffer=leerBinarioEnPosicion(binario,1,espacioPorEntrada);
-      printf("\n el segundo valor en el binario es:   %s  \n",buffer);
+        //escribo en 2da posicion del binario y luego la leo
+        entrada= list_get(listaEntradas,1);
+        escribirBinarioEnPosicion(binario,1,espacioPorEntrada, entrada->valor);
+        buffer=leerBinarioEnPosicion(binario,1,espacioPorEntrada);
+        printf("\n el segundo valor en el binario es:   %s  \n",buffer);
 
-	
-	//cargo el NumeroEntrada de las Estructuras de la lista, segun su posicion en el bin.
-	/*
-	int numeroDeEntrada = buscarPosicionEnBin(binario, espacioPorEntrada, entrada->valor);	
-	entrada->numeroDeEntrada=numeroDeEntrada;
-	printf("\n es posicion %d     y deberia ser posicion  1 tomando en cuenta la posicion 0\n",numeroDeEntrada);
-	*/
+        //cargo el NumeroEntrada de las Estructuras de la lista, segun su posicion en el bin.
+        int numeroDeEntrada = buscarPosicionEnBin(binario, espacioPorEntrada, entrada->valor);	
+        entrada->numeroDeEntrada=numeroDeEntrada;
+        printf("\n es posicion %d     y deberia ser posicion  1 tomando en cuenta la posicion 0\n",numeroDeEntrada);
 
         // Cierro los FD
         fclose(binario);      
-        fclose(vectorBin);          
+        fclose(vectorBin);
 	}
 
 

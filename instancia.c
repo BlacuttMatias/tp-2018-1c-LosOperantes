@@ -98,6 +98,8 @@ int main(int argc, char* argv[]){
     if (dir == NULL)
         error("No se puede abrir el directorio");
 
+    
+
     // Una vez nos aseguramos de que no hay error... 
     // Leyendo uno a uno todos los archivos que hay 
     while ((ent = readdir (dir)) != NULL)
@@ -105,13 +107,16 @@ int main(int argc, char* argv[]){
         // Nos devolverá el directorio actual (.) y el anterior (..), como hace ls //
         if ( (strcmp(ent->d_name, ".")!=0) && (strcmp(ent->d_name, "..")!=0) )
         {
+            char* nombreArchivoProcesar = string_new();
+            string_append_with_format(&nombreArchivoProcesar, "%s/%s", config_get_string_value(cfg,"PUNTO_MONTAJE"), ent->d_name);
+
             // Una vez tenemos el archivo, lo pasamos a una función para procesarlo. //
-            procesoArchivo(ent->d_name, listaEntradas);
+            procesoArchivo(nombreArchivoProcesar, listaEntradas);  
+
+            free(nombreArchivoProcesar);          
         }
     }
     closedir (dir);
-	
-
 
 	//////////////////////////////////////
 
@@ -157,7 +162,7 @@ int main(int argc, char* argv[]){
 	segundoElemento = list_get(tablaEntradas,1);
 	
 	//muestro entrada hardcodeada
-  	printf("Clave:%s - Valor:%s - Numero:%d - Tamanio:%d \n",primerElemento->clave,primerElemento->valor,primerElemento->numeroDeEntrada,primerElemento->tamanioValorAlmacenado); //prueba imprimir por pantalla el elemento obtenido
+  	printf("Clave:%s - Numero:%d - Tamanio:%d \n",primerElemento->clave,primerElemento->numeroDeEntrada,primerElemento->tamanioValorAlmacenado); //prueba imprimir por pantalla el elemento obtenido
 
     // Persisto dos Entradas
     //persistirEntrada(primerElemento);
@@ -180,14 +185,20 @@ int main(int argc, char* argv[]){
         fseek(vectorBin,0,SEEK_SET);	
         fwrite(&uno,1,sizeof(char),vectorBin);
         char *buffer;
-        escribirBinarioEnPosicion(binario,0,espacioPorEntrada, entrada->valor);
+
+
+        // TODO 
+
+        // El 4to parametro es el Valor de la Key que ahora hay que consultarlo del Archivo Binario
+        // Se pasa NULL para que no falle
+        escribirBinarioEnPosicion(binario,0,espacioPorEntrada, NULL);
         buffer= leerBinarioEnPosicion(binario,0,espacioPorEntrada);
 
         printf("\n el primer valor en el binario es:   %s  \n",buffer);	
 
         //escribo en 2da posicion del binario y luego la leo
         entrada= list_get(listaEntradas,1);
-        escribirBinarioEnPosicion(binario,1,espacioPorEntrada, entrada->valor);
+        escribirBinarioEnPosicion(binario,1,espacioPorEntrada, NULL);
         buffer=leerBinarioEnPosicion(binario,1,espacioPorEntrada);
         printf("\n el segundo valor en el binario es:   %s  \n",buffer);
 
@@ -198,7 +209,7 @@ int main(int argc, char* argv[]){
         printf("\n es posicion %d     y deberia ser posicion  1 tomando en cuenta la posicion 0\n",numeroDeEntrada);
 */
 
-		int Bool=buscarPosicionesEnBin(binario,espacioPorEntrada,listaEntradas);
+		int Bool=buscarPosicionesEnBin(binario,espacioPorEntrada,listaEntradas, NULL);
 
 		if(Bool){
 		  puts("se encontraron todas las entradas en el bin\n");	}

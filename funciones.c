@@ -1223,10 +1223,6 @@ void cargarTablaEntradas(t_list *tablaEntradas,Instruccion* estructuraInstruccio
 
 	nuevaEntrada->clave = estructuraInstruccion->key;
 
-	nuevaEntrada->valor = malloc(strlen(estructuraInstruccion->dato)+1);
-	strcpy(nuevaEntrada->valor,estructuraInstruccion->dato);
-	nuevaEntrada->valor[strlen(estructuraInstruccion->dato)] = '\0';
-
 	nuevaEntrada->numeroDeEntrada = 999; //para luego verificar si se carga bien el nmEntrada. quedara 999 si se hizo mal
 	nuevaEntrada->tamanioValorAlmacenado = strlen(estructuraInstruccion->dato);
 
@@ -1240,7 +1236,7 @@ void cargarTablaEntradas(t_list *tablaEntradas,Instruccion* estructuraInstruccio
 void procesoArchivo(char *archivo,t_list* tablaEntradas){
 
 	char *carpeta_archivo = string_new();
-	string_append_with_format(&carpeta_archivo, "entradas/%s", archivo); // para que lea ficheros de la carpeta "entradas"
+	string_append_with_format(&carpeta_archivo, "%s", archivo); // para que lea ficheros de la carpeta "entradas"
 
 	char* contenido_fichero = string_new(); // aca se guarda el contenido de cada fichero es decir el valor almacenado en cada key
 
@@ -1293,14 +1289,12 @@ void procesoArchivo(char *archivo,t_list* tablaEntradas){
  	nuevaEntrada->clave = malloc(strlen(nombre_sin_formato)+1);
 	strcpy(nuevaEntrada->clave, nombre_sin_formato);
 	nuevaEntrada->clave[strlen(nombre_sin_formato)] = '\0';
-	nuevaEntrada->valor = malloc(strlen(contenido_fichero)+1);
-	strcpy(nuevaEntrada->valor,contenido_fichero);
-	nuevaEntrada->valor[strlen(contenido_fichero)] = '\0';
+	
 	list_add(tablaEntradas,nuevaEntrada);
 	//muestro entrada "elementoDeTabla" para testear que esté todo correcto
     
 	elementoDeTabla = list_get(tablaEntradas,list_size(tablaEntradas)-1);
-	printf("Clave:%s - Valor:%s - Numero:%d - Tamanio:%d - Posicion en tabla:%d \n",elementoDeTabla->clave,elementoDeTabla->valor,elementoDeTabla->numeroDeEntrada,elementoDeTabla->tamanioValorAlmacenado,list_size(tablaEntradas)); //prueba imprimir por pantalla el elemento obtenido
+	printf("Clave:%s - Numero:%d - Tamanio:%d - Posicion en tabla:%d \n",elementoDeTabla->clave,elementoDeTabla->numeroDeEntrada,elementoDeTabla->tamanioValorAlmacenado,list_size(tablaEntradas)); //prueba imprimir por pantalla el elemento obtenido
 // ------------------------------------------------------------------
 
     if( !fclose(fichero) )
@@ -1309,15 +1303,13 @@ void procesoArchivo(char *archivo,t_list* tablaEntradas){
        printf( "\nError: fichero NO CERRADO\n" );
     }
 
-
+    free(carpeta_archivo);
+    free(nombre_sin_formato);
 }
 
 
 void dump(t_list* tablaEntradas){
-
-
-		list_iterate(tablaEntradas,(void*)persistirEntrada);
-
+	list_iterate(tablaEntradas,(void*)persistirEntrada);
 }
 
 // persistir una entrada en disco
@@ -1330,7 +1322,12 @@ void persistirEntrada(t_entrada* unaEntrada){
     FILE* archivoTexto;
 	archivoTexto = fopen(nombre_formato_archivo,"w+");
 
-	char *valorIdentificado = unaEntrada->valor;
+	//char *valorIdentificado = unaEntrada->valor;
+
+	// TODO
+	// Aca hay que obtener el VALOR de la KEY del archivo BINARIO ya que no existe mas en la Tabla de Estados
+	char *valorIdentificado = string_new();
+	string_append_with_format(&valorIdentificado, "EJEMPLO");
 
     // Grabo el Valor de la Entrada en el Archivo
 	fputs(valorIdentificado, archivoTexto );
@@ -1468,7 +1465,7 @@ int buscarPosicionEnBin(FILE* binario, int espacioPorEntrada, char* valor){
 	return -1;
 }
 
-int buscarPosicionesEnBin(FILE*binario, int espacioPorEntrada, t_list* entradas){
+int buscarPosicionesEnBin(FILE*binario, int espacioPorEntrada, t_list* entradas, char* valorEntrada){
 
 	int tamanio= list_size(entradas);
 	t_entrada* entrada;
@@ -1476,7 +1473,7 @@ int buscarPosicionesEnBin(FILE*binario, int espacioPorEntrada, t_list* entradas)
 
 	for(i=0;i<tamanio;i++){
 		entrada = list_get(entradas,i);
-		entrada->numeroDeEntrada = buscarPosicionEnBin(binario,espacioPorEntrada, entrada->valor);
+		entrada->numeroDeEntrada = buscarPosicionEnBin(binario,espacioPorEntrada, valorEntrada);
 	}
 
 	bool se_Encontro_Todo(t_entrada* unaEntrada){

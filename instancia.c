@@ -38,37 +38,45 @@ int main(int argc, char* argv[]){
         log_info(infoLogger, "Se creo la estructura del Punto de Montaje" );
     }
 
-    // Defino la Cantidad de Entradas y el Tamaño de las Entradas
-    int entradas=5;
-    int espacioPorEntrada=15;
-
-
     char cero='0';
     int uno='1';
     int contador=0;
 
 
-    // Creo el Storage.bin si no existe
-    if (!existeArchivo("storage.bin")){
-        FILE* binario= fopen("storage.bin","wb+");
-        ftruncate(fileno(binario),entradas*espacioPorEntrada);
+    // -----------------------------------------------------------------------
+    //    TODO ESTE CODIGO SE PUEDE BORRAR PORQUE YA ESTA IMPLEMENTADO EN EL MENSAJE OBTENCION_CONFIG_ENTRADAS
+    //    SE DEJA PARA QUE SE PUEDE SEGUIR TESTEANDO HARCODEADO
+    // -----------------------------------------------------------------------
 
-        // Cierro los FD
-        fclose(binario);
-    }
 
-    // Creo el Bitmap si no existe
-    if (!existeArchivo("vectorBin.txt")){
-        FILE* vectorBin = fopen("vectorBin.txt","w");
+                // Defino la Cantidad de Entradas y el Tamaño de las Entradas
+                int entradas=5;
+                int espacioPorEntrada=15;
 
-        for(contador=0;contador<entradas; contador=contador+1){
-          fseek(vectorBin,sizeof(char)*contador,SEEK_SET);
-          fwrite(&cero,sizeof(char),1,vectorBin);
-        }
+                // Creo el Storage.bin si no existe
+                if (!existeArchivo("storage.bin")){
+                    FILE* binario= fopen("storage.bin","wb+");
+                    ftruncate(fileno(binario),entradas*espacioPorEntrada);
 
-        // Cierro los FD
-        fclose(vectorBin);
-    }
+                    // Cierro los FD
+                    fclose(binario);
+                }
+
+                // Creo el Bitmap si no existe
+                if (!existeArchivo("vectorBin.txt")){
+                    FILE* vectorBin = fopen("vectorBin.txt","w");
+
+                    for(contador=0;contador<entradas; contador=contador+1){
+                      fseek(vectorBin,sizeof(char)*contador,SEEK_SET);
+                      fwrite(&cero,sizeof(char),1,vectorBin);
+                    }
+
+                    // Cierro los FD
+                    fclose(vectorBin);
+                }  
+
+    // -----------------------------------------------------------------------
+
 
 	// -----------------------------------------------------------------------
 	//    Prueba de funciones 1
@@ -191,7 +199,7 @@ int main(int argc, char* argv[]){
 */
 
 		int Bool=buscarPosicionesEnBin(binario,espacioPorEntrada,listaEntradas);
-        
+
 		if(Bool){
 		  puts("se encontraron todas las entradas en el bin\n");	}
 		else{
@@ -262,6 +270,8 @@ int main(int argc, char* argv[]){
 
 // -----------------------------------------------------------------------
 
+    EntradasIntancias registroEntradasIntancias;
+
     while(1){
     	temporales=master;
 
@@ -311,6 +321,41 @@ int main(int argc, char* argv[]){
 								log_info(infoLogger,"Pedido de Ejecución de Instruccion recibido del Coordinador.");
 								break;
 
+                            case OBTENCION_CONFIG_ENTRADAS:
+
+                                // Recibo los datos de las Entradas
+                                paquete = recibir_payload(&i,&encabezado.tam_payload);
+                                registroEntradasIntancias = dsrlz_datosEntradas(paquete.buffer);
+                                free(paquete.buffer);
+
+                                log_info(infoLogger,"Recepcipión del Coordinador de la Cantidad (%d) y Tamaño de las Entradas (%d).", registroEntradasIntancias.cantEntrada , registroEntradasIntancias.tamanioEntrada);
+
+                                // Guardo los datos recibidos
+                                entradas=registroEntradasIntancias.cantEntrada;
+                                espacioPorEntrada=registroEntradasIntancias.tamanioEntrada;
+
+                                // Creo el Storage.bin si no existe
+                                if (!existeArchivo("storage.bin")){
+                                    FILE* binario= fopen("storage.bin","wb+");
+                                    ftruncate(fileno(binario),entradas*espacioPorEntrada);
+
+                                    // Cierro los FD
+                                    fclose(binario);
+                                }
+
+                                // Creo el Bitmap si no existe
+                                if (!existeArchivo("vectorBin.txt")){
+                                    FILE* vectorBin = fopen("vectorBin.txt","w");
+
+                                    for(contador=0;contador<entradas; contador=contador+1){
+                                      fseek(vectorBin,sizeof(char)*contador,SEEK_SET);
+                                      fwrite(&cero,sizeof(char),1,vectorBin);
+                                    }
+
+                                    // Cierro los FD
+                                    fclose(vectorBin);
+                                }                                
+                                break;
 						}
 					}
                 }

@@ -266,6 +266,20 @@ void servidorCoordinador(void* puerto){
 
                                     // Muestro por pantalla el contenido de listaProcesosConectados
                                     showContenidolistaProcesosConectados(listaProcesosConectados);
+
+
+                                    // Obtengo la Cantidad y Tamano de Entradas y se lo envio a la Instancia
+                                    paquete = srlz_datosEntradas('C', OBTENCION_CONFIG_ENTRADAS, config_get_int_value(cfg,"CANTIDAD_ENTRADAS"), config_get_int_value(cfg,"TAMANO_ENTRADA"));
+
+                                    // Envio el Paquete a la Instancia
+                                    if(send(i,paquete.buffer,paquete.tam_buffer,0) != -1){
+
+                                        free(paquete.buffer);
+
+                                        log_info(infoLogger, "Se le envió a la INSTANCIA los datos de Cantidad y Tamaño de Entradas.");    
+                                    }else{
+                                        log_error(infoLogger, "No se pudo enviar a la INSTANCIA los datos de Cantidad y Tamaño de Entradas");
+                                    }
                                     break;
 
                                 case RESPUESTA_EJECUTAR_INSTRUCCION:

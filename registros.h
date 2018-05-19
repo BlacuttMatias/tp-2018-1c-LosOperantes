@@ -21,6 +21,7 @@ enum cod_operacion {
 	OBTENER_STATUS_CLAVE = 10,
 	ESI_MUERE = 11,
 	IS_ALIVE = 12,	
+	OBTENCION_CONFIG_ENTRADAS = 13,
 };
 
 // Defino los Tipos de Procesos
@@ -111,5 +112,9 @@ typedef struct{ //tipo entrada
 	int tamanioValorAlmacenado;
 } t_entrada;
 
+typedef struct{ //tipo entrada
+	int cantEntrada;
+	int tamanioEntrada;
+} EntradasIntancias;
 
 #endif

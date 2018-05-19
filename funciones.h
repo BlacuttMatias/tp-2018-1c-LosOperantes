@@ -49,6 +49,9 @@
 	Paquete srlz_datosInstancia(char proceso, int codigoOperacion, char* nombreProceso, int entradasLibres, int socketProceso);
 	Instancia dsrlz_datosInstancia(void* buffer);
 
+	Paquete srlz_datosEntradas(char proceso, int codigoOperacion, int cantEntrada, int tamanioEntrada);
+	EntradasIntancias dsrlz_datosEntradas(void* buffer);
+
 /* ---------------------------------------- */
 /*  Funciones de ESI 						*/
 /* ---------------------------------------- */

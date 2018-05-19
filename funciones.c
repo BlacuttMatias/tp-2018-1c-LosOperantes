@@ -2,6 +2,45 @@
 
 //*********************** SERIALIZADO Y DESERIALIZADO ********************************//
 
+
+Paquete srlz_datosEntradas(char proceso, int codigoOperacion, int cantEntrada, int tamanioEntrada){
+
+	int posicion = 0;//int para ir guiando desde donde se copia
+	int sizeBuffer = 0;
+	int tamString = 0;
+	int tamPayload = 0;
+	Paquete paquete;
+
+
+	sizeBuffer =sizeof(char)+
+			(sizeof(int)*4);
+
+	paquete.tam_buffer = sizeBuffer;
+	paquete.buffer = malloc( sizeBuffer );
+	tamPayload = sizeBuffer - (sizeof(int)*2) - sizeof(char);
+
+	memcpy(paquete.buffer                                                   ,&(proceso)                     ,sizeof(char));
+	memcpy(paquete.buffer + (posicion=sizeof(char))							,&(codigoOperacion)				,sizeof(int));
+	memcpy(paquete.buffer + (posicion += sizeof(int))						,&(tamPayload)					,sizeof(int));
+
+	memcpy(paquete.buffer + (posicion += sizeof(int))						,&(cantEntrada)					,sizeof(int) ); 
+	memcpy(paquete.buffer + (posicion += sizeof(int))						,&(tamanioEntrada)				,sizeof(int) ); 
+
+	return paquete;
+}
+
+EntradasIntancias dsrlz_datosEntradas(void* buffer)
+{
+	int posicion = 0; //int para ir guiando desde donde se copia
+	int tamString = 0;
+	EntradasIntancias solicitud;
+
+	memcpy(&(solicitud.cantEntrada)					 	,buffer+posicion							,sizeof(int));
+	memcpy(&(solicitud.tamanioEntrada)					,buffer+(posicion+=sizeof(int))				,sizeof(int));
+
+	return solicitud;
+}
+
 Paquete srlz_datosInstancia(char proceso, int codigoOperacion, char* nombreProceso, int entradasLibres, int socketProceso){
 
 	int posicion = 0;//int para ir guiando desde donde se copia

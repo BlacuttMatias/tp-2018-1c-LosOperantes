@@ -36,6 +36,7 @@
     t_list* listaReady;
     t_list* listaESIconectados;
 
+    bool respuestaEjecucionInstruccionEsi;
     bool ejecutarAlgoritmoPlanificacion;
     bool planificadorPausado;
     bool planificarProcesos;
@@ -480,6 +481,8 @@ void servidorPlanificador(void* puerto){
 
                                     // Activo la Planificacion de los Procesos
                                     planificarProcesos = true;
+                                    respuestaEjecucionInstruccionEsi=true;
+
                                     break;
 
                                 case FINALIZACION_EJECUCION_ESI:
@@ -508,6 +511,7 @@ void servidorPlanificador(void* puerto){
                                     // Activo la Planificacion de los Procesos
                                     planificarProcesos = true;
                                     ejecutarAlgoritmoPlanificacion=true;
+                                    respuestaEjecucionInstruccionEsi=true;
                                     break;                                
                             }
                         }
@@ -604,11 +608,8 @@ void servidorPlanificador(void* puerto){
             } 
 
             // Planifica los Procesos de la ColaReady
-            if(!planificadorPausado && planificarProcesos){
+            if(!planificadorPausado && planificarProcesos && respuestaEjecucionInstruccionEsi){
 
-            	//lo deje en true porque no me funcionaba bien esta bandera para saber cuando ejecutar el algoritmo, en realidad esta instruccion no deberia estar
-            	//cuando ya funcione todo bien
-            	ejecutarAlgoritmoPlanificacion=true;
             	//ejecuta el algoritmo de planificacion
                 if(ejecutarAlgoritmoPlanificacion){
 
@@ -682,6 +683,7 @@ void servidorPlanificador(void* puerto){
 
                         free(paquete.buffer);
                         log_info(infoLogger, "Se le pidio al ESI %s que ejecute la proxima Instruccion", procesoSeleccionado->nombreProceso);
+                        respuestaEjecucionInstruccionEsi=false;
                     }else{
                         log_error(infoLogger, "No se pudo enviar al ESI %s la orden de ejecucion de la proxima Instruccion", procesoSeleccionado->nombreProceso);
                     }
@@ -745,6 +747,7 @@ int main(int argc, char* argv[]){
     planificadorPausado = false;
     planificarProcesos = false;
     ejecutarAlgoritmoPlanificacion=false;
+    respuestaEjecucionInstruccionEsi=true;
 
     // Creo conexión con el Coordinador
     coordinador_fd = conectarseAservidor(config_get_string_value(cfg,"COORDINADOR_IP"),config_get_int_value(cfg,"COORDINADOR_PUERTO"));

@@ -604,7 +604,7 @@ void servidorPlanificador(void* puerto){
 
                 // Desactivo la Planificacion de los Procesos
                 planificarProcesos = false;                                    
-
+/*
                 if(procesoSeleccionado !=NULL){
                 	Rafagas* registroRafagaAux;
                 	registroRafagaAux = dictionary_get(diccionarioRafagas,procesoSeleccionado->nombreProceso);
@@ -613,7 +613,7 @@ void servidorPlanificador(void* puerto){
                 	registroRafagaAux->proximaEstimacion = estimarRafaga(registroRafagaAux->estimacionRafagaAnterior, registroRafagaAux->rafagaAnterior, alfa);
                 	registroRafagaAux->estimacionRafagaAnterior = registroRafagaAux->proximaEstimacion;
                 	registroRafagaAux->tiempoDeEsperaDeCpu = 0;
-                }
+                }*/
 
             	procesoSeleccionado = obtenerProximoProcesoPlanificado(listaReady, colaReady, diccionarioRafagas, algoritmoPlanificacion, alfa);
 

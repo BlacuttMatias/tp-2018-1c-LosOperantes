@@ -1070,8 +1070,8 @@ Proceso* obtenerProximoProcesoPlanificado(t_list* listaReady, t_queue* colaReady
 			printf("%s \t valor por el cual se ordeno: %f\n", registroProcesoConRafagaAux->nombreProceso, registroProcesoConRafagaAux->proximaEstimacion);
 		}
 		//muestro la lista de procesos y los valores sobre los cuales se planificaron
-		printf("\nLista de Procesos ordenados segun su criterio (por rafaga o tasa de resp.): \n----------------\n");
-		list_iterate(listaProcesosConRafagas, (void*)mostrarListaDeProcesosConRafagas);
+		//printf("\nLista de Procesos ordenados segun su criterio (por rafaga o tasa de resp.): \n----------------\n");
+		//list_iterate(listaProcesosConRafagas, (void*)mostrarListaDeProcesosConRafagas);
 
 		list_clean_and_destroy_elements(listaProcesosConRafagas, (void*)liberarProcesoConRafaga);
 		list_destroy(listaProcesosConRafagas);

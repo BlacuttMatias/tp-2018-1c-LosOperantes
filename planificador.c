@@ -433,7 +433,7 @@ void servidorPlanificador(void* puerto){
 
                                     // Activo la Planificacion de los Procesos
                                     planificarProcesos = true;
-                                    if(list_size(listaReady)==1) ejecutarAlgoritmoPlanificacion=true;
+                                    if(list_size(listaReady)==1 && queue_size(colaEjecucion)==0) ejecutarAlgoritmoPlanificacion=true;
                                     break;
 
                                 case RESPUESTA_EJECUTAR_INSTRUCCION:
@@ -606,6 +606,9 @@ void servidorPlanificador(void* puerto){
             // Planifica los Procesos de la ColaReady
             if(!planificadorPausado && planificarProcesos){
 
+            	//lo deje en true porque no me funcionaba bien esta bandera para saber cuando ejecutar el algoritmo, en realidad esta instruccion no deberia estar
+            	//cuando ya funcione todo bien
+            	ejecutarAlgoritmoPlanificacion=true;
             	//ejecuta el algoritmo de planificacion
                 if(ejecutarAlgoritmoPlanificacion){
 
@@ -628,8 +631,9 @@ void servidorPlanificador(void* puerto){
                 	Rafagas* rafagasAux2=NULL;
                 	if(procesoSeleccionado !=NULL){
                 		rafagasAux2= dictionary_get(diccionarioRafagas, procesoSeleccionado->nombreProceso);
-                		printf("\nProceso seleccionado: %s\n", procesoSeleccionado->nombreProceso);
+                		printf("\nProceso planificado para ejecutar: %s\n", procesoSeleccionado->nombreProceso);
                 	}
+                	rafagaActual=0;
                 }
 
                 // Desactivo la Planificacion de los Procesos

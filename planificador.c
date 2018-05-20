@@ -614,9 +614,9 @@ void servidorPlanificador(void* puerto){
                 	registroRafagaAux->estimacionRafagaAnterior = registroRafagaAux->proximaEstimacion;
                 	registroRafagaAux->tiempoDeEsperaDeCpu = 0;
                 }
-                printf("asd");
+
             	procesoSeleccionado = obtenerProximoProcesoPlanificado(listaReady, colaReady, diccionarioRafagas, algoritmoPlanificacion, alfa);
-            	printf("asd");
+
             	//estas cinco lineas solo las pongo para informar que proceso de selecciono de la planificacion
             	Rafagas* rafagasAux2=NULL;
             	if(procesoSeleccionado !=NULL){

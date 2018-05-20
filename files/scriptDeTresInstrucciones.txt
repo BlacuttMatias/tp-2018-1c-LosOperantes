@@ -1,0 +1,3 @@
+SET deportes:futbol:messi Lionel Messi
+GET deportes:futbol:messi
+SET deportes:basquet:ginobili Emanuel Ginobili

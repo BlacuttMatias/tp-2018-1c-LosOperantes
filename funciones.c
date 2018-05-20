@@ -964,103 +964,86 @@ void showContenidoCola(t_queue* cola, char* nombreCola){
 	}
 }
 
-int estimarRafaga (int estimacionAnterior, int rafagaAnterior, int alfa){
-		return alfa/100 * rafagaAnterior + (1 - alfa/100) * estimacionAnterior;
+float estimarRafaga (float estimacionAnterior, int rafagaAnterior, int alfa){
+		return alfa/100.0 * rafagaAnterior + (1 - alfa/100.0) * estimacionAnterior;
 	}
 
 Proceso* obtenerProximoProcesoPlanificado(t_list* listaReady, t_queue* colaReady,t_dictionary* diccionarioRafagas, char* algoritmoPlanificacion, int alfa){
 
 	Proceso* proximoProcesoPlanificado = NULL;
+	//lista auxiliar de procesos con sus respectivas rafagas o tasas de respuesta
 	t_list* listaProcesosConRafagas = list_create();
+	bool elAlgoritmoEsHRRN = (string_starts_with(algoritmoPlanificacion,"HRRN"));
 
 
-	//se usa con un list_iterate() de la listaReady
-		//lo que hace es recibir un Proceso, calcular la nueva rafaga de cada proceso y meter estas en el diccionario
-		//tambien se crea van adiriendo cada proceso con su rafaga a una lista de tipo ProcesoConRafaga
-		void actualizarDiccionario(Proceso* registroProcesoAux){
+		//se usa con un list_iterate() de la listaReady
+		//lo que hace es recibir cada Proceso y añadirlo junto con su rafaga que se obtiene del diccionario a una lista de tipo ProcesoConRafaga
+		void cargarListaAuxiliar(Proceso* registroProcesoAux){
 
 			Rafagas* registroRafagaAux;
 
 			//obtengo la rafaga de un Proceso del diccionario
 			registroRafagaAux = dictionary_get(diccionarioRafagas,registroProcesoAux->nombreProceso);
 
-			//modifico ese valor del diccionario con su nueva rafaga
-			registroRafagaAux->proximaEstimacion = estimarRafaga(registroRafagaAux->estimacionRafagaAnterior, registroRafagaAux->rafagaAnterior, alfa);
-			registroRafagaAux->estimacionRafagaAnterior = registroRafagaAux->proximaEstimacion;
-
-			//agrego el proceso con su rafaga en una lista
+			//cargo el nombre del proceso y su rafaga (o tasa de resp.) una misma variable de tipo ProcesoConRafaga
 			ProcesoConRafaga* registroProcesoConRafagaAux = malloc(sizeof(ProcesoConRafaga));
 
 			registroProcesoConRafagaAux->nombreProceso = malloc(strlen(registroProcesoAux->nombreProceso)+1);
 			strcpy(registroProcesoConRafagaAux->nombreProceso, registroProcesoAux->nombreProceso);
 			registroProcesoConRafagaAux->nombreProceso[strlen(registroProcesoAux->nombreProceso)] = '\0';
 
-			registroProcesoConRafagaAux->proximaEstimacion = registroRafagaAux->proximaEstimacion;
+			//si es SJF, almaceno la prox. rafaga, y si es HRRN calculo y almaceno la tasa de respuesta
+			if(!elAlgoritmoEsHRRN) registroProcesoConRafagaAux->proximaEstimacion = registroRafagaAux->proximaEstimacion;
+			else registroProcesoConRafagaAux->proximaEstimacion = (registroRafagaAux->proximaEstimacion + registroRafagaAux->tiempoDeEsperaDeCpu)/registroRafagaAux->proximaEstimacion;
 
+			//agrego el proceso con su rafaga o tasa de resp. en caso de ser HRRN en una lista auxiliar
 			list_add(listaProcesosConRafagas ,registroProcesoConRafagaAux);
 
 		}
 
 		//se usa para la funcion list_sort(), para que ordene una lista de ProcesosConRafagas de menor a mayor, por su estimacion
-
-		bool compararRafagaDeProcesos(ProcesoConRafaga* registroProcesoConRafaga1, ProcesoConRafaga* registroProcesoConRafaga2){
+		bool ordenarPorRafagaMasCortaSJF(ProcesoConRafaga* registroProcesoConRafaga1, ProcesoConRafaga* registroProcesoConRafaga2){
 			if (registroProcesoConRafaga1->proximaEstimacion < registroProcesoConRafaga2->proximaEstimacion) return true;
+			else return false;
+		}
+
+		bool ordenarPorTasaDeReapuestaMasLargaHRRN(ProcesoConRafaga* registroProcesoConRafaga1, ProcesoConRafaga* registroProcesoConRafaga2){
+			if (registroProcesoConRafaga1->proximaEstimacion > registroProcesoConRafaga2->proximaEstimacion) return true;
 			else return false;
 		}
 
 		//se usa en un list_iterate() de ProcesosConRafagas, lo que hace es tomar el nombre de un ProcesoConRafagas,
 		//buscar ese nombre en la listaReady, y poner ese elemento tipo Proceso en la colaReady
-
 		void ponerProcesoDeLaListaDeReadyEnLaCola(ProcesoConRafaga* registroProcesoConRafagaAux){
-
 				//es para encontrar en la listaReady, el proceso que coincida con el ProcesoConRafaga. Para eso verifica si los dos tienen el mismo nombre
-				bool compararProcesoPorSuNombre(Proceso* registroProcesoAux){
+				bool buscarProcesoPorSuNombre(Proceso* registroProcesoAux){
 					return (!strcmp(registroProcesoAux->nombreProceso, registroProcesoConRafagaAux->nombreProceso));
 				}
-
-				//encuentro ese proceso en la lista de ready y creo un nuevo registro Proceso con los
-				//mismos datos que el encontrado para ponerlo en la cola de ready
-
-				Proceso* registroProcesoAuxDeLaLista = list_find(listaReady, (void*)compararProcesoPorSuNombre);
-				Proceso* nuevoRegistroProcesoParaLaCola = malloc(sizeof(Proceso));
-
-				nuevoRegistroProcesoParaLaCola->nombreProceso = malloc(strlen(registroProcesoAuxDeLaLista->nombreProceso)+1);
-				strcpy(nuevoRegistroProcesoParaLaCola->nombreProceso, registroProcesoAuxDeLaLista->nombreProceso);
-				nuevoRegistroProcesoParaLaCola->nombreProceso[strlen(registroProcesoAuxDeLaLista->nombreProceso)] = '\0';
-
-				nuevoRegistroProcesoParaLaCola->socketProceso = registroProcesoAuxDeLaLista->socketProceso;
-				nuevoRegistroProcesoParaLaCola->tipoProceso = registroProcesoAuxDeLaLista->tipoProceso;
-
-				queue_push(colaReady, nuevoRegistroProcesoParaLaCola);
-
+				Proceso* registroProcesoAuxDeLaLista = list_find(listaReady, (void*)buscarProcesoPorSuNombre);
+				queue_push(colaReady, registroProcesoAuxDeLaLista);
 		}
 
 		void liberarProcesoConRafaga(ProcesoConRafaga* registroProcesoConRafagaAux){
-			//free(registroProcesoConRafagaAux->nombreProceso);
-			//free(registroProcesoConRafagaAux);
+			free(registroProcesoConRafagaAux->nombreProceso);
+			free(registroProcesoConRafagaAux);
 		}
 
-		void liberarProceso(Proceso* registroProcesoAux){
-			//free(registroProcesoAux->nombreProceso);
-			//free(registroProcesoAux);
-		}
 
 	// Si hay elementos en la ListaReady
 	if(list_size(listaReady) > 0){
 
 		//limpio la cola de ready para luego llenarla con los procesos en el orden que lo establezcan los algoritmos
-		if (queue_size(colaReady) >0) queue_clean_and_destroy_elements(colaReady, (void*)liberarProceso);
+		if (queue_size(colaReady) >0) queue_clean(colaReady);
+		//showContenidolistaReady(listaReady);
 
 		// Ordeno la ColaReady segun el Algoritmo de Planificacion
 		if(string_starts_with(algoritmoPlanificacion,"SJF-SD") || string_starts_with(algoritmoPlanificacion,"SJF-CD")){
 
-
 			//actualiza el diccionario con las nuevas estimaciones y carga una lista auxiliar (listaProcesosConRafagas) con todos los procesos y sus estimaciones
-			list_iterate(listaReady, (void*)actualizarDiccionario);
-
+			list_iterate(listaReady, (void*)cargarListaAuxiliar);
 
 			//ordena la lista auxiliar por procesos con rafaga mas corta, osea, de menor a mayor
-			list_sort(listaProcesosConRafagas, (void*)compararRafagaDeProcesos);
+			list_sort(listaProcesosConRafagas, (void*)ordenarPorRafagaMasCortaSJF);
 
 			//carga los procesos en la colaReady
 			list_iterate(listaProcesosConRafagas, (void*)ponerProcesoDeLaListaDeReadyEnLaCola);
@@ -1069,15 +1052,31 @@ Proceso* obtenerProximoProcesoPlanificado(t_list* listaReady, t_queue* colaReady
 
 		if(string_starts_with(algoritmoPlanificacion,"HRRN")){
 
-			// TODO
+			//actualiza el diccionario con las nuevas estimaciones y carga una lista auxiliar (listaProcesosConRafagas) con todos los procesos y sus estimaciones
+			list_iterate(listaReady, (void*)cargarListaAuxiliar);
+
+			//ordena la lista auxiliar por procesos con rafaga mas corta, osea, de menor a mayor
+			list_sort(listaProcesosConRafagas, (void*)ordenarPorTasaDeReapuestaMasLargaHRRN);
+
+			//carga los procesos en la colaReady
+			list_iterate(listaProcesosConRafagas, (void*)ponerProcesoDeLaListaDeReadyEnLaCola);
 
 		}
 
 		// Extraigo un elemento de la ColaReady
 		proximoProcesoPlanificado = queue_pop(colaReady);
 
+		void mostrarListaDeProcesosConRafagas(ProcesoConRafaga* registroProcesoConRafagaAux){
+			printf("%s \t valor por el cual se ordeno: %f\n", registroProcesoConRafagaAux->nombreProceso, registroProcesoConRafagaAux->proximaEstimacion);
+		}
+		//muestro la lista de procesos y los valores sobre los cuales se planificaron
+		printf("\nLista de Procesos ordenados segun su criterio (por rafaga o tasa de resp.): \n----------------\n");
+		list_iterate(listaProcesosConRafagas, (void*)mostrarListaDeProcesosConRafagas);
+
 		list_clean_and_destroy_elements(listaProcesosConRafagas, (void*)liberarProcesoConRafaga);
 		list_destroy(listaProcesosConRafagas);
+
+
 
 		return proximoProcesoPlanificado;
 	}else{

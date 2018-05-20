@@ -86,14 +86,15 @@ typedef struct
 typedef struct
 {
 	int rafagaAnterior;
-	int estimacionRafagaAnterior;
-	int proximaEstimacion;
+	float estimacionRafagaAnterior;
+	float proximaEstimacion;
+	int tiempoDeEsperaDeCpu;
 }Rafagas;
 
 typedef struct
 {
 	char* nombreProceso;
-	int proximaEstimacion;
+	float proximaEstimacion;
 }ProcesoConRafaga;
 
 typedef struct

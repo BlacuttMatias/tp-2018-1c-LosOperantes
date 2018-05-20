@@ -36,10 +36,11 @@
     t_list* listaReady;
     t_list* listaESIconectados;
 
+    bool ejecutarAlgoritmoPlanificacion;
     bool planificadorPausado;
     bool planificarProcesos;
     char* algoritmoPlanificacion = NULL;
-    int alfa;
+    float alfa;
     int coordinador_fd;
     int rafagaActual;
     Proceso* procesoAnterior;
@@ -424,8 +425,9 @@ void servidorPlanificador(void* puerto){
                                     //cargo el proceso en dictionary
                                     Rafagas* registroRafagaAux= malloc(sizeof(Rafagas));
                                     registroRafagaAux->rafagaAnterior=0;
-                                    registroRafagaAux->estimacionRafagaAnterior=0;
-                                    registroRafagaAux->proximaEstimacion=config_get_int_value(cfg,"ESTIMACION_INICIAL");
+                                    registroRafagaAux->estimacionRafagaAnterior=config_get_int_value(cfg,"ESTIMACION_INICIAL");
+                                    registroRafagaAux->proximaEstimacion=estimarRafaga(registroRafagaAux->estimacionRafagaAnterior, registroRafagaAux->rafagaAnterior, alfa);
+                                    registroRafagaAux->tiempoDeEsperaDeCpu=0;
                                     dictionary_put(diccionarioRafagas,registroProcesoAux->nombreProceso,registroRafagaAux);
 
 
@@ -443,6 +445,15 @@ void servidorPlanificador(void* puerto){
                                     // Si la ejecucion de la instruccion no fallo
                                     if(resultadoEjecucion == EJECUCION_EXITOSA){
                                         rafagaActual += 1;
+
+                                        void actualizarTiempoDeEsperaDeLosProcesos(Proceso* registroProcesoAux){
+                                               Rafagas* registroRafagaAux;
+                                               registroRafagaAux = dictionary_get(diccionarioRafagas,registroProcesoAux->nombreProceso);
+                                               registroRafagaAux->tiempoDeEsperaDeCpu++;
+                                        }
+                                        //actualizo el tiempo de espera de CPU de cada proceso en la lista de ready
+                                        list_iterate(listaReady, (void *) actualizarTiempoDeEsperaDeLosProcesos);
+
                                         log_info(infoLogger,"Respuesta sobre la Ejecución EXITOSA de la Instruccion recibida por el Proceso ESI.");
 
                                     }else{ // Si la ejecucion de la instruccion fallo
@@ -476,6 +487,10 @@ void servidorPlanificador(void* puerto){
 
                                     // Cargar el Proceso en la Cola de Finalizados
                                     cargarProcesoCola(listaESIconectados, colaFinalizados, i);
+
+                                    //si se estaba ejecutando y finalizo el proceso, el procesoSeleccionado lo pongo en NULL
+                                    //para evitarme problemas a la hora de planificar
+                                    if(obtenerRegistroProceso(listaESIconectados, i) == procesoSeleccionado) procesoSeleccionado = NULL;
 
                                     // Elimino el Proceso ESI de las estrucutras Administrativas
                                     dictionary_remove(diccionarioRafagas, obtenerNombreProceso(listaESIconectados,i));
@@ -590,9 +605,25 @@ void servidorPlanificador(void* puerto){
                 // Desactivo la Planificacion de los Procesos
                 planificarProcesos = false;                                    
 
-                // Obtengo el Proximo Proceso a planificar
-                procesoSeleccionado = obtenerProximoProcesoPlanificado(listaReady, colaReady, diccionarioRafagas, algoritmoPlanificacion, alfa);
+                if(procesoSeleccionado !=NULL){
+                	Rafagas* registroRafagaAux;
+                	registroRafagaAux = dictionary_get(diccionarioRafagas,procesoSeleccionado->nombreProceso);
 
+                	registroRafagaAux->rafagaAnterior = rafagaActual;
+                	registroRafagaAux->proximaEstimacion = estimarRafaga(registroRafagaAux->estimacionRafagaAnterior, registroRafagaAux->rafagaAnterior, alfa);
+                	registroRafagaAux->estimacionRafagaAnterior = registroRafagaAux->proximaEstimacion;
+                	registroRafagaAux->tiempoDeEsperaDeCpu = 0;
+                }
+                printf("asd");
+            	procesoSeleccionado = obtenerProximoProcesoPlanificado(listaReady, colaReady, diccionarioRafagas, algoritmoPlanificacion, alfa);
+            	printf("asd");
+            	//estas cinco lineas solo las pongo para informar que proceso de selecciono de la planificacion
+            	Rafagas* rafagasAux2=NULL;
+            	if(procesoSeleccionado !=NULL){
+            		rafagasAux2= dictionary_get(diccionarioRafagas, procesoSeleccionado->nombreProceso);
+            		printf("\nProceso seleccionado: %s - Rafaga: %f\n", procesoSeleccionado->nombreProceso, rafagasAux2->proximaEstimacion);
+            	}
+            	/*
                 //si cambia el proceso, guarda nuevas rafagas
                 if(procesoAnterior == NULL){
                     procesoAnterior=procesoSeleccionado;
@@ -616,7 +647,8 @@ void servidorPlanificador(void* puerto){
                         }
                         procesoAnterior= procesoSeleccionado;
                     }
-                }
+                }*/
+
                 // Si existe un Proceso para planificar
                 if(procesoSeleccionado != NULL){
 

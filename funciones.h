@@ -104,6 +104,7 @@
 	void cargarListaInstanciasConectadas(t_list *listaInstanciasConectadas, Proceso* nuevoProceso);
 	void showContenidolistaProcesosConectados(t_list* listaProcesosConectados);
 	void showContenidolistaInstanciasConectadas(t_list* listaInstanciasConectadas);
+	bool enviarInstruccionInstancia(Instruccion registroInstruccion, int socketInstancia);
 
 /* ---------------------------------------- */
 /*  Funciones de Instancia 					*/
@@ -123,6 +124,7 @@
 	void escribirBinarioEnPosicion(FILE* binario, int posicion, int espacioPorEntrada, char* valor);
 	int buscarPosicionEnBin(FILE*binario,int espacioPorEntrada, char* valor);
 	int buscarPosicionesEnBin(FILE*binario, int espacioPorEntrada, t_list* entradas, char* valorEntrada);
+	void preCargarTablaEntradas(t_list *tablaEntradas,char* puntoMontaje);
 
 /* ---------------------------------------- */
 #endif

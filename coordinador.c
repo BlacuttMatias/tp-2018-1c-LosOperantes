@@ -343,6 +343,7 @@ void servidorCoordinador(void* puerto){
                                         if(!dictionary_has_key(diccionarioClavesInstancias, registroInstruccion.key) ){
 
                                             // Creo Registro Nuevo
+                                            proximaInstancia = malloc(sizeof(Instancia));
                                             proximaInstancia->nombreProceso = NULL;
                                             proximaInstancia->socketProceso = 0;
                                             proximaInstancia->entradasLibres = 0;
@@ -417,20 +418,21 @@ void servidorCoordinador(void* puerto){
 // Falta contemplar el caso Script que Aborta por desconexión de la instancia
 // TODO
 
-                                        // Si el Recurso ya fue atendido por una Instancia
+                                        // Si el Recurso ya fue recibido por el Coordinador (2da y demas veces)
                                         if(dictionary_has_key(diccionarioClavesInstancias, registroInstruccion.key) ){
 
                                             // Obtener la Instancia ya asignado al Recurso
                                             proximaInstancia = obtenerInstanciaAsignada(diccionarioClavesInstancias,registroInstruccion.key);
 
                                             // Si el Recurso habia tenido un GET pero todavia nunca se asigno una Instancia
-                                            if(proximaInstancia == NULL){
+                                            if(proximaInstancia->nombreProceso == NULL){
 
                                                 // Defino el Algoritmo de Distribucion a utlizar
                                                 char* algoritmoDistribucion = string_new();
                                                 string_append(&algoritmoDistribucion,config_get_string_value(cfg,"ALGORITMO_DISTRIBUCION"));
 
                                                 // Obtengo la Instancia segun el Algoritmo de Distribucion
+                                                //proximaInstancia = NULL;
                                                 proximaInstancia = obtenerInstanciaNueva(listaInstanciasConectadas,&registroInstruccion,algoritmoDistribucion);
 
                                                 log_info(infoLogger, "Se aplico el Algoritmo de Distribución %s y se obtuvo la Instancia %s", algoritmoDistribucion, proximaInstancia->nombreProceso);
@@ -456,15 +458,20 @@ void servidorCoordinador(void* puerto){
                                             // Obtengo la Instancia segun el Algoritmo de Distribucion
                                             proximaInstancia = obtenerInstanciaNueva(listaInstanciasConectadas,&registroInstruccion,algoritmoDistribucion);
 
-
                                             log_info(infoLogger, "Se aplico el Algoritmo de Distribución %s y se obtuvo la Instancia %s", algoritmoDistribucion, proximaInstancia->nombreProceso);
 
                                             // Guardo en el Dictionary que Instancia posee un Key
                                             dictionary_put(diccionarioClavesInstancias, registroInstruccion.key, proximaInstancia);  
                                             free(algoritmoDistribucion);
                                         }
+                                        
+                                        // Envio el Paquetea a la Instancia
+                                        if(enviarInstruccionInstancia(registroInstruccion, proximaInstancia->socketProceso)){
+                                            log_info(infoLogger, "Se le envio a la INSTANCIA %s la proxima Instruccion a ejecutar", proximaInstancia->nombreProceso);
+                                        }else{
+                                            log_error(infoLogger, "No se pudo enviar a la INSTANCIA %s la proxima Instruccion a ejecutar",proximaInstancia->nombreProceso);
+                                        }
 
-                                        // TODO
 
 
                                         // Genero el Log de Operaciones

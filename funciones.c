@@ -659,7 +659,7 @@ void cargarProcesoCola(t_list* listaUtilizar, t_queue* colaUtilizar, int socketP
 
 
 //**************************************************************************//
-// Mostrar el contenido de un Dirtionary
+// Obtener la Instancia Asignada a un Recurso
 //**************************************************************************//
 Instancia* obtenerInstanciaAsignada(t_dictionary * dictionario, char* key){ 
 
@@ -676,7 +676,7 @@ Instancia* obtenerInstanciaAsignada(t_dictionary * dictionario, char* key){
 // El Coordinador procesa la instruccion y elige la Instancia que lo va a ejecutar
 //**************************************************************************//
 Instancia* obtenerInstanciaNueva(t_list* listaInstanciasConectadas, Instruccion* datosInstruccion, char* algoritmoDistribucion){
-	int algoritmo=8;
+	int algoritmo;
 	int cantidadElem,dividendo,resto;						//para algoritmo EK
 	char key;
 	Instancia* instanciaElegida = NULL;
@@ -686,17 +686,20 @@ Instancia* obtenerInstanciaNueva(t_list* listaInstanciasConectadas, Instruccion*
 		else {return false;}
 	}			
 
-	if(!strcmp(algoritmoDistribucion,"LSU")){
+	if(strcmp(algoritmoDistribucion,"LSU") == 0) {
 		algoritmo=LSU;
-	}	else{
+	}else{
 		if(algoritmoDistribucion[0]=='K'){
 			algoritmo=KE;
 		}
 		else{
 			if(algoritmoDistribucion[0]=='E'){
-			algoritmo=EL;}
-			else{puts("no se reconoce algoritmo");}
-			}}
+				algoritmo=EL;
+			}else{
+				puts("no se reconoce algoritmo");
+			}
+		}
+	}
 
 	switch(algoritmo){
 
@@ -705,8 +708,7 @@ Instancia* obtenerInstanciaNueva(t_list* listaInstanciasConectadas, Instruccion*
 			instanciaElegida = list_remove(listaInstanciasConectadas, 0);
 
 			//ahora la pongo al final de la lista
-			list_add(listaInstanciasConectadas,instanciaElegida);
-
+			list_add(listaInstanciasConectadas,instanciaElegida);			
 			break;
 
 		case LSU:
@@ -1207,7 +1209,58 @@ bool persistirDatos(Instruccion* datosInstruccion, char* algoritmoDistribucion){
 	return true;
 }
 
+bool enviarInstruccionInstancia(Instruccion registroInstruccion, int socketInstancia){
 
+	// Armo el Paquete de Ejecucion de la Proxima Instruccion
+	Paquete paquete = srlz_instruccion('C', EJECUTAR_INSTRUCCION,registroInstruccion);
+
+	// Envio el Paquetea a la Instancia
+	if(send(socketInstancia,paquete.buffer,paquete.tam_buffer,0) != -1){
+
+	    free(paquete.buffer);
+	    return true;
+	    log_info(infoLogger, "Se le envio al COORDINADOR la proxima Instruccion a ejecutar");
+	}else{
+		return false;
+	    log_error(infoLogger, "No se pudo enviar al COORDINADOR la proxima Instruccion a ejecutar");
+	}
+}
+
+// Cuando se inicia una Instancia, se precarga la Tabla de Entradas con la info del Dump
+void preCargarTablaEntradas(t_list *tablaEntradas,char* puntoMontaje){
+
+    // Con un puntero a DIR abro el directorio 
+    DIR *dir;
+    // en *ent habrá información sobre el archivo que se está "sacando" a cada momento 
+    struct dirent *ent;
+    t_list* listaEntradas = list_create();
+
+    /* Empezaremos a leer en el directorio entradas */
+    dir = opendir(puntoMontaje);
+
+    // Miramos que no haya error 
+    if (dir == NULL)
+        error("No se puede abrir el directorio");
+
+
+    // Una vez nos aseguramos de que no hay error... 
+    // Leyendo uno a uno todos los archivos que hay 
+    while ((ent = readdir (dir)) != NULL)
+    {
+        // Nos devolverá el directorio actual (.) y el anterior (..), como hace ls //
+        if ( (strcmp(ent->d_name, ".")!=0) && (strcmp(ent->d_name, "..")!=0) )
+        {
+            char* nombreArchivoProcesar = string_new();
+            string_append_with_format(&nombreArchivoProcesar, "%s", ent->d_name);
+
+            // Una vez tenemos el archivo, lo pasamos a una función para procesarlo. //
+            procesoArchivo(nombreArchivoProcesar, listaEntradas, config_get_string_value(cfg,"PUNTO_MONTAJE"));  
+
+            free(nombreArchivoProcesar);
+        }
+    }
+    closedir (dir);
+}
 
 
 //funcion para carga de entradas

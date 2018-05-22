@@ -239,9 +239,7 @@ int main(int argc, char* argv[]){
                                     // Armo el Paquete de Ejecucion de la Proxima Instruccion
                                     paquete = srlz_instruccion('E', EJECUTAR_INSTRUCCION,proximaInstruccion);
 
-                                    //printf("\n\n codigo %d    key  %s    dato %s  \n\n",proximaInstruccion.operacion,proximaInstruccion.key,proximaInstruccion.dato);
-
-                                    // Envio el Paquetea al Planificador
+                                    // Envio el Paquetea al Coordinador
                                     if(send(coordinador_fd,paquete.buffer,paquete.tam_buffer,0) != -1){
 
                                         free(paquete.buffer);

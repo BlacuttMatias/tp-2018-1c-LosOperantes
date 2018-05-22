@@ -22,6 +22,14 @@
 
 
 /* ---------------------------------------- */
+/*  Variables Globales                      */
+/* ---------------------------------------- */
+
+    int entradas;
+    int espacioPorEntrada;
+    t_list* tablaEntradas;
+
+/* ---------------------------------------- */
 
 int main(int argc, char* argv[]){
 
@@ -42,134 +50,10 @@ int main(int argc, char* argv[]){
     int uno='1';
     int contador=0;
 
-
-    // -----------------------------------------------------------------------
-    //    TODO ESTE CODIGO SE PUEDE BORRAR PORQUE YA ESTA IMPLEMENTADO EN EL MENSAJE OBTENCION_CONFIG_ENTRADAS
-    //    SE DEJA PARA QUE SE PUEDE SEGUIR TESTEANDO HARCODEADO
-    // -----------------------------------------------------------------------
-
-
-                // Defino la Cantidad de Entradas y el Tamaño de las Entradas
-                int entradas=5;
-                int espacioPorEntrada=15;
-
-                // Creo el Storage.bin si no existe
-                if (!existeArchivo("storage.bin")){
-                    FILE* binario= fopen("storage.bin","wb+");
-                    ftruncate(fileno(binario),entradas*espacioPorEntrada);
-
-                    // Cierro los FD
-                    fclose(binario);
-                }
-
-                // Creo el Bitmap si no existe
-                if (!existeArchivo("vectorBin.txt")){
-                    FILE* vectorBin = fopen("vectorBin.txt","w");
-
-                    for(contador=0;contador<entradas; contador=contador+1){
-                      fseek(vectorBin,sizeof(char)*contador,SEEK_SET);
-                      fwrite(&cero,sizeof(char),1,vectorBin);
-                    }
-
-                    // Cierro los FD
-                    fclose(vectorBin);
-                }  
-
-    // -----------------------------------------------------------------------
-
-
-	// -----------------------------------------------------------------------
-	//    Prueba de funciones 1
-	// -----------------------------------------------------------------------
-
-
-	////////////////////////////////////////////
-	
-    // Con un puntero a DIR abro el directorio 
-    DIR *dir;
-    // en *ent habrá información sobre el archivo que se está "sacando" a cada momento 
-    struct dirent *ent;
-    t_list* listaEntradas = list_create();
-
-    /* Empezaremos a leer en el directorio entradas */
-    dir = opendir (config_get_string_value(cfg,"PUNTO_MONTAJE"));
-
-    // Miramos que no haya error 
-    if (dir == NULL)
-        error("No se puede abrir el directorio");
-
-    
-
-    // Una vez nos aseguramos de que no hay error... 
-    // Leyendo uno a uno todos los archivos que hay 
-    while ((ent = readdir (dir)) != NULL)
-    {
-        // Nos devolverá el directorio actual (.) y el anterior (..), como hace ls //
-        if ( (strcmp(ent->d_name, ".")!=0) && (strcmp(ent->d_name, "..")!=0) )
-        {
-            char* nombreArchivoProcesar = string_new();
-            string_append_with_format(&nombreArchivoProcesar, "%s", ent->d_name);
-
-            // Una vez tenemos el archivo, lo pasamos a una función para procesarlo. //
-            procesoArchivo(nombreArchivoProcesar, listaEntradas, config_get_string_value(cfg,"PUNTO_MONTAJE"));  
-
-            free(nombreArchivoProcesar);
-        }
-    }
-    closedir (dir);
-
-	//////////////////////////////////////
-
-
-
-	//PRUEBA TABLA ENTRADAS IMPLEMENTACION CON LISTAS + nueva funcion cargarTablaEntradas
-	t_list* tablaEntradas = list_create(); //creo lista tabla de entradas
+	//creo lista tabla de entradas
+	tablaEntradas = list_create(); 
 	
 	
-//**PARA TESTEAR EL RECUPERO DE INFORMACION SI LA INSTANCIA MUERE HAY QUE COMENTAR ESTE PEDAZO DE CODIGO****** //
-	
-	//hardcodeo una instruccion
-	Instruccion* nuevaInstruccion = NULL;
-	Instruccion* otraInstruccion = NULL;
-	nuevaInstruccion = malloc(sizeof(Instruccion));
-	otraInstruccion = malloc(sizeof(Instruccion));
-
-	//carga de datos
-	nuevaInstruccion->dato = malloc(strlen("MESSI")+1);
-	strcpy(nuevaInstruccion->dato, "MESSI");
-	nuevaInstruccion->dato[strlen("MESSI")] = '\0';
-
-	otraInstruccion->dato = malloc(strlen("NARDIELLO")+1);
-	strcpy(otraInstruccion->dato, "NARDIELLO");
-	otraInstruccion->dato[strlen("NARDIELLO")] = '\0';
-
-
-	//carga de claves
-	strcpy(nuevaInstruccion->key,"FUTBOL");
-	strcpy(otraInstruccion->key,"OPERATIVOS");
-	//carga de operaciones
-	nuevaInstruccion->operacion = 1;
-	otraInstruccion->operacion = 2;
-	
-
-	//cargo tabla con entrada hardcodeada
-	cargarTablaEntradas(tablaEntradas,nuevaInstruccion);
-	cargarTablaEntradas(tablaEntradas,otraInstruccion);
-
-	t_entrada* primerElemento;
-	t_entrada* segundoElemento;
-	primerElemento = list_get(tablaEntradas,0);
-	segundoElemento = list_get(tablaEntradas,1);
-	
-	//muestro entrada hardcodeada
-  	printf("Clave:%s - Numero:%d - Tamanio:%d \n",primerElemento->clave,primerElemento->numeroDeEntrada,primerElemento->tamanioValorAlmacenado); //prueba imprimir por pantalla el elemento obtenido
-
-    // Persisto dos Entradas
-    //persistirEntrada(primerElemento);
-    //persistirEntrada(segundoElemento);
-
-  	//testeo de dump
-  	dump(tablaEntradas);
 
 
 
@@ -178,6 +62,8 @@ int main(int argc, char* argv[]){
 
 //PRUEBA ARCHIVO BINARIO					/////
 	// creo el archivo binario
+
+/*
    if(list_size(listaEntradas)>1){
         FILE* binario= fopen("storage.bin","r+b");
         FILE* vectorBin = fopen("vectorBin.txt","r+");
@@ -204,11 +90,11 @@ int main(int argc, char* argv[]){
         printf("\n el segundo valor en el binario es:   %s  \n",buffer);
 
         //cargo el NumeroEntrada de las Estructuras de la lista, segun su posicion en el bin.
-/*        
-        int numeroDeEntrada = buscarPosicionEnBin(binario, espacioPorEntrada, entrada->valor);	
-        entrada->numeroDeEntrada=numeroDeEntrada;
-        printf("\n es posicion %d     y deberia ser posicion  1 tomando en cuenta la posicion 0\n",numeroDeEntrada);
-*/
+
+//        int numeroDeEntrada = buscarPosicionEnBin(binario, espacioPorEntrada, entrada->valor);	
+//       entrada->numeroDeEntrada=numeroDeEntrada;
+//        printf("\n es posicion %d     y deberia ser posicion  1 tomando en cuenta la posicion 0\n",numeroDeEntrada);
+
 
 		int Bool=buscarPosicionesEnBin(binario,espacioPorEntrada,listaEntradas, "NULO");
 
@@ -223,7 +109,7 @@ int main(int argc, char* argv[]){
         fclose(binario);      
         fclose(vectorBin);
 	}
-
+*/
 
 	printf("Iniciando INSTANCIA\n");
 
@@ -283,6 +169,7 @@ int main(int argc, char* argv[]){
 // -----------------------------------------------------------------------
 
     EntradasIntancias registroEntradasIntancias;
+    Instruccion registroInstruccion;
 
     while(1){
     	temporales=master;
@@ -330,7 +217,25 @@ int main(int argc, char* argv[]){
                             
                                 // TODO
 
-								log_info(infoLogger,"Pedido de Ejecución de Instruccion recibido del Coordinador.");
+                                paquete=recibir_payload(&i,&encabezado.tam_payload);
+                                registroInstruccion=dsrlz_instruccion(paquete.buffer);
+                                free(paquete.buffer);
+
+                                log_info(infoLogger,"Pedido de Ejecución de una Instruccion recibida del Coordinador: %d %s %s", registroInstruccion.operacion, registroInstruccion.key, registroInstruccion.dato);
+
+                                if(registroInstruccion.operacion == SET){
+                                    // Cargo la Tabla de Entradas
+                                    cargarTablaEntradas(tablaEntradas,&registroInstruccion);
+
+                                    // Realizo el Dump de la Tabla de Entradas
+                                    dump(tablaEntradas);
+                                }
+
+                                if(registroInstruccion.operacion == STORE){                                
+
+                                }
+
+
 								break;
 
                             case OBTENCION_CONFIG_ENTRADAS:
@@ -366,7 +271,10 @@ int main(int argc, char* argv[]){
 
                                     // Cierro los FD
                                     fclose(vectorBin);
-                                }                                
+                                }
+
+                                // Se precarga la Tabla de Entradas con datos del Dump
+                                preCargarTablaEntradas(tablaEntradas,config_get_string_value(cfg,"PUNTO_MONTAJE"));
                                 break;
 						}
 					}

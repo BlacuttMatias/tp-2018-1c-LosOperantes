@@ -49,6 +49,7 @@ void servidorCoordinador(void* puerto){
 
 
     Proceso registroProceso;
+    ResultadoEjecucion registroResultadoEjecucion;
     Instruccion registroInstruccion;
     KeyBloqueada registroKeyBloqueada;
     Instancia* proximaInstancia;
@@ -152,7 +153,7 @@ void servidorCoordinador(void* puerto){
                                     //usleep(config_get_int_value(cfg,"RETARDO"));
 
                                     // Armo el Paquete del Resultado de la Ejecucion de la Instruccion
-                                    paquete = crearHeader('C', RESPUESTA_EJECUTAR_INSTRUCCION, EJECUCION_EXITOSA);
+                                    paquete = srlz_resultadoEjecucion('C', RESPUESTA_EJECUTAR_INSTRUCCION, registroKeyBloqueada.nombreProceso, EJECUCION_EXITOSA, "");
 
                                     // Envio el Paquete a ESI
                                     if(send(socketESI,paquete.buffer,paquete.tam_buffer,0) != -1){
@@ -181,7 +182,7 @@ void servidorCoordinador(void* puerto){
                                     socketESI = obtenerSocketProceso(listaProcesosConectados, registroKeyBloqueada.nombreProceso);
 
                                     // Armo el Paquete del Resultado de la Ejecucion de la Instruccion
-                                    paquete = crearHeader('C', RESPUESTA_EJECUTAR_INSTRUCCION, EJECUCION_FALLIDA);
+                                    paquete = srlz_resultadoEjecucion('C', RESPUESTA_EJECUTAR_INSTRUCCION, registroKeyBloqueada.nombreProceso, EJECUCION_FALLIDA, "");
 
                                     // Envio el Paquetea a ESI
                                     if(send(socketESI,paquete.buffer,paquete.tam_buffer,0) != -1){
@@ -284,9 +285,25 @@ void servidorCoordinador(void* puerto){
 
                                 case RESPUESTA_EJECUTAR_INSTRUCCION:
 
-                                    // TODO
+                                    paquete=recibir_payload(&i,&encabezado.tam_payload);
+                                    registroResultadoEjecucion=dsrlz_resultadoEjecucion(paquete.buffer);
+                                    free(paquete.buffer);
 
                                     log_info(infoLogger,"Respuesta sobre la Ejecución de Instruccion recibida de la Instancia.");
+
+                                    socketESI = obtenerSocketProceso(listaProcesosConectados, registroResultadoEjecucion.nombreEsiDestino);
+
+                                    // Armo el Paquete del Resultado de la Ejecucion de la Instruccion
+                                    paquete = srlz_resultadoEjecucion('C', RESPUESTA_EJECUTAR_INSTRUCCION, registroResultadoEjecucion.nombreEsiDestino, registroResultadoEjecucion.resultado, registroResultadoEjecucion.contenido);
+
+                                    // Envio el Paquete a ESI
+                                    if(send(socketESI,paquete.buffer,paquete.tam_buffer,0) != -1){
+                                        free(paquete.buffer);
+
+                                        log_info(infoLogger, "Se le envió al ESI %s el Resultado de la Ejecución de la Instrucción",registroResultadoEjecucion.nombreEsiDestino);
+                                    }else{
+                                        log_error(infoLogger, "No se pudo enviar al ESI %s el Resultado de la Ejecución de la Instrucción", registroResultadoEjecucion.nombreEsiDestino);
+                                    }
                                     break;
                             }
                         }
@@ -372,7 +389,7 @@ void servidorCoordinador(void* puerto){
                                             if(!dictionary_has_key(diccionarioClavesInstancias, registroInstruccion.key) ){
 
                                                 // Armo el Paquete del Resultado de la Ejecucion de la Instruccion
-                                                paquete = crearHeader('C', RESPUESTA_EJECUTAR_INSTRUCCION, EJECUCION_FALLIDA);
+                                                paquete = srlz_resultadoEjecucion('C', RESPUESTA_EJECUTAR_INSTRUCCION, obtenerNombreProceso(listaProcesosConectados, i), EJECUCION_FALLIDA, "");
 
                                                 // Envio el Paquetea a ESI
                                                 if(send(i,paquete.buffer,paquete.tam_buffer,0) != -1){
@@ -467,11 +484,10 @@ void servidorCoordinador(void* puerto){
                                         
                                         // Envio el Paquetea a la Instancia
                                         if(enviarInstruccionInstancia(registroInstruccion, proximaInstancia->socketProceso)){
-                                            log_info(infoLogger, "Se le envio a la INSTANCIA %s la proxima Instruccion a ejecutar", proximaInstancia->nombreProceso);
+                                            log_info(infoLogger, "Se le envio a la instancia %s la proxima Instruccion a ejecutar", proximaInstancia->nombreProceso);
                                         }else{
-                                            log_error(infoLogger, "No se pudo enviar a la INSTANCIA %s la proxima Instruccion a ejecutar",proximaInstancia->nombreProceso);
+                                            log_error(infoLogger, "No se pudo enviar a la instancia %s la proxima Instruccion a ejecutar",proximaInstancia->nombreProceso);
                                         }
-
 
 
                                         // Genero el Log de Operaciones
@@ -482,7 +498,8 @@ void servidorCoordinador(void* puerto){
                                         usleep(config_get_int_value(cfg,"RETARDO"));
 
                                         // Armo el Paquete del Resultado de la Ejecucion de la Instruccion
-                                        paquete = crearHeader('C', RESPUESTA_EJECUTAR_INSTRUCCION, EJECUCION_EXITOSA);
+                                        paquete = srlz_resultadoEjecucion('C', RESPUESTA_EJECUTAR_INSTRUCCION, obtenerNombreProceso(listaProcesosConectados, i), EJECUCION_EXITOSA, "");
+
 
                                         // Envio el Paquetea a ESI
                                         if(send(i,paquete.buffer,paquete.tam_buffer,0) != -1){

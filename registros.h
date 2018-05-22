@@ -62,10 +62,18 @@ typedef struct //Encabezado
 
 typedef struct
 {
+	char* nombreEsiOrigen;
 	int operacion;
 	char key[40];
 	char* dato;
 }Instruccion;
+
+typedef struct
+{
+	char* nombreEsiDestino;
+	int resultado;
+	char* contenido;
+}ResultadoEjecucion;
 
 typedef struct
 {

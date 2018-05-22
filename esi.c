@@ -28,22 +28,6 @@ t_list* listaInstrucciones;
 
 int main(int argc, char* argv[]){
 
-
-	 	//codigo para probar la serializacion y descerializacion de una instruccion
-/*
-	Instruccion ins2;	//instruccion de prueba con valores cualquiera
-	ins2.operacion = 1;
-	strcpy(ins2.key,"key");
-	ins2.dato = "valor";
-	Paquete pac;
-	pac = srlz_instruccion('p',1,ins2);
-	Instruccion ins = dsrlz_instruccion(pac.buffer+sizeof(char)+8);
-	//printf("%s\n",ins.key);
-	mostrarInstruccion(&ins);
-
-	exit(0);
-*/	
-
     char* nombreProceso = string_new();
     char* pathScript = string_new();
 
@@ -134,8 +118,7 @@ int main(int argc, char* argv[]){
 
     free(pathScript);
 
-
-    int resultadoEjecucion = 0;
+    ResultadoEjecucion registroResultadoEjecucion;
 
     while(1){
     	temporales=master;
@@ -169,11 +152,12 @@ int main(int argc, char* argv[]){
 
                             case RESPUESTA_EJECUTAR_INSTRUCCION:
 
-                                resultadoEjecucion = encabezado.tam_payload;
+                                paquete=recibir_payload(&i,&encabezado.tam_payload);
+                                registroResultadoEjecucion=dsrlz_resultadoEjecucion(paquete.buffer);
+                                free(paquete.buffer);
 
                                 // Si la ejecucion de la instruccion no fallo
-                                if(resultadoEjecucion == EJECUCION_EXITOSA){
-
+                                if(registroResultadoEjecucion.resultado == EJECUCION_EXITOSA){
 
                                     log_info(infoLogger,"Respuesta sobre la Ejecución EXITOSA de la Instruccion recibida por el Coordinador.");
 
@@ -190,7 +174,7 @@ int main(int argc, char* argv[]){
                                 }
 
                                 // Armo el Paquete del Resultado de la Ejecucion de la Instruccion
-                                paquete = crearHeader('E', RESPUESTA_EJECUTAR_INSTRUCCION, resultadoEjecucion);
+                                paquete = crearHeader('E', RESPUESTA_EJECUTAR_INSTRUCCION, registroResultadoEjecucion.resultado);
 
                                 // Envio el Paquetea al Planificador
                                 if(send(planificador_fd,paquete.buffer,paquete.tam_buffer,0) != -1){
@@ -213,14 +197,14 @@ int main(int argc, char* argv[]){
 
                                 log_info(infoLogger,"Pedido de Ejecución de Instruccion recibido del Planificador.");
 
-                                // TODO
+                                // Se obtiene la Proxima Instruccion a Ejecutar
                                 Instruccion* aux= obtenerSiguienteInstruccion(listaInstrucciones);
 
                                 // Si se obtuvo una Proxima Instrucion
                                 if(NULL != aux){
 
                                     Instruccion proximaInstruccion;
-                                    proximaInstruccion=pasarAEstructura(aux);
+                                    proximaInstruccion=pasarAEstructura(aux, nombreProceso);
 
                                     // Mostrando por pantalla la Instruccion a Ejecutar
                                     switch(proximaInstruccion.operacion){
@@ -248,7 +232,7 @@ int main(int argc, char* argv[]){
                                         log_error(infoLogger, "No se pudo enviar al COORDINADOR la proxima Instruccion a ejecutar");
                                     }
                                 }else{
-                                    log_info(infoLogger, "El ESI %s ya no posee mas Instrucciones ha ejecutar.", nombreProceso);
+                                    log_info(infoLogger, "El ESI %s ya no posee más Instrucciones ha ejecutar.", nombreProceso);
 
                                     // Armo el Paquete de Finalizacion de Ejecucion del Proceso ESI
                                     paquete = crearHeader('E', FINALIZACION_EJECUCION_ESI, 1);

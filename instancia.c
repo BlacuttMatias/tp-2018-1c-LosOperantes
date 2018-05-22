@@ -227,15 +227,33 @@ int main(int argc, char* argv[]){
                                     // Cargo la Tabla de Entradas
                                     cargarTablaEntradas(tablaEntradas,&registroInstruccion);
 
+                                    // TODO
+                                    // Modificar el valor de la Key
+
                                     // Realizo el Dump de la Tabla de Entradas
                                     dump(tablaEntradas);
                                 }
 
                                 if(registroInstruccion.operacion == STORE){                                
 
+                                    // Realizo el Dump de la Tabla de Entradas
+                                    dump(tablaEntradas);
                                 }
 
+                                // TODO
 
+                                // Armo el Paquete del Resultado de la Ejecucion de la Instruccion
+                                paquete = srlz_resultadoEjecucion('I', RESPUESTA_EJECUTAR_INSTRUCCION, registroInstruccion.nombreEsiOrigen, EJECUCION_EXITOSA, "");
+
+                                // Envio el Paquete al Coordinador
+                                if(send(coordinador_fd,paquete.buffer,paquete.tam_buffer,0) != -1){
+
+                                    free(paquete.buffer);
+                                    log_info(infoLogger, "Se le notificó al COORDINADOR el resultado de la ejecución de la Instrucción");
+
+                                }else{
+                                    log_error(infoLogger, "No se pudo notificar al COORDINADOR el resultado de la ejecución de la Instrucción");
+                                }
 								break;
 
                             case OBTENCION_CONFIG_ENTRADAS:
@@ -265,8 +283,8 @@ int main(int argc, char* argv[]){
                                     FILE* vectorBin = fopen("vectorBin.txt","w");
 
                                     for(contador=0;contador<entradas; contador=contador+1){
-                                      fseek(vectorBin,sizeof(char)*contador,SEEK_SET);
-                                      fwrite(&cero,sizeof(char),1,vectorBin);
+                                        fseek(vectorBin,sizeof(char)*contador,SEEK_SET);
+                                        fwrite(&cero,sizeof(char),1,vectorBin);
                                     }
 
                                     // Cierro los FD

@@ -2,10 +2,63 @@
 
 //*********************** SERIALIZADO Y DESERIALIZADO ********************************//
 
+Paquete srlz_resultadoEjecucion(char proceso, int codigoOperacion, char* nombreEsiDestino, int resultado, char* contenido){
+	int posicion = 0;
+	int sizeBuffer = 0;
+	int tamString = 0;
+	int tamPayload = 0;
+	Paquete paquete;
+
+	sizeBuffer =sizeof(char)+
+			(sizeof(int)*5) + strlen(nombreEsiDestino) + strlen(contenido);
+
+	paquete.tam_buffer = sizeBuffer;
+	paquete.buffer = malloc( sizeBuffer );
+	tamPayload = sizeBuffer - (sizeof(int)*2) - sizeof(char);
+
+	memcpy(paquete.buffer                                                   ,&(proceso)                     ,sizeof(char));
+	memcpy(paquete.buffer + (posicion=sizeof(char))							,&(codigoOperacion)				,sizeof(int));
+	memcpy(paquete.buffer + (posicion += sizeof(int))						,&(tamPayload)					,sizeof(int));
+
+	tamString = strlen(nombreEsiDestino);
+	memcpy(paquete.buffer + (posicion += sizeof(int))						,&(tamString)					,sizeof(int) ); 
+	memcpy(paquete.buffer + (posicion += sizeof(int) )						,nombreEsiDestino				,tamString); 
+
+	memcpy(paquete.buffer + (posicion += tamString)							,&(resultado)					,sizeof(int) ); 
+
+	tamString = strlen(contenido);
+	memcpy(paquete.buffer + (posicion += sizeof(int))						,&(tamString)					,sizeof(int) ); 
+	memcpy(paquete.buffer + (posicion += sizeof(int) )						,contenido						,tamString); 
+
+
+	return paquete;	
+}
+
+ResultadoEjecucion dsrlz_resultadoEjecucion(void* buffer){
+	int posicion = 0; 
+	int tamString = 0;
+	ResultadoEjecucion solicitud;
+
+
+	memcpy(&(tamString)					 	,buffer+posicion											,sizeof(int));
+	solicitud.nombreEsiDestino = malloc(sizeof(char) * tamString+1);
+	memcpy(solicitud.nombreEsiDestino			,buffer+(posicion+=sizeof(int))							,sizeof(char)*tamString);
+	solicitud.nombreEsiDestino[tamString]='\0';
+
+	memcpy(&solicitud.resultado 			,buffer+(posicion+=sizeof(char) * tamString)				,sizeof(int));
+
+	memcpy(&(tamString)					 	,buffer+(posicion+=sizeof(int))								,sizeof(int));
+	solicitud.contenido = malloc(sizeof(char) * tamString+1);
+	memcpy(solicitud.contenido			,buffer+(posicion+=sizeof(int))									,sizeof(char)*tamString);
+	solicitud.contenido[tamString]='\0';
+
+	return solicitud;
+}
+
 
 Paquete srlz_datosEntradas(char proceso, int codigoOperacion, int cantEntrada, int tamanioEntrada){
 
-	int posicion = 0;//int para ir guiando desde donde se copia
+	int posicion = 0;
 	int sizeBuffer = 0;
 	int tamString = 0;
 	int tamPayload = 0;
@@ -31,7 +84,7 @@ Paquete srlz_datosEntradas(char proceso, int codigoOperacion, int cantEntrada, i
 
 EntradasIntancias dsrlz_datosEntradas(void* buffer)
 {
-	int posicion = 0; //int para ir guiando desde donde se copia
+	int posicion = 0; 
 	EntradasIntancias solicitud;
 
 	memcpy(&(solicitud.cantEntrada)					 	,buffer+posicion							,sizeof(int));
@@ -42,7 +95,7 @@ EntradasIntancias dsrlz_datosEntradas(void* buffer)
 
 Paquete srlz_datosInstancia(char proceso, int codigoOperacion, char* nombreProceso, int entradasLibres, int socketProceso){
 
-	int posicion = 0;//int para ir guiando desde donde se copia
+	int posicion = 0;
 	int sizeBuffer = 0;
 	int tamString = 0;
 	int tamPayload = 0;
@@ -73,7 +126,7 @@ Paquete srlz_datosInstancia(char proceso, int codigoOperacion, char* nombreProce
 
 Instancia dsrlz_datosInstancia(void* buffer)
 {
-	int posicion = 0; //int para ir guiando desde donde se copia
+	int posicion = 0; 
 	int tamString = 0;
 	Instancia solicitud;
 
@@ -91,7 +144,7 @@ Instancia dsrlz_datosInstancia(void* buffer)
 
 Paquete srlz_datosKeyBloqueada(char proceso, int codigoOperacion, char* nombreProceso, int operacion, char key[40], char* dato){
 
-	int posicion = 0;//int para ir guiando desde donde se copia
+	int posicion = 0;
 	int sizeBuffer = 0;
 	int tamString = 0;
 	int tamPayload = 0;
@@ -141,7 +194,7 @@ Paquete srlz_datosKeyBloqueada(char proceso, int codigoOperacion, char* nombrePr
 
 KeyBloqueada dsrlz_datosKeyBloqueada(void* buffer){
 
-	int posicion = 0; //int para ir guiando desde donde se copia
+	int posicion = 0; 
 	int tamString = 0;
 	char* keyAux;
 	KeyBloqueada solicitud;
@@ -174,7 +227,7 @@ KeyBloqueada dsrlz_datosKeyBloqueada(void* buffer){
 
 Paquete srlz_datosProceso(char proceso, int codigoOperacion, char* nombreProceso, int tipoProceso, int socketProceso){
 
-	int posicion = 0;//int para ir guiando desde donde se copia
+	int posicion = 0;
 	int sizeBuffer = 0;
 	int tamString = 0;
 	int tamPayload = 0;
@@ -205,7 +258,7 @@ Paquete srlz_datosProceso(char proceso, int codigoOperacion, char* nombreProceso
 
 Proceso dsrlz_datosProceso(void* buffer)
 {
-	int posicion = 0; //int para ir guiando desde donde se copia
+	int posicion = 0; 
 	int tamString = 0;
 	Proceso solicitud;
 
@@ -224,22 +277,24 @@ Proceso dsrlz_datosProceso(void* buffer)
 Paquete srlz_instruccion (char proceso, int codigoOperacion,Instruccion instruccion){
 
 	
-	int posicion = 0;//int para ir guiando desde donde se copia
+	int posicion = 0;
 	int sizeBuffer = 0;
 	int tamClave = 0;
 	int tamPayload = 0;
 	int tamDato = 0;
+	int tamNombreEsi = 0;
 	Paquete paquete;
 
 	tamClave = strlen(instruccion.key);
+	tamNombreEsi = strlen(instruccion.nombreEsiOrigen);
 
 	//dependiendo de si se hace un get/store o un set, el tamaño del buffer sera uno u otro, porque en el set se agrega tambien el valor asociado a la key
 	if(instruccion.operacion == GET || instruccion.operacion == STORE){
-		sizeBuffer = sizeof(int)*4 + sizeof(char) + tamClave;
+		sizeBuffer = sizeof(int)*5 + sizeof(char) + tamClave + tamNombreEsi;
 	}
 	else{
 		tamDato = strlen(instruccion.dato);
-		sizeBuffer = sizeof(int)*5 + sizeof(char) + tamClave + tamDato;	//agrego el tamaño del valor y el valor(el dato de la instruccion)
+		sizeBuffer = sizeof(int)*6 + sizeof(char) + tamClave + tamDato + tamNombreEsi;	//agrego el tamaño del valor y el valor(el dato de la instruccion)
 	}
 	paquete.tam_buffer = sizeBuffer;
 	paquete.buffer = malloc( sizeBuffer );
@@ -250,7 +305,12 @@ Paquete srlz_instruccion (char proceso, int codigoOperacion,Instruccion instrucc
 	memcpy(paquete.buffer + (posicion=sizeof(char))			,&(codigoOperacion)				,sizeof(int));
 	memcpy(paquete.buffer + (posicion += sizeof(int))		,&(tamPayload)					,sizeof(int));
 
-	memcpy(paquete.buffer + (posicion+=sizeof(int))			,&(instruccion.operacion)		,sizeof(int));
+	
+	memcpy(paquete.buffer + (posicion += sizeof(int))		,&(tamNombreEsi)				,sizeof(int));
+	memcpy(paquete.buffer + (posicion += sizeof(int))		,instruccion.nombreEsiOrigen	,tamNombreEsi);
+
+
+	memcpy(paquete.buffer + (posicion+=tamNombreEsi)		,&(instruccion.operacion)		,sizeof(int));
 
 	memcpy(paquete.buffer + (posicion += sizeof(int))		,&(tamClave)					,sizeof(int));
 	memcpy(paquete.buffer + (posicion += sizeof(int))		,instruccion.key				,tamClave);
@@ -259,26 +319,32 @@ Paquete srlz_instruccion (char proceso, int codigoOperacion,Instruccion instrucc
 		memcpy(paquete.buffer + (posicion += tamClave)			,&(tamDato)						,sizeof(int));
 		memcpy(paquete.buffer + (posicion += sizeof(int))		,instruccion.dato				,tamDato);
 	}
-	return paquete;
 
+	return paquete;
 }
 
 
 Instruccion dsrlz_instruccion (void* buffer){
 
 	
-	int posicion = 0; //int para ir guiando desde donde se copia
+	int posicion = 0; 
 	int tamClave = 0;
+	int tamDato = 0;	
 	Instruccion instruccion;
 
-	memcpy(&instruccion.operacion			,buffer + posicion										,sizeof(int));
+	memcpy(&tamDato							,buffer + posicion							,sizeof(int));
+	instruccion.nombreEsiOrigen = malloc(tamDato+1);
+	memcpy(instruccion.nombreEsiOrigen					,buffer + (posicion+=sizeof(int))						,tamDato);
+	instruccion.nombreEsiOrigen[tamDato] = '\0';
+
+
+	memcpy(&instruccion.operacion			,buffer + (posicion+=tamDato)							,sizeof(int));
 	memcpy(&tamClave						,buffer + (posicion+=sizeof(int))						,sizeof(int));
 	memcpy(instruccion.key					,buffer + (posicion+=sizeof(int))						,tamClave);
 	instruccion.key[tamClave] = '\0';
 
 	if(instruccion.operacion==SET){	//si es un set significa que tengo que seguir leyendo del buffer el valor asociado a la key(el dato)
 
-		int tamDato = 0;
 		memcpy(&tamDato							,buffer + (posicion+=tamClave)							,sizeof(int));
 		instruccion.dato = malloc(tamDato+1);
 		memcpy(instruccion.dato					,buffer + (posicion+=sizeof(int))						,tamDato);
@@ -329,11 +395,16 @@ Instruccion* sacarSiguienteInstruccion(t_list* listaInstruccion) {
 //**************************************************************************//
 // Se carga un Registro de Instruccion
 //**************************************************************************//
-Instruccion pasarAEstructura(Instruccion* puntero) {
+Instruccion pasarAEstructura(Instruccion* puntero, char* nombreEsi) {
 	Instruccion instruccion;
 	instruccion.operacion= (puntero->operacion);
 	strcpy(instruccion.key,puntero->key);
 	instruccion.dato= puntero->dato;
+
+	instruccion.nombreEsiOrigen=malloc(strlen(nombreEsi)+1);
+	strcpy(instruccion.nombreEsiOrigen,nombreEsi);
+	instruccion.nombreEsiOrigen[strlen(nombreEsi)] = '\0';
+
 	return instruccion;
 }
 
@@ -1306,8 +1377,9 @@ void procesoArchivo(char *archivo,t_list* tablaEntradas, char* punto_montaje){
 	int tamanio= ftell(fichero) + 1;
 	fseek(fichero,0,SEEK_SET);
 
+/*
 	printf( "Fichero: %s -> ", archivo );
-    	if( fichero )
+	if( fichero )
        printf( "existe (ABIERTO)\n" );
     else{
        printf( "Error (NO ABIERTO)\n" );
@@ -1316,7 +1388,7 @@ void procesoArchivo(char *archivo,t_list* tablaEntradas, char* punto_montaje){
     printf( "Contenido/clave-key con formato del fichero: %s\n\n", archivo ); //muestro key con formato ".txt"
     printf( "Valor: %s\n", fgets(contenido_fichero,tamanio, fichero) ); 
     printf ("Clave/key: %s\n\n",nombre_archivo_sin_extension); //muestro key sin formato ".txt"
-
+*/
 		/*
     	//carga de valor/dato
     	nuevaInstruccion->dato = malloc(strlen(contenido_fichero)+1);
@@ -1350,15 +1422,11 @@ void procesoArchivo(char *archivo,t_list* tablaEntradas, char* punto_montaje){
 	//muestro entrada "elementoDeTabla" para testear que esté todo correcto
     
 	elementoDeTabla = list_get(tablaEntradas,list_size(tablaEntradas)-1);
-	printf("Clave:%s - Numero:%d - Tamanio:%d - Posicion en tabla:%d \n",elementoDeTabla->clave,elementoDeTabla->numeroDeEntrada,elementoDeTabla->tamanioValorAlmacenado,list_size(tablaEntradas)); //prueba imprimir por pantalla el elemento obtenido
+
+//	printf("Clave:%s - Numero:%d - Tamanio:%d - Posicion en tabla:%d \n",elementoDeTabla->clave,elementoDeTabla->numeroDeEntrada,elementoDeTabla->tamanioValorAlmacenado,list_size(tablaEntradas)); //prueba imprimir por pantalla el elemento obtenido
 // ------------------------------------------------------------------
 
-    if( !fclose(fichero) )
-       printf( "\n----Fichero cerrado----\n\n\n" );
-    else{
-       printf( "\nError: fichero NO CERRADO\n" );
-    }
-
+	fclose(fichero);
     free(carpeta_archivo);
     free(nombre_archivo_sin_extension);
 }

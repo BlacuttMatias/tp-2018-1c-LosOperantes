@@ -1,0 +1,7 @@
+SET clave10 valor10
+SET clave11 valor11
+GET MATERIAS:K3001
+SET clave12 valor12
+SET clave13 valor13
+SET clave14 valor14
+SET clave15 valor15

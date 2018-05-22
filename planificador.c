@@ -456,6 +456,10 @@ void servidorPlanificador(void* puerto){
                                         //actualizo el tiempo de espera de CPU de cada proceso en la lista de ready
                                         list_iterate(listaReady, (void *) actualizarTiempoDeEsperaDeLosProcesos);
 
+                                        // Pongo el proceso en la Cola Ready
+                                        cargarProcesoCola(listaESIconectados, colaReady, i);
+                                        cargarProcesoLista(listaESIconectados, listaReady, i);
+
                                         log_info(infoLogger,"Respuesta sobre la Ejecución EXITOSA de la Instruccion recibida por el Proceso ESI.");
 
                                     }else{ // Si la ejecucion de la instruccion fallo
@@ -474,10 +478,8 @@ void servidorPlanificador(void* puerto){
                                         log_info(infoLogger,"Actualizacion de las Estructuras Administrativas");
                                     }
 
-                                    // Cargo el Proceso en la Cola de Ejecucion y lo saco de la Cola Ready
+                                    // Saco el Proceso de la Cola de Ejecucion y lo saco de
                                     eliminarProcesoCola(colaEjecucion, i);
-                                    cargarProcesoCola(listaESIconectados, colaReady, i);
-                                    cargarProcesoLista(listaESIconectados, listaReady, i);
 
                                     // Activo la Planificacion de los Procesos
                                     planificarProcesos = true;

@@ -593,9 +593,9 @@ void servidorPlanificador(void* puerto){
                                     break;
 
 
-                                case INSTANCIA_INEXISTENTE:
+                                case INSTANCIA_DESCONECTADA:
                                     // TODO
-                                    log_info(infoLogger,"Respuesta sobre la una Instancia que no existe recibida del COORDINADOR.");
+                                    log_info(infoLogger,"Respuesta sobre la Instancia que no existe recibida del COORDINADOR.");
                                     break;
 
 

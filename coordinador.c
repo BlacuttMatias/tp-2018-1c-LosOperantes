@@ -522,14 +522,17 @@ void servidorCoordinador(void* puerto){
                                     break;  
 
                                 case ESI_MUERE:
+                                    log_info(infoLogger,"Notificacion sobre la finalizacion del Proceso ESI %s via el comando KILL.", obtenerNombreProceso(listaProcesosConectados, i));
 
                                     // Elimino el Proceso ESI de la listaProcesosConectados
                                     eliminarProcesoLista(listaProcesosConectados, i);
-                                    //TODO
+
+                                    // Libero los Recursos que tenia asignado en Lista de Claves Bloqueadas
+                                    liberarRecursosProceso(diccionarioClavesBloqueadas, obtenerNombreProceso(listaInstanciasConectadas, i));   
+
                                     break;                              
                             }
                         }
-
                     }
                 }
             }

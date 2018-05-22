@@ -214,8 +214,6 @@ int main(int argc, char* argv[]){
 						switch(encabezado.cod_operacion){
 
 							case EJECUTAR_INSTRUCCION:
-                            
-                                // TODO
 
                                 paquete=recibir_payload(&i,&encabezado.tam_payload);
                                 registroInstruccion=dsrlz_instruccion(paquete.buffer);
@@ -224,6 +222,10 @@ int main(int argc, char* argv[]){
                                 log_info(infoLogger,"Pedido de Ejecución de una Instruccion recibida del Coordinador: %d %s %s", registroInstruccion.operacion, registroInstruccion.key, registroInstruccion.dato);
 
                                 if(registroInstruccion.operacion == SET){
+
+                                    // TODO
+                                    // Persistir el Valor en el Archivo Binario
+
                                     // Cargo la Tabla de Entradas
                                     cargarTablaEntradas(tablaEntradas,&registroInstruccion);
 
@@ -236,11 +238,15 @@ int main(int argc, char* argv[]){
 
                                 if(registroInstruccion.operacion == STORE){                                
 
+                                    // TODO
+                                    // Implementar
+
                                     // Realizo el Dump de la Tabla de Entradas
                                     dump(tablaEntradas);
                                 }
 
                                 // TODO
+                                // Determinar si fallo o no y corregir el mensaje de abajo. Ahora esta harcodeado a EJECUCION_EXITOSA
 
                                 // Armo el Paquete del Resultado de la Ejecucion de la Instruccion
                                 paquete = srlz_resultadoEjecucion('I', RESPUESTA_EJECUTAR_INSTRUCCION, registroInstruccion.nombreEsiOrigen, EJECUCION_EXITOSA, "", registroInstruccion.operacion, registroInstruccion.key);

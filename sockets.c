@@ -92,7 +92,6 @@ int aceptarconexion (int socket_escucha){
 		perror("error aceptar\n");
 		exit(1);
 	}
-	printf("conectado\n");
 	return newfd;
 }
 

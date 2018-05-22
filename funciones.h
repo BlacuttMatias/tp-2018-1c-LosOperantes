@@ -114,7 +114,7 @@
 	void persistirEntrada(t_entrada* unaEntrada);
 	/* Función para devolver un error */
 	void error(const char *s);
-	void procesoArchivo(char *archivo,t_list* tablaEntradas);
+	void procesoArchivo(char *archivo,t_list* tablaEntradas, char* punto_montaje);
 	void dump(t_list* tablaEntradas);
 	int cantidadDirectoriosPath(char* pathDirectorio);
 	bool crearEstructuraDirectorios(char* pathArchivo);

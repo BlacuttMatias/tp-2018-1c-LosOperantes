@@ -32,7 +32,6 @@ Paquete srlz_datosEntradas(char proceso, int codigoOperacion, int cantEntrada, i
 EntradasIntancias dsrlz_datosEntradas(void* buffer)
 {
 	int posicion = 0; //int para ir guiando desde donde se copia
-	int tamString = 0;
 	EntradasIntancias solicitud;
 
 	memcpy(&(solicitud.cantEntrada)					 	,buffer+posicion							,sizeof(int));
@@ -1232,22 +1231,20 @@ void cargarTablaEntradas(t_list *tablaEntradas,Instruccion* estructuraInstruccio
 
 
 
-void procesoArchivo(char *archivo,t_list* tablaEntradas){
+void procesoArchivo(char *archivo,t_list* tablaEntradas, char* punto_montaje){
 
 	char *carpeta_archivo = string_new();
-	string_append_with_format(&carpeta_archivo, "%s", archivo); // para que lea ficheros de la carpeta "entradas"
+	string_append_with_format(&carpeta_archivo, "%s%s", punto_montaje, archivo); // para que lea ficheros de la carpeta "entradas"
 
-	char* contenido_fichero = string_new(); // aca se guarda el contenido de cada fichero es decir el valor almacenado en cada key
+	// aca se guarda el contenido de cada fichero es decir el valor almacenado en cada key
+	char* contenido_fichero = string_new(); 
 
-	t_entrada* nuevaEntrada = NULL;
-	nuevaEntrada = malloc(sizeof(t_entrada)); //prueba con entrada  FUNCIONA
+	//obtengo la key sacando ultimos 4 caracteres ya que es el nombre sin el formato ".txt"
+	char* nombre_archivo_sin_extension = string_new();
+	nombre_archivo_sin_extension = string_substring(archivo,0,(string_length(archivo)-4)); 
 
-
-	char* nombre_sin_formato = string_new();
-	nombre_sin_formato = string_substring(archivo,0,(string_length(archivo)-4)); //obtengo la key sacando ultimos 4 caracteres ya que es el nombre sin el formato ".txt"
-
-	Instruccion* nuevaInstruccion = NULL;
-	nuevaInstruccion = malloc(sizeof(Instruccion)); //prueba con instruccion FUNCIONA
+//	Instruccion* nuevaInstruccion = NULL;
+//	nuevaInstruccion = malloc(sizeof(Instruccion)); //prueba con instruccion FUNCIONA
 	t_entrada* elementoDeTabla;
 
 	FILE *fichero;
@@ -1265,17 +1262,18 @@ void procesoArchivo(char *archivo,t_list* tablaEntradas){
 
     printf( "Contenido/clave-key con formato del fichero: %s\n\n", archivo ); //muestro key con formato ".txt"
     printf( "Valor: %s\n", fgets(contenido_fichero,tamanio, fichero) ); 
-    printf ("Clave/key: %s\n\n",nombre_sin_formato); //muestro key sin formato ".txt"
+    printf ("Clave/key: %s\n\n",nombre_archivo_sin_extension); //muestro key sin formato ".txt"
 
+		/*
     	//carga de valor/dato
     	nuevaInstruccion->dato = malloc(strlen(contenido_fichero)+1);
     	strcpy(nuevaInstruccion->dato, contenido_fichero);
     	nuevaInstruccion->dato[strlen(contenido_fichero)] = '\0';
 
     	//carga de clave/key
-    	strcpy(nuevaInstruccion->key,nombre_sin_formato);
+    	strcpy(nuevaInstruccion->key,nombre_archivo_sin_extension);
 
-		/*
+
     	cargarTablaEntradas(tablaEntradas,nuevaInstruccion); //cargo la tabla de entradas con esta nueva instruccion
 
 
@@ -1285,10 +1283,16 @@ void procesoArchivo(char *archivo,t_list* tablaEntradas){
     	  	printf("Clave:%s - Valor:%s - Numero:%d - Tamanio:%d - Posicion en tabla:%d \n",elementoDeTabla->clave,elementoDeTabla->valor,elementoDeTabla->numeroDeEntrada,elementoDeTabla->tamanioValorAlmacenado,list_size(tablaEntradas)); //prueba imprimir por pantalla el elemento obtenido
 		*/
 //------------------------------------------------------------------------orueba con entrada//
- 	nuevaEntrada->clave = malloc(strlen(nombre_sin_formato)+1);
-	strcpy(nuevaEntrada->clave, nombre_sin_formato);
-	nuevaEntrada->clave[strlen(nombre_sin_formato)] = '\0';
-	
+
+	t_entrada* nuevaEntrada = NULL;
+	nuevaEntrada = malloc(sizeof(t_entrada)); //prueba con entrada  FUNCIONA
+
+ 	nuevaEntrada->clave = malloc(strlen(nombre_archivo_sin_extension)+1);
+	strcpy(nuevaEntrada->clave, nombre_archivo_sin_extension);
+	nuevaEntrada->clave[strlen(nombre_archivo_sin_extension)] = '\0';
+	nuevaEntrada->tamanioValorAlmacenado = strlen(contenido_fichero);
+	nuevaEntrada->numeroDeEntrada = 0;
+
 	list_add(tablaEntradas,nuevaEntrada);
 	//muestro entrada "elementoDeTabla" para testear que esté todo correcto
     
@@ -1303,7 +1307,7 @@ void procesoArchivo(char *archivo,t_list* tablaEntradas){
     }
 
     free(carpeta_archivo);
-    free(nombre_sin_formato);
+    free(nombre_archivo_sin_extension);
 }
 
 
@@ -1333,6 +1337,7 @@ void persistirEntrada(t_entrada* unaEntrada){
 
 	fclose ( archivoTexto );
     free(nombre_formato_archivo);
+    free(valorIdentificado);
 }
 
 void error(const char *s)

@@ -112,7 +112,7 @@ typedef struct{ //tipo entrada
 	int tamanioValorAlmacenado;
 } t_entrada;
 
-typedef struct{ //tipo entrada
+typedef struct{ 
 	int cantEntrada;
 	int tamanioEntrada;
 } EntradasIntancias;

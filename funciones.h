@@ -59,7 +59,6 @@
 /*  Funciones de ESI 						*/
 /* ---------------------------------------- */
 
-
 	Instruccion* sacarSiguienteInstruccion(t_list* listaInstrucciones);
 	Instruccion pasarAEstructura(Instruccion* puntero, char* nombreEsi);
 	bool procesarScript(char* pathScript, t_list* listaInstrucciones);
@@ -108,6 +107,7 @@
 	void showContenidolistaProcesosConectados(t_list* listaProcesosConectados);
 	void showContenidolistaInstanciasConectadas(t_list* listaInstanciasConectadas);
 	bool enviarInstruccionInstancia(Instruccion registroInstruccion, int socketInstancia);
+	void actualizarDiccionarioClavesInstancias(t_dictionary* diccionarioClavesInstancias, char key[40], Instancia* proximaInstancia);
 
 /* ---------------------------------------- */
 /*  Funciones de Instancia 					*/

@@ -471,12 +471,8 @@ void servidorCoordinador(void* puerto){
 
                                                 log_info(infoLogger, "Se aplico el Algoritmo de Distribución %s y se obtuvo la Instancia %s", algoritmoDistribucion, proximaInstancia->nombreProceso);
 
-                                                // Guardo en el Dictionary que Instancia posee un Key
-                                                //dictionary_put(diccionarioClavesInstancias, registroInstruccion.key, proximaInstancia);  
-
-                                                // Aca hay que actualizar el diccionario con la Instancia nueva
-                                                // TODO
-
+                                                // Actualizo el diccionario con la Instancia nueva asignada
+                                                actualizarDiccionarioClavesInstancias(diccionarioClavesInstancias, registroInstruccion.key, proximaInstancia);
 
                                                 free(algoritmoDistribucion);
                                             }

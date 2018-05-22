@@ -1618,3 +1618,23 @@ int buscarPosicionesEnBin(FILE*binario, int espacioPorEntrada, t_list* entradas,
 	return list_all_satisfy(entradas, (void*)se_Encontro_Todo);
 }
 /******************INSTANCIA********************************************/
+
+// Actualizo el Diccionario con la Nueva Instancia Asignada
+void actualizarDiccionarioClavesInstancias(t_dictionary* dictionario, char key[40], Instancia* nuevaInstancia){
+
+    void _each_elemento_(char* keyAux, Instancia* registroInstanciaAux)
+	{
+		// Actualizo el Registro
+		if(strcmp(keyAux, key) == 0){
+
+			registroInstanciaAux->socketProceso = nuevaInstancia->socketProceso;
+			registroInstanciaAux->entradasLibres = nuevaInstancia->entradasLibres;
+
+			registroInstanciaAux->nombreProceso=malloc(strlen(nuevaInstancia->nombreProceso)+1);
+			strcpy(registroInstanciaAux->nombreProceso,nuevaInstancia->nombreProceso);
+			registroInstanciaAux->nombreProceso[strlen(nuevaInstancia->nombreProceso)] = '\0';
+		}
+
+	}
+    dictionary_iterator(dictionario, (void*)_each_elemento_);
+}

@@ -24,7 +24,8 @@
 
     t_list* listaProcesosConectados;
     t_list* listaInstanciasConectadas;
-    t_dictionary* diccionarioClavesInstancias;    
+    t_dictionary* diccionarioClavesInstancias;
+    t_dictionary* diccionarioClavesBloqueadas;
     int fd_planificador;
 
 /* ---------------------------------------- */
@@ -142,6 +143,9 @@ void servidorCoordinador(void* puerto){
 
                                     log_info(infoLogger,"El PLANIFICADOR notifica que el Recurso %s esta LIBRE.", registroKeyBloqueada.key);
 
+                                    // Cargo el Recurso en la Lista de Claves Bloqueadas
+                                    dictionary_put(diccionarioClavesBloqueadas, registroKeyBloqueada.key, &registroKeyBloqueada);
+
                                     // Averiguo el Socket del Proceso ESI para notificarle que no fallo la Ejecucion de la Instruccion
                                     socketESI = obtenerSocketProceso(listaProcesosConectados, registroKeyBloqueada.nombreProceso);
 
@@ -153,14 +157,12 @@ void servidorCoordinador(void* puerto){
                                     //usleep(config_get_int_value(cfg,"RETARDO"));
 
                                     // Armo el Paquete del Resultado de la Ejecucion de la Instruccion
-                                    paquete = srlz_resultadoEjecucion('C', RESPUESTA_EJECUTAR_INSTRUCCION, registroKeyBloqueada.nombreProceso, EJECUCION_EXITOSA, "");
+                                    paquete = srlz_resultadoEjecucion('C', RESPUESTA_EJECUTAR_INSTRUCCION, registroKeyBloqueada.nombreProceso, EJECUCION_EXITOSA, "", registroKeyBloqueada.operacion, registroKeyBloqueada.key);
 
                                     // Envio el Paquete a ESI
                                     if(send(socketESI,paquete.buffer,paquete.tam_buffer,0) != -1){
 
                                         free(paquete.buffer);
-
-                                        // TODO Enviar a la Instancia
 
                                         log_info(infoLogger, "Se le notifico al ESI %s que el Recurso %s estaba LIBRE", obtenerNombreProceso(listaProcesosConectados, socketESI), registroKeyBloqueada.key);
 
@@ -182,15 +184,16 @@ void servidorCoordinador(void* puerto){
                                     socketESI = obtenerSocketProceso(listaProcesosConectados, registroKeyBloqueada.nombreProceso);
 
                                     // Armo el Paquete del Resultado de la Ejecucion de la Instruccion
-                                    paquete = srlz_resultadoEjecucion('C', RESPUESTA_EJECUTAR_INSTRUCCION, registroKeyBloqueada.nombreProceso, EJECUCION_FALLIDA, "");
+                                    paquete = srlz_resultadoEjecucion('C', RESPUESTA_EJECUTAR_INSTRUCCION, registroKeyBloqueada.nombreProceso, EJECUCION_FALLIDA, "", registroKeyBloqueada.operacion, registroKeyBloqueada.key);
 
                                     // Envio el Paquetea a ESI
                                     if(send(socketESI,paquete.buffer,paquete.tam_buffer,0) != -1){
 
                                         free(paquete.buffer);
-                                        log_info(infoLogger, "Se le notifico al ESI %s que el Recurso %s estaba tomado por otro Proceso ESI", obtenerNombreProceso(listaProcesosConectados, socketESI), registroKeyBloqueada.key);
+
+                                        log_info(infoLogger, "Se le notifico al ESI %s que el Recurso %s estaba OCUPADO por otro Proceso ESI", obtenerNombreProceso(listaProcesosConectados, socketESI), registroKeyBloqueada.key);
                                     }else{
-                                        log_error(infoLogger, "No se pudo notificar al ESI %s que el Recurso %s estaba tomado por otro Proceso ESI", obtenerNombreProceso(listaProcesosConectados, socketESI), registroKeyBloqueada.key);
+                                        log_error(infoLogger, "No se pudo notificar al ESI %s que el Recurso %s estaba OCUPADO por otro Proceso ESI", obtenerNombreProceso(listaProcesosConectados, socketESI), registroKeyBloqueada.key);
                                     }
                                     break;
 
@@ -204,7 +207,8 @@ void servidorCoordinador(void* puerto){
                                     log_info(infoLogger,"El PLANIFICADOR solicita informacion sobre el Recurso %s.", registroKeyBloqueada.key);
 
 
-                                    // TODO Falta generar la informacion de la Instancia y devolverlo al Planificador. Hoy esta harcodeado
+                                    // TODO 
+                                    // Falta generar la informacion de la Instancia y devolverlo al Planificador. Hoy esta harcodeado
 
                                     // Serializado la Respuesta (ESTE MENSAJE LLEGA DIRECTAMENTE A LA CONSOLA)
                                     paquete = srlz_datosInstancia('C', OBTENER_STATUS_CLAVE, "Instancia1", 2, 3);
@@ -289,12 +293,32 @@ void servidorCoordinador(void* puerto){
                                     registroResultadoEjecucion=dsrlz_resultadoEjecucion(paquete.buffer);
                                     free(paquete.buffer);
 
-                                    log_info(infoLogger,"Respuesta sobre la Ejecución de Instruccion recibida de la Instancia.");
+                                    log_info(infoLogger,"Respuesta de la Ejecución de una Instrucción recibida de la Instancia %s.", obtenerNombreProceso(listaProcesosConectados, i));
 
                                     socketESI = obtenerSocketProceso(listaProcesosConectados, registroResultadoEjecucion.nombreEsiDestino);
 
+                                    // Si la Operacion fue STORE y resulto Exitosa, libero el Recurso
+                                    if(registroResultadoEjecucion.operacion == STORE && registroResultadoEjecucion.resultado == EJECUCION_EXITOSA){
+                                        
+                                        // Libero un Recurso de la Lista de Claves Bloqueadas
+                                        dictionary_remove(diccionarioClavesBloqueadas, registroResultadoEjecucion.key);
+
+                                        // Serializado el Proceso y la Key
+                                        paquete = srlz_datosKeyBloqueada('C', NOTIFICAR_LIBERACION_RECURSO, registroResultadoEjecucion.nombreEsiDestino, registroResultadoEjecucion.operacion, registroResultadoEjecucion.key, registroResultadoEjecucion.contenido);
+
+                                        // Envio el Paquetea al Planificador
+                                        if(send(fd_planificador,paquete.buffer,paquete.tam_buffer,0) != -1){
+                                            log_info(infoLogger, "Se le notifica al PLANIFICADOR que el Proceso ESI %s quiere liberó el Recurso %s.", registroResultadoEjecucion.nombreEsiDestino, registroInstruccion.key);
+                                        }else{
+                                            log_error(infoLogger, "No se pudo enviar mensaje al PLANIFICADOR sobre la liberación  del Recurso %s por el Proceso ESI %s.", registroInstruccion.key, registroResultadoEjecucion.nombreEsiDestino);
+                                        }
+
+                                        // Libero el Buffer
+                                        free(paquete.buffer);
+                                    }
+
                                     // Armo el Paquete del Resultado de la Ejecucion de la Instruccion
-                                    paquete = srlz_resultadoEjecucion('C', RESPUESTA_EJECUTAR_INSTRUCCION, registroResultadoEjecucion.nombreEsiDestino, registroResultadoEjecucion.resultado, registroResultadoEjecucion.contenido);
+                                    paquete = srlz_resultadoEjecucion('C', RESPUESTA_EJECUTAR_INSTRUCCION, registroResultadoEjecucion.nombreEsiDestino, registroResultadoEjecucion.resultado, registroResultadoEjecucion.contenido, registroResultadoEjecucion.operacion, registroResultadoEjecucion.key);
 
                                     // Envio el Paquete a ESI
                                     if(send(socketESI,paquete.buffer,paquete.tam_buffer,0) != -1){
@@ -355,11 +379,10 @@ void servidorCoordinador(void* puerto){
                                         // Serializado el Proceso y la Key
                                         paquete = srlz_datosKeyBloqueada('C', NOTIFICAR_USO_RECURSO, obtenerNombreProceso(listaProcesosConectados, i), registroInstruccion.operacion, registroInstruccion.key, registroInstruccion.dato);
 
-
                                         // Si el Recurso no fue creado en el diccionarioClavesInstancias (primera vez), lo creo
                                         if(!dictionary_has_key(diccionarioClavesInstancias, registroInstruccion.key) ){
 
-                                            // Creo Registro Nuevo
+                                            // Creo Registro Nuevo pero VACIO
                                             proximaInstancia = malloc(sizeof(Instancia));
                                             proximaInstancia->nombreProceso = NULL;
                                             proximaInstancia->socketProceso = 0;
@@ -377,7 +400,7 @@ void servidorCoordinador(void* puerto){
                                         }else{
                                             log_error(infoLogger, "No se pudo enviar mensaje al PLANIFICADOR sobre el uso de un Recurso por el Proceso ESI %s.", obtenerNombreProceso(listaProcesosConectados, i));
                                         }
-
+                                        break;
 
                                     }else{ // Si la operacion es SET o STORE
 
@@ -389,7 +412,7 @@ void servidorCoordinador(void* puerto){
                                             if(!dictionary_has_key(diccionarioClavesInstancias, registroInstruccion.key) ){
 
                                                 // Armo el Paquete del Resultado de la Ejecucion de la Instruccion
-                                                paquete = srlz_resultadoEjecucion('C', RESPUESTA_EJECUTAR_INSTRUCCION, obtenerNombreProceso(listaProcesosConectados, i), EJECUCION_FALLIDA, "");
+                                                paquete = srlz_resultadoEjecucion('C', RESPUESTA_EJECUTAR_INSTRUCCION, "COORDINADOR", EJECUCION_FALLIDA_FINALIZAR_ESI, "Error de Clave no Identificada", registroInstruccion.operacion, registroInstruccion.key);
 
                                                 // Envio el Paquetea a ESI
                                                 if(send(i,paquete.buffer,paquete.tam_buffer,0) != -1){
@@ -399,43 +422,37 @@ void servidorCoordinador(void* puerto){
                                                 }else{
                                                     log_error(infoLogger, "No se pudo notificar al ESI %s por Error de Clave %s no Identificada", obtenerNombreProceso(listaProcesosConectados, i), registroKeyBloqueada.key);
                                                 }
-
-
-                                            }else{
-
-
-
-
-                                            }
-
-
-
-
-                                            // Serializado el Proceso y la Key
-                                            paquete = srlz_datosKeyBloqueada('C', NOTIFICAR_LIBERACION_RECURSO, obtenerNombreProceso(listaProcesosConectados, i), registroInstruccion.operacion, registroInstruccion.key, registroInstruccion.dato);
-
-                                            // Envio el Paquetea al Planificador
-                                            if(send(fd_planificador,paquete.buffer,paquete.tam_buffer,0) != -1){
-
-                                                free(paquete.buffer);
-                                                log_info(infoLogger, "Se le notifica al PLANIFICADOR que el Proceso ESI %s quiere acceder al Recurso %s.", obtenerNombreProceso(listaProcesosConectados, i), registroInstruccion.key);
-                                            }else{
-                                                log_error(infoLogger, "No se pudo enviar mensaje al PLANIFICADOR sobre el uso de un Recurso por el Proceso ESI %s.", obtenerNombreProceso(listaProcesosConectados, i));
+                                                break;
                                             }
                                         }
 
                                         if(registroInstruccion.operacion == SET){
 
-                                            // Se verifica que la clave este bloqueada previamente. Si no esta bloqueada, se cancela el ESI por "Error de Clave no Bloqueada"
+                                            // Si el Recurso NO esta bloqueado previamente, se cancela el ESI por "Error de Clave no Bloqueada"
+                                            if(!dictionary_has_key(diccionarioClavesBloqueadas, registroInstruccion.key) ){
 
-                                            // TODO
+
+                                                // Armo el Paquete del Resultado de la Ejecucion de la Instruccion
+                                                paquete = srlz_resultadoEjecucion('C', RESPUESTA_EJECUTAR_INSTRUCCION, "COORDINADOR", EJECUCION_FALLIDA_FINALIZAR_ESI, "Error de Clave no Bloqueada", registroInstruccion.operacion, registroInstruccion.key);
+
+                                                // Envio el Paquetea a ESI
+                                                if(send(i,paquete.buffer,paquete.tam_buffer,0) != -1){
+
+                                                    free(paquete.buffer);
+                                                    log_info(infoLogger, "Se cancela el ESI %s por Error de Clave %s no Bloqueada", obtenerNombreProceso(listaProcesosConectados, i), registroInstruccion.key);
+                                                }else{
+                                                    log_error(infoLogger, "No se pudo notificar al ESI %s por Error de Clave %s no Bloqueada", obtenerNombreProceso(listaProcesosConectados, i), registroInstruccion.key);
+                                                }
+                                                break;
+                                            }
                                         }
 
 
 // Falta contemplar el caso Script que Aborta por desconexión de la instancia
 // TODO
 
-                                        // Si el Recurso ya fue recibido por el Coordinador (2da y demas veces)
+
+                                        // Si el Recurso ya fue recibido previamente por el Coordinador (2da y demas veces)
                                         if(dictionary_has_key(diccionarioClavesInstancias, registroInstruccion.key) ){
 
                                             // Obtener la Instancia ya asignado al Recurso
@@ -489,25 +506,12 @@ void servidorCoordinador(void* puerto){
                                             log_error(infoLogger, "No se pudo enviar a la instancia %s la proxima Instruccion a ejecutar",proximaInstancia->nombreProceso);
                                         }
 
-
                                         // Genero el Log de Operaciones
                                         registrarLogOperaciones(listaProcesosConectados, registroInstruccion.operacion, registroInstruccion.key, registroInstruccion.dato, i);
                                         log_info(infoLogger,"Operacion guardada en el Log de Operaciones:  %s %i %s %s", obtenerNombreProceso(listaProcesosConectados, i), registroInstruccion.operacion, registroInstruccion.key, registroInstruccion.dato);
 
                                         // Aplico Retardo de Ejecucion segun Archivo de Configuracion
                                         usleep(config_get_int_value(cfg,"RETARDO"));
-
-                                        // Armo el Paquete del Resultado de la Ejecucion de la Instruccion
-                                        paquete = srlz_resultadoEjecucion('C', RESPUESTA_EJECUTAR_INSTRUCCION, obtenerNombreProceso(listaProcesosConectados, i), EJECUCION_EXITOSA, "");
-
-
-                                        // Envio el Paquetea a ESI
-                                        if(send(i,paquete.buffer,paquete.tam_buffer,0) != -1){
-
-                                            free(paquete.buffer);
-                                        }else{
-                                        }
-
                                     }
                                     break;
 
@@ -516,6 +520,9 @@ void servidorCoordinador(void* puerto){
 
                                     // Elimino el Proceso ESI de la listaProcesosConectados
                                     eliminarProcesoLista(listaProcesosConectados, i);
+
+                                    // Libero los Recursos que tenia asignado en Lista de Claves Bloqueadas
+                                    liberarRecursosProceso(diccionarioClavesBloqueadas, obtenerNombreProceso(listaInstanciasConectadas, i));                                    
                                     break;  
 
                                 case ESI_MUERE:
@@ -556,6 +563,9 @@ int main(int argc, char* argv[]){
     // Creo el Diccionario con las Claves y que Instancia la tiene
     diccionarioClavesInstancias = dictionary_create();
 
+    // Creo la Lista de Claves Bloqueadas (Estructura Administrativa para evitar comunicarnos con el Planificador)
+    diccionarioClavesBloqueadas = dictionary_create();
+
 // -----------------------------------------------------------------------
 
     pthread_t hiloServidor;
@@ -572,6 +582,7 @@ int main(int argc, char* argv[]){
     list_destroy(listaProcesosConectados);
     list_destroy(listaInstanciasConectadas);
     dictionary_destroy(diccionarioClavesInstancias);
+    dictionary_destroy(diccionarioClavesBloqueadas);
 
     return EXIT_SUCCESS;
 }

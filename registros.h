@@ -43,6 +43,7 @@ enum algoritmo_distribucion{
 enum resultado_operaciones{
 	EJECUCION_EXITOSA =1,
 	EJECUCION_FALLIDA=2,
+	EJECUCION_FALLIDA_FINALIZAR_ESI=3,	
 };
 
 
@@ -71,6 +72,8 @@ typedef struct
 typedef struct
 {
 	char* nombreEsiDestino;
+	int operacion;
+	char key[40];
 	int resultado;
 	char* contenido;
 }ResultadoEjecucion;

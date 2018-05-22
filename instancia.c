@@ -243,7 +243,7 @@ int main(int argc, char* argv[]){
                                 // TODO
 
                                 // Armo el Paquete del Resultado de la Ejecucion de la Instruccion
-                                paquete = srlz_resultadoEjecucion('I', RESPUESTA_EJECUTAR_INSTRUCCION, registroInstruccion.nombreEsiOrigen, EJECUCION_EXITOSA, "");
+                                paquete = srlz_resultadoEjecucion('I', RESPUESTA_EJECUTAR_INSTRUCCION, registroInstruccion.nombreEsiOrigen, EJECUCION_EXITOSA, "", registroInstruccion.operacion, registroInstruccion.key);
 
                                 // Envio el Paquete al Coordinador
                                 if(send(coordinador_fd,paquete.buffer,paquete.tam_buffer,0) != -1){

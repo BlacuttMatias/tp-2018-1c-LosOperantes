@@ -2,7 +2,7 @@
 
 //*********************** SERIALIZADO Y DESERIALIZADO ********************************//
 
-Paquete srlz_resultadoEjecucion(char proceso, int codigoOperacion, char* nombreEsiDestino, int resultado, char* contenido){
+Paquete srlz_resultadoEjecucion(char proceso, int codigoOperacion, char* nombreEsiDestino, int resultado, char* contenido, int operacion, char key[40]){
 	int posicion = 0;
 	int sizeBuffer = 0;
 	int tamString = 0;
@@ -10,7 +10,7 @@ Paquete srlz_resultadoEjecucion(char proceso, int codigoOperacion, char* nombreE
 	Paquete paquete;
 
 	sizeBuffer =sizeof(char)+
-			(sizeof(int)*5) + strlen(nombreEsiDestino) + strlen(contenido);
+			(sizeof(int)*7) + strlen(nombreEsiDestino) + strlen(contenido) + strlen(key);
 
 	paquete.tam_buffer = sizeBuffer;
 	paquete.buffer = malloc( sizeBuffer );
@@ -30,6 +30,11 @@ Paquete srlz_resultadoEjecucion(char proceso, int codigoOperacion, char* nombreE
 	memcpy(paquete.buffer + (posicion += sizeof(int))						,&(tamString)					,sizeof(int) ); 
 	memcpy(paquete.buffer + (posicion += sizeof(int) )						,contenido						,tamString); 
 
+	memcpy(paquete.buffer + (posicion += tamString)							,&(operacion)					,sizeof(int) ); 
+
+	tamString = strlen(key);
+	memcpy(paquete.buffer + (posicion += sizeof(int) )						,&(tamString)					,sizeof(int) );
+	memcpy(paquete.buffer + (posicion += sizeof(int) )						,key							,tamString); 
 
 	return paquete;	
 }
@@ -51,6 +56,12 @@ ResultadoEjecucion dsrlz_resultadoEjecucion(void* buffer){
 	solicitud.contenido = malloc(sizeof(char) * tamString+1);
 	memcpy(solicitud.contenido			,buffer+(posicion+=sizeof(int))									,sizeof(char)*tamString);
 	solicitud.contenido[tamString]='\0';
+
+	memcpy(&solicitud.operacion 			,buffer+(posicion+=sizeof(char) * tamString)				,sizeof(int));
+
+	memcpy(&(tamString)					 	,buffer+(posicion+=sizeof(int))								,sizeof(int));
+	memcpy(solicitud.key					,buffer+(posicion+=sizeof(int))								,sizeof(char)*tamString);
+	solicitud.key[tamString]='\0';
 
 	return solicitud;
 }

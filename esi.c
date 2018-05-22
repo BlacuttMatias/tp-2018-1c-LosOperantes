@@ -119,6 +119,7 @@ int main(int argc, char* argv[]){
     free(pathScript);
 
     ResultadoEjecucion registroResultadoEjecucion;
+    bool continuarEjecutandoESI;
 
     while(1){
     	temporales=master;
@@ -156,33 +157,77 @@ int main(int argc, char* argv[]){
                                 registroResultadoEjecucion=dsrlz_resultadoEjecucion(paquete.buffer);
                                 free(paquete.buffer);
 
-                                // Si la ejecucion de la instruccion no fallo
-                                if(registroResultadoEjecucion.resultado == EJECUCION_EXITOSA){
+                                // Dependiendo el estado de la ejecucion de la instruccion
+                                switch(registroResultadoEjecucion.resultado){
 
-                                    log_info(infoLogger,"Respuesta sobre la Ejecución EXITOSA de la Instruccion recibida por el Coordinador.");
+                                    case EJECUCION_EXITOSA:
 
-                                    // Se elimina la Instruccion Ejecutada de la Lista
-                                    eliminarUltimaInstruccion(listaInstrucciones);
+                                        log_info(infoLogger,"Respuesta sobre la Ejecución EXITOSA de la Instruccion recibida por el Coordinador. Clave: %s", registroResultadoEjecucion.key);
 
-                                    printf(" - OK\n");
+                                        // Se elimina la Instruccion Ejecutada de la Lista
+                                        eliminarUltimaInstruccion(listaInstrucciones);
 
-                                }else{ // Si la ejecucion de la instruccion fallo
+                                        printf(" - OK\n");
 
-                                    printf(" - FALLO\n");
+                                        continuarEjecutandoESI = true;
+                                        break;
 
-                                    log_info(infoLogger,"Respuesta sobre la Ejecución FALLIDA de la Instruccion recibida por el Coordinador.");
+                                    case EJECUCION_FALLIDA:
+
+                                        printf(" - FALLO\n");
+
+                                        log_info(infoLogger,"Respuesta sobre la Ejecución FALLIDA de la Instruccion recibida por el Coordinador. Clave: %s", registroResultadoEjecucion.key);
+
+                                        continuarEjecutandoESI = true;
+                                        break;
+
+                                    case EJECUCION_FALLIDA_FINALIZAR_ESI:
+                                        log_error(infoLogger, "El ESI %s finaliza por el ERROR: %s .", nombreProceso, registroResultadoEjecucion.contenido);
+
+                                        continuarEjecutandoESI = false;
+                                        break;
                                 }
 
-                                // Armo el Paquete del Resultado de la Ejecucion de la Instruccion
-                                paquete = crearHeader('E', RESPUESTA_EJECUTAR_INSTRUCCION, registroResultadoEjecucion.resultado);
 
-                                // Envio el Paquetea al Planificador
-                                if(send(planificador_fd,paquete.buffer,paquete.tam_buffer,0) != -1){
+                                if(continuarEjecutandoESI){
 
-                                    free(paquete.buffer);
-                                    log_info(infoLogger, "Se le respondio al PLANIFICADOR el resultado de la ejecucion de la Instruccion");
+                                    // Armo el Paquete del Resultado de la Ejecucion de la Instruccion
+                                    paquete = crearHeader('E', RESPUESTA_EJECUTAR_INSTRUCCION, registroResultadoEjecucion.resultado);
+
+                                    // Envio el Paquetea al Planificador
+                                    if(send(planificador_fd,paquete.buffer,paquete.tam_buffer,0) != -1){
+
+                                        free(paquete.buffer);
+                                        log_info(infoLogger, "Se le respondio al PLANIFICADOR el resultado de la ejecucion de la Instruccion");
+                                    }else{
+                                        log_error(infoLogger, "No se pudo enviar mensaje al PLANIFICADOR sobre el resultado de la ejecucion de la Instruccion");
+                                    }
+
                                 }else{
-                                    log_error(infoLogger, "No se pudo enviar mensaje al PLANIFICADOR sobre el resultado de la ejecucion de la Instruccion");
+
+                                    // Armo el Paquete de Finalizacion de Ejecucion del Proceso ESI
+                                    paquete = crearHeader('E', FINALIZACION_EJECUCION_ESI, 1);
+
+                                    // Notifico al Planificador que voy a finalizar
+                                    if(send(planificador_fd,paquete.buffer,paquete.tam_buffer,0) != -1){
+
+                                        log_info(infoLogger, "Se le notifico al PLANIFICADOR que el ESI %s finalizo", nombreProceso);
+
+                                        // Notifico al Coordinador que voy a finalizar
+                                        if(send(coordinador_fd,paquete.buffer,paquete.tam_buffer,0) != -1){
+                                            log_info(infoLogger, "Se le notifico al COORDINADOR que el ESI %s finalizo", nombreProceso);
+                                        }else{
+                                            log_error(infoLogger, "No se pudo enviar al COORDINADOR la notificacion de finalizacion del ESI %s", nombreProceso);
+                                        }
+                                    }else{
+                                        log_error(infoLogger, "No se pudo enviar al PLANIFICADOR la notificacion de finalizacion del ESI %s", nombreProceso);
+                                    }
+
+                                    // Libero Buffer
+                                    free(paquete.buffer);                                        
+
+                                    printf("\n\nProceso %s finalizado con ERROR: %s.\n", nombreProceso, registroResultadoEjecucion.contenido);
+                                    return EXIT_FAILURE;                                    
                                 }
                                 break;
 						}
@@ -216,9 +261,8 @@ int main(int argc, char* argv[]){
                                             break;
                                         case STORE:
                                             printf("Ejecutando... STORE %s %s ",proximaInstruccion.key, proximaInstruccion.dato);
-                                            break;
+                                            break;                                      
                                     }
-                                    
 
                                     // Armo el Paquete de Ejecucion de la Proxima Instruccion
                                     paquete = srlz_instruccion('E', EJECUTAR_INSTRUCCION,proximaInstruccion);
@@ -227,9 +271,9 @@ int main(int argc, char* argv[]){
                                     if(send(coordinador_fd,paquete.buffer,paquete.tam_buffer,0) != -1){
 
                                         free(paquete.buffer);
-                                        log_info(infoLogger, "Se le envio al COORDINADOR la proxima Instruccion a ejecutar");
+                                        log_info(infoLogger, "Se le envio al COORDINADOR la proxima Instrucción a ejecutar. Key: %s - Operacion: %d - Dato: %s", proximaInstruccion.key, proximaInstruccion.operacion, proximaInstruccion.dato);
                                     }else{
-                                        log_error(infoLogger, "No se pudo enviar al COORDINADOR la proxima Instruccion a ejecutar");
+                                        log_error(infoLogger, "No se pudo enviar al COORDINADOR la proxima Instrucción a ejecutar");
                                     }
                                 }else{
                                     log_info(infoLogger, "El ESI %s ya no posee más Instrucciones ha ejecutar.", nombreProceso);
@@ -267,20 +311,24 @@ int main(int argc, char* argv[]){
                                 }
                                 break;
 
-                                case ESI_MUERE:
+                            case ESI_MUERE:
 
-                                    log_info(infoLogger, "El PLANIFICADOR envió comando KILL");
-                                    paquete= srlz_datosProceso('E', ESI_MUERE,nombreProceso, ESI, 0 );
-                                    
+                                log_info(infoLogger, "El PLANIFICADOR envió comando KILL");
+                                paquete= srlz_datosProceso('E', ESI_MUERE,nombreProceso, ESI, 0 );
+                                
 
-                                    if(send(coordinador_fd, paquete.buffer, paquete.tam_buffer,0) != -1){
-                                        log_info(infoLogger,"Se avisó al COORDINADOR sobre el fin de esi");
-                                    }
-                                    else {
-                                        log_info(infoLogger,"no se pudo avisar al COORDINADOR fin de esi");
-                                    }
-                                    free(paquete.buffer);
-                                    return EXIT_FAILURE;
+                                if(send(coordinador_fd, paquete.buffer, paquete.tam_buffer,0) != -1){
+                                    log_info(infoLogger,"Se avisó al COORDINADOR sobre el fin de esi");
+                                }
+                                else {
+                                    log_info(infoLogger,"no se pudo avisar al COORDINADOR fin de esi");
+                                }
+
+                                // Libero los Recursos
+                                free(paquete.buffer);
+
+                                return EXIT_FAILURE;
+
                                 break;
                         }
                     }

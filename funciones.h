@@ -52,7 +52,7 @@
 	Paquete srlz_datosEntradas(char proceso, int codigoOperacion, int cantEntrada, int tamanioEntrada);
 	EntradasIntancias dsrlz_datosEntradas(void* buffer);
 
-	Paquete srlz_resultadoEjecucion(char proceso, int codigoOperacion, char* nombreEsiDestino, int resultado, char* contenido);
+	Paquete srlz_resultadoEjecucion(char proceso, int codigoOperacion, char* nombreEsiDestino, int resultado, char* contenido, int operacion, char key[40]);
 	ResultadoEjecucion dsrlz_resultadoEjecucion(void* buffer);
 
 /* ---------------------------------------- */

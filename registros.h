@@ -123,6 +123,15 @@ typedef struct{ //tipo entrada
 	int tamanioValorAlmacenado;
 } t_entrada;
 
+typedef struct{ //para mejor manejo en la instancia
+	int cantidadEntradas;
+	int tamPorEntrada;
+	char* binario;
+	char* vector;
+}Almacenamiento;
+
+
+
 typedef struct{ 
 	int cantEntrada;
 	int tamanioEntrada;

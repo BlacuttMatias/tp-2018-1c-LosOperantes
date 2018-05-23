@@ -33,7 +33,6 @@
 
 int main(int argc, char* argv[]){
 
-
     /* Creo la instancia del Archivo de Configuracion y del Log */
     cfg = config_create("config/config.cfg");
     infoLogger = log_create("log/instancia.log", "INSTANCIA", false, LOG_LEVEL_INFO);
@@ -62,54 +61,53 @@ int main(int argc, char* argv[]){
 
 //PRUEBA ARCHIVO BINARIO					/////
 	// creo el archivo binario
+    /*
+    preCargarTablaEntradas(tablaEntradas,config_get_string_value(cfg,"PUNTO_MONTAJE"));
+    t_entrada* entrada1= list_get(tablaEntradas,0);
+    printf("\nla primer clave de la lista es     %s", entrada1->clave);
 
-/*
-   if(list_size(listaEntradas)>1){
+   if(list_size(tablaEntradas)>1){
+        Almacenamiento almacenamiento;
+        almacenamiento.cantidadEntradas=10;
+        almacenamiento.tamPorEntrada=15;
+        almacenamiento.binario=string_new();
+        almacenamiento.vector=string_new();
+        strcpy(almacenamiento.binario,"vectorBin.txt");
+        strcpy(almacenamiento.vector,"storage.Bin");
+
         FILE* binario= fopen("storage.bin","r+b");
         FILE* vectorBin = fopen("vectorBin.txt","r+");
+        fclose(binario);
 
         //----------ESCRIBO Y LEO LA PRIMERA POSICION EN EL BINARIO----/
-        t_entrada* entrada= list_get(listaEntradas,0);
+        t_entrada* entrada= list_get(tablaEntradas,0);
         fseek(vectorBin,0,SEEK_SET);	
         fwrite(&uno,1,sizeof(char),vectorBin);
+        fclose(vectorBin);
         char *buffer;
 
         // TODO 
 
         // El 4to parametro es el Valor de la Key que ahora hay que consultarlo del Archivo Binario
         // Se pasa NULL para que no falle
-        escribirBinarioEnPosicion(binario,0,espacioPorEntrada, "NULO");       
-        buffer= leerBinarioEnPosicion(binario,0,espacioPorEntrada);
+        escribirBinarioEnPosicion(almacenamiento,0, "NULO");       
+        buffer= leerBinarioEnPosicion(almacenamiento,0);
 
         printf("\n el primer valor en el binario es:   %s  \n",buffer);	
 
         //escribo en 2da posicion del binario y luego la leo
-        entrada= list_get(listaEntradas,1);
-        escribirBinarioEnPosicion(binario,1,espacioPorEntrada, "NULO");
-        buffer=leerBinarioEnPosicion(binario,1,espacioPorEntrada);
+        entrada= list_get(tablaEntradas,1);
+        escribirBinarioEnPosicion(almacenamiento,1, "NULO");
+        buffer=leerBinarioEnPosicion(almacenamiento,1);
         printf("\n el segundo valor en el binario es:   %s  \n",buffer);
 
         //cargo el NumeroEntrada de las Estructuras de la lista, segun su posicion en el bin.
 
-//        int numeroDeEntrada = buscarPosicionEnBin(binario, espacioPorEntrada, entrada->valor);	
-//       entrada->numeroDeEntrada=numeroDeEntrada;
-//        printf("\n es posicion %d     y deberia ser posicion  1 tomando en cuenta la posicion 0\n",numeroDeEntrada);
+        int numeroDeEntrada = buscarPosicionEnBin(almacenamiento, entrada);	
+        printf("\n es posicion %d     y deberia ser posicion  1 tomando en cuenta la posicion 0\n",numeroDeEntrada);
 
+	}*/
 
-		int Bool=buscarPosicionesEnBin(binario,espacioPorEntrada,listaEntradas, "NULO");
-
-		if(Bool){
-		  puts("se encontraron todas las entradas en el bin\n");	}
-		else{
-		  puts("no se encontro alguna entrada");	
-		}
-
-
-        // Cierro los FD
-        fclose(binario);      
-        fclose(vectorBin);
-	}
-*/
 
 	printf("Iniciando INSTANCIA\n");
 
@@ -295,6 +293,15 @@ int main(int argc, char* argv[]){
 
                                     // Cierro los FD
                                     fclose(vectorBin);
+
+                                    //creo estructura de datos con info de almacenamiento
+                                    Almacenamiento almacenamiento;
+                                    almacenamiento.cantidadEntradas=entradas;
+                                    almacenamiento.tamPorEntrada=espacioPorEntrada;
+                                    almacenamiento.binario=string_new();
+                                    almacenamiento.vector=string_new();
+                                    strcpy(almacenamiento.binario,"vectorBin.txt");
+                                    strcpy(almacenamiento.vector,"storage.Bin");
                                 }
 
                                 // Se precarga la Tabla de Entradas con datos del Dump

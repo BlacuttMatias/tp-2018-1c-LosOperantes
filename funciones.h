@@ -123,10 +123,10 @@
 	int cantidadDirectoriosPath(char* pathDirectorio);
 	bool crearEstructuraDirectorios(char* pathArchivo);
 
-	char* leerBinarioEnPosicion(FILE* binario, int posicion, int espacioPorEntrada);
-	void escribirBinarioEnPosicion(FILE* binario, int posicion, int espacioPorEntrada, char* valor);
-	int buscarPosicionEnBin(FILE*binario,int espacioPorEntrada, char* valor);
-	int buscarPosicionesEnBin(FILE*binario, int espacioPorEntrada, t_list* entradas, char* valorEntrada);
+	char* leerBinarioEnPosicion(Almacenamiento almacenamiento, int posicion);
+	void escribirBinarioEnPosicion(Almacenamiento almacenamiento, int posicion, char* valor);
+	char* valorEntrada(t_entrada* entrada);
+	int buscarPosicionEnBin(Almacenamiento almacenamiento, t_entrada* entrada);
 	void preCargarTablaEntradas(t_list *tablaEntradas,char* puntoMontaje);
 
 /* ---------------------------------------- */

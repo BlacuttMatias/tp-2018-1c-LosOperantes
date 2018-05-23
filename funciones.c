@@ -1367,6 +1367,7 @@ void cargarTablaEntradas(t_list *tablaEntradas,Instruccion* estructuraInstruccio
 
 
 void procesoArchivo(char *archivo,t_list* tablaEntradas, char* punto_montaje){
+	printf("\n se quiere abrir archivo %s \n",archivo);
 
 	char *carpeta_archivo = string_new();
 	string_append_with_format(&carpeta_archivo, "%s%s", punto_montaje, archivo); // para que lea ficheros de la carpeta "entradas"
@@ -1434,7 +1435,7 @@ void procesoArchivo(char *archivo,t_list* tablaEntradas, char* punto_montaje){
     
 	elementoDeTabla = list_get(tablaEntradas,list_size(tablaEntradas)-1);
 
-//	printf("Clave:%s - Numero:%d - Tamanio:%d - Posicion en tabla:%d \n",elementoDeTabla->clave,elementoDeTabla->numeroDeEntrada,elementoDeTabla->tamanioValorAlmacenado,list_size(tablaEntradas)); //prueba imprimir por pantalla el elemento obtenido
+	printf("Clave:%s - Numero:%d - Tamanio:%d - Posicion en tabla:%d \n",elementoDeTabla->clave,elementoDeTabla->numeroDeEntrada,elementoDeTabla->tamanioValorAlmacenado,list_size(tablaEntradas)); //prueba imprimir por pantalla el elemento obtenido
 // ------------------------------------------------------------------
 
 	fclose(fichero);
@@ -1547,7 +1548,9 @@ int cantidadDirectoriosPath(char* pathDirectorio){
 	return contadorDirectorios;
 }
 
-char* leerBinarioEnPosicion(FILE* binario, int posicion, int tamEntrada){
+char* leerBinarioEnPosicion(Almacenamiento almacenamiento, int posicion){
+	FILE* binario= fopen(almacenamiento.binario,"r+");
+	int tamEntrada= almacenamiento.tamPorEntrada;
 	char* buffer = string_new();
 	char letra='z';
 	fseek(binario,tamEntrada*posicion,SEEK_SET);
@@ -1559,22 +1562,47 @@ char* leerBinarioEnPosicion(FILE* binario, int posicion, int tamEntrada){
 		//printf("letra leida es %c \n",letra);
 		contador +=1;
 	} 
+	fclose(binario);
 	return buffer;
 }
 
-void escribirBinarioEnPosicion(FILE* binario, int posicion, int tamEntrada, char* valor){
-
+void escribirBinarioEnPosicion(Almacenamiento almacenamiento, int posicion, char* valor){
+	FILE* binario= fopen(almacenamiento.binario,"r+");
+	int tamEntrada= almacenamiento.tamPorEntrada;
 	fseek(binario, tamEntrada*posicion,SEEK_SET);
 	int tamanio= string_length(valor);
 	fwrite(valor,tamanio,1,binario);
 	char fin='\0';
 	fwrite(&fin,sizeof(char),1,binario);
+	fclose(binario);
+}
+
+char* valorEntrada(t_entrada* entrada){
+	char* valor = string_new();
+	char* archivo= string_new();
+	string_append_with_format(&archivo, "%s%s.txt"   ,config_get_string_value(cfg,"PUNTO_MONTAJE"),entrada->clave );
+	FILE *fichero;
+	fichero = fopen(archivo, "r");
+	fseek(fichero,0,SEEK_END);
+	int tamanio= ftell(fichero) ;
+	fseek(fichero,0,SEEK_SET);
+	printf("\n sobre el string %s ",valor);
+	fread(valor,sizeof(char)*tamanio,1,fichero);
+	printf("\nleí el valor    %s \n", valor);
+	return valor;
+
+
+
 }
 
 //DEVUELVE LA POSICION DEL BINARIO EN LA QUE SE ENCUENTRA EL VALOR BUSCADO. 
 //De no encontrarse retorna -1
 //De haber error, retorna -2
-int buscarPosicionEnBin(FILE* binario, int espacioPorEntrada, char* valor){
+int buscarPosicionEnBin(Almacenamiento almacenamiento, t_entrada* entrada){
+	FILE* binario= fopen(almacenamiento.binario,"r+");
+	char*valor = string_new();
+	strcpy(valor, valorEntrada(entrada));
+	int espacioPorEntrada= almacenamiento.tamPorEntrada;
 	fseek(binario,0,SEEK_END);
 	int tamanio= ftell(binario);
 	printf("\n tamanio archivo es %d",tamanio);
@@ -1582,6 +1610,7 @@ int buscarPosicionEnBin(FILE* binario, int espacioPorEntrada, char* valor){
 
 	if(tamanio%espacioPorEntrada != 0){
 		printf("\n error al calcular cant.entradas\n");
+		fclose(binario);
 		return -2;
 	}else{
 		printf("\n se calculo bien cant.entradas igual a %d\n",entradas);
@@ -1592,16 +1621,19 @@ int buscarPosicionEnBin(FILE* binario, int espacioPorEntrada, char* valor){
 	int i=0;
 	printf("\nse busca %s\n",valor);
 	while(i<entradas){
-		buffer= leerBinarioEnPosicion(binario,i,espacioPorEntrada);
+		buffer= leerBinarioEnPosicion(almacenamiento ,i);
 		//printf("\n se leyó %s\n",buffer);
-		if(strcmp(buffer,valor) == 0){return i;}	
+		if(strcmp(buffer,valor) == 0){
+			fclose(binario);
+			return i;}	
 		i +=1;
 
 	}
+	fclose(binario);
 	return -1;
 }
-
-int buscarPosicionesEnBin(FILE*binario, int espacioPorEntrada, t_list* entradas, char* valorEntrada){
+/* esto ya no serviría, lo guardo por si sirve la lógica
+int buscarPosicionesEnBin(Almacenamiento almacenamietn, t_list* entradas, char* valorEntrada){
 
 	int tamanio= list_size(entradas);
 	t_entrada* entrada;
@@ -1616,7 +1648,7 @@ int buscarPosicionesEnBin(FILE*binario, int espacioPorEntrada, t_list* entradas,
 		return unaEntrada->numeroDeEntrada>=0;
 	}
 	return list_all_satisfy(entradas, (void*)se_Encontro_Todo);
-}
+} */
 /******************INSTANCIA********************************************/
 
 // Actualizo el Diccionario con la Nueva Instancia Asignada

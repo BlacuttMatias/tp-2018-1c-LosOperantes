@@ -1541,7 +1541,7 @@ int cantidadDirectoriosPath(char* pathDirectorio){
 }
 
 char* leerBinarioEnPosicion(Almacenamiento almacenamiento, int posicion){
-	FILE* binario= fopen(almacenamiento.binario,"r+");
+	FILE* binario= fopen(almacenamiento.binario,"rb");
 	int tamEntrada= almacenamiento.tamPorEntrada;
 	char* buffer = string_new();
 	char letra='z';
@@ -1551,7 +1551,6 @@ char* leerBinarioEnPosicion(Almacenamiento almacenamiento, int posicion){
 	while( letra !='\0'){
 		fread(&letra,sizeof(char),1,binario);
 		buffer[contador]=letra;
-		//printf("letra leida es %c \n",letra);
 		contador +=1;
 	} 
 	fclose(binario);
@@ -1591,11 +1590,11 @@ char* valorEntrada(t_entrada* entrada){
 //De no encontrarse retorna -1
 //De haber error, retorna -2
 int buscarPosicionEnBin(Almacenamiento almacenamiento, char* valor){
-	FILE* binario= fopen(almacenamiento.binario,"r+");
+	FILE* binario= fopen(almacenamiento.binario,"rb");
 	int espacioPorEntrada= almacenamiento.tamPorEntrada;
 	fseek(binario,0,SEEK_END);
-	int tamanio= ftell(binario) + 1;
-	printf("\n tamanio archivo es %d",tamanio);
+	int tamanio= ftell(binario);
+	printf("\n tamanio archivo es %d          espacio por entrada es  %d 		cantidad de entradas es %d\n",tamanio, espacioPorEntrada, almacenamiento.cantidadEntradas);
 	int entradas= tamanio/espacioPorEntrada;
 
 	if(tamanio%espacioPorEntrada != 0){

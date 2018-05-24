@@ -57,17 +57,12 @@ int main(int argc, char* argv[]){
 
 
 //**PARA TESTEAR EL RECUPERO DE INFORMACION SI LA INSTANCIA MUERE HAY QUE COMENTAR ESTE PEDAZO DE CODIGO****** //
-  	
+ /* 	
 
 //PRUEBA ARCHIVO BINARIO					/////
 	// creo el archivo binario
-    /*
-    preCargarTablaEntradas(tablaEntradas,config_get_string_value(cfg,"PUNTO_MONTAJE"));
-    t_entrada* entrada1= list_get(tablaEntradas,0);
-    printf("\nla primer clave de la lista es     %s", entrada1->clave);
-
-   if(list_size(tablaEntradas)>1){
-        Almacenamiento almacenamiento;
+    
+Almacenamiento almacenamiento;
         almacenamiento.cantidadEntradas=10;
         almacenamiento.tamPorEntrada=15;
         almacenamiento.binario=string_new();
@@ -75,6 +70,14 @@ int main(int argc, char* argv[]){
         strcpy(almacenamiento.binario,"vectorBin.txt");
         strcpy(almacenamiento.vector,"storage.Bin");
 
+
+
+    preCargarTablaEntradas(tablaEntradas,config_get_string_value(cfg,"PUNTO_MONTAJE"), almacenamiento);
+    t_entrada* entrada1= list_get(tablaEntradas,0);
+    printf("\nla primer clave de la lista es     %s", entrada1->clave);
+
+   if(list_size(tablaEntradas)>1){
+        
         FILE* binario= fopen("storage.bin","r+b");
         FILE* vectorBin = fopen("vectorBin.txt","r+");
         fclose(binario);
@@ -102,11 +105,11 @@ int main(int argc, char* argv[]){
         printf("\n el segundo valor en el binario es:   %s  \n",buffer);
 
         //cargo el NumeroEntrada de las Estructuras de la lista, segun su posicion en el bin.
+	
+        printf("\n es posicion %d     y deberia ser posicion  1 tomando en cuenta la posicion 0\n",entrada->numeroDeEntrada);
 
-        int numeroDeEntrada = buscarPosicionEnBin(almacenamiento, entrada);	
-        printf("\n es posicion %d     y deberia ser posicion  1 tomando en cuenta la posicion 0\n",numeroDeEntrada);
-
-	}*/
+	}
+    //*/
 
 
 	printf("Iniciando INSTANCIA\n");
@@ -305,7 +308,7 @@ int main(int argc, char* argv[]){
                                 }
 
                                 // Se precarga la Tabla de Entradas con datos del Dump
-                                preCargarTablaEntradas(tablaEntradas,config_get_string_value(cfg,"PUNTO_MONTAJE"));
+                                preCargarTablaEntradas(tablaEntradas,config_get_string_value(cfg,"PUNTO_MONTAJE"), almacenamiento);
                                 break;
 						}
 					}

@@ -1309,13 +1309,12 @@ bool enviarInstruccionInstancia(Instruccion registroInstruccion, int socketInsta
 }
 
 // Cuando se inicia una Instancia, se precarga la Tabla de Entradas con la info del Dump
-void preCargarTablaEntradas(t_list *tablaEntradas,char* puntoMontaje){
+void preCargarTablaEntradas(t_list *tablaEntradas,char* puntoMontaje, Almacenamiento almacenamiento){
 
     // Con un puntero a DIR abro el directorio 
     DIR *dir;
     // en *ent habrá información sobre el archivo que se está "sacando" a cada momento 
     struct dirent *ent;
-    t_list* listaEntradas = list_create();
 
     /* Empezaremos a leer en el directorio entradas */
     dir = opendir(puntoMontaje);
@@ -1336,7 +1335,7 @@ void preCargarTablaEntradas(t_list *tablaEntradas,char* puntoMontaje){
             string_append_with_format(&nombreArchivoProcesar, "%s", ent->d_name);
 
             // Una vez tenemos el archivo, lo pasamos a una función para procesarlo. //
-            procesoArchivo(nombreArchivoProcesar, listaEntradas, config_get_string_value(cfg,"PUNTO_MONTAJE"));  
+            procesoArchivo(nombreArchivoProcesar, tablaEntradas, config_get_string_value(cfg,"PUNTO_MONTAJE"), almacenamiento);  
 
             free(nombreArchivoProcesar);
         }
@@ -1366,7 +1365,8 @@ void cargarTablaEntradas(t_list *tablaEntradas,Instruccion* estructuraInstruccio
 
 
 
-void procesoArchivo(char *archivo,t_list* tablaEntradas, char* punto_montaje){
+void procesoArchivo(char *archivo,t_list* tablaEntradas, char* punto_montaje, Almacenamiento almacenamiento){
+	printf("\n se quiere abrir archivo %s \n",archivo);
 
 	char *carpeta_archivo = string_new();
 	string_append_with_format(&carpeta_archivo, "%s%s", punto_montaje, archivo); // para que lea ficheros de la carpeta "entradas"
@@ -1388,33 +1388,26 @@ void procesoArchivo(char *archivo,t_list* tablaEntradas, char* punto_montaje){
 	int tamanio= ftell(fichero) + 1;
 	fseek(fichero,0,SEEK_SET);
 
-/*
+
 	printf( "Fichero: %s -> ", archivo );
 	if( fichero )
        printf( "existe (ABIERTO)\n" );
     else{
        printf( "Error (NO ABIERTO)\n" );
     }
-
     printf( "Contenido/clave-key con formato del fichero: %s\n\n", archivo ); //muestro key con formato ".txt"
     printf( "Valor: %s\n", fgets(contenido_fichero,tamanio, fichero) ); 
     printf ("Clave/key: %s\n\n",nombre_archivo_sin_extension); //muestro key sin formato ".txt"
-*/
+
 		/*
     	//carga de valor/dato
     	nuevaInstruccion->dato = malloc(strlen(contenido_fichero)+1);
     	strcpy(nuevaInstruccion->dato, contenido_fichero);
     	nuevaInstruccion->dato[strlen(contenido_fichero)] = '\0';
-
     	//carga de clave/key
     	strcpy(nuevaInstruccion->key,nombre_archivo_sin_extension);
-
-
     	cargarTablaEntradas(tablaEntradas,nuevaInstruccion); //cargo la tabla de entradas con esta nueva instruccion
-
-
     		elementoDeTabla = list_get(tablaEntradas,list_size(tablaEntradas)-1);
-
     		//muestro entrada "elementoDeTabla" para testear que esté todo correcto
     	  	printf("Clave:%s - Valor:%s - Numero:%d - Tamanio:%d - Posicion en tabla:%d \n",elementoDeTabla->clave,elementoDeTabla->valor,elementoDeTabla->numeroDeEntrada,elementoDeTabla->tamanioValorAlmacenado,list_size(tablaEntradas)); //prueba imprimir por pantalla el elemento obtenido
 		*/
@@ -1427,14 +1420,14 @@ void procesoArchivo(char *archivo,t_list* tablaEntradas, char* punto_montaje){
 	strcpy(nuevaEntrada->clave, nombre_archivo_sin_extension);
 	nuevaEntrada->clave[strlen(nombre_archivo_sin_extension)] = '\0';
 	nuevaEntrada->tamanioValorAlmacenado = strlen(contenido_fichero);
-	nuevaEntrada->numeroDeEntrada = 0;
+	nuevaEntrada->numeroDeEntrada = buscarPosicionEnBin(almacenamiento,contenido_fichero);
 
 	list_add(tablaEntradas,nuevaEntrada);
 	//muestro entrada "elementoDeTabla" para testear que esté todo correcto
     
 	elementoDeTabla = list_get(tablaEntradas,list_size(tablaEntradas)-1);
 
-//	printf("Clave:%s - Numero:%d - Tamanio:%d - Posicion en tabla:%d \n",elementoDeTabla->clave,elementoDeTabla->numeroDeEntrada,elementoDeTabla->tamanioValorAlmacenado,list_size(tablaEntradas)); //prueba imprimir por pantalla el elemento obtenido
+	printf("Clave:%s - Numero:%d - Tamanio:%d - Posicion en tabla:%d \n",elementoDeTabla->clave,elementoDeTabla->numeroDeEntrada,elementoDeTabla->tamanioValorAlmacenado,list_size(tablaEntradas)); //prueba imprimir por pantalla el elemento obtenido
 // ------------------------------------------------------------------
 
 	fclose(fichero);
@@ -1547,7 +1540,9 @@ int cantidadDirectoriosPath(char* pathDirectorio){
 	return contadorDirectorios;
 }
 
-char* leerBinarioEnPosicion(FILE* binario, int posicion, int tamEntrada){
+char* leerBinarioEnPosicion(Almacenamiento almacenamiento, int posicion){
+	FILE* binario= fopen(almacenamiento.binario,"rb");
+	int tamEntrada= almacenamiento.tamPorEntrada;
 	char* buffer = string_new();
 	char letra='z';
 	fseek(binario,tamEntrada*posicion,SEEK_SET);
@@ -1556,32 +1551,55 @@ char* leerBinarioEnPosicion(FILE* binario, int posicion, int tamEntrada){
 	while( letra !='\0'){
 		fread(&letra,sizeof(char),1,binario);
 		buffer[contador]=letra;
-		//printf("letra leida es %c \n",letra);
 		contador +=1;
 	} 
+	fclose(binario);
 	return buffer;
 }
 
-void escribirBinarioEnPosicion(FILE* binario, int posicion, int tamEntrada, char* valor){
-
+void escribirBinarioEnPosicion(Almacenamiento almacenamiento, int posicion, char* valor){
+	FILE* binario= fopen(almacenamiento.binario,"r+");
+	int tamEntrada= almacenamiento.tamPorEntrada;
 	fseek(binario, tamEntrada*posicion,SEEK_SET);
 	int tamanio= string_length(valor);
 	fwrite(valor,tamanio,1,binario);
 	char fin='\0';
 	fwrite(&fin,sizeof(char),1,binario);
+	fclose(binario);
+}
+
+char* valorEntrada(t_entrada* entrada){
+	char* valor = string_new();
+	char* archivo= string_new();
+	string_append_with_format(&archivo, "%s%s.txt"   ,config_get_string_value(cfg,"PUNTO_MONTAJE"),entrada->clave );
+	FILE *fichero;
+	fichero = fopen(archivo, "r");
+	fseek(fichero,0,SEEK_END);
+	int tamanio= ftell(fichero) ;
+	fseek(fichero,0,SEEK_SET);
+	printf("\n sobre el string %s ",valor);
+	fread(valor,sizeof(char)*tamanio,1,fichero);
+	printf("\nleí el valor    %s \n", valor);
+	return valor;
+
+
+
 }
 
 //DEVUELVE LA POSICION DEL BINARIO EN LA QUE SE ENCUENTRA EL VALOR BUSCADO. 
 //De no encontrarse retorna -1
 //De haber error, retorna -2
-int buscarPosicionEnBin(FILE* binario, int espacioPorEntrada, char* valor){
+int buscarPosicionEnBin(Almacenamiento almacenamiento, char* valor){
+	FILE* binario= fopen(almacenamiento.binario,"rb");
+	int espacioPorEntrada= almacenamiento.tamPorEntrada;
 	fseek(binario,0,SEEK_END);
 	int tamanio= ftell(binario);
-	printf("\n tamanio archivo es %d",tamanio);
+	printf("\n tamanio archivo es %d          espacio por entrada es  %d 		cantidad de entradas es %d\n",tamanio, espacioPorEntrada, almacenamiento.cantidadEntradas);
 	int entradas= tamanio/espacioPorEntrada;
 
 	if(tamanio%espacioPorEntrada != 0){
 		printf("\n error al calcular cant.entradas\n");
+		fclose(binario);
 		return -2;
 	}else{
 		printf("\n se calculo bien cant.entradas igual a %d\n",entradas);
@@ -1592,31 +1610,31 @@ int buscarPosicionEnBin(FILE* binario, int espacioPorEntrada, char* valor){
 	int i=0;
 	printf("\nse busca %s\n",valor);
 	while(i<entradas){
-		buffer= leerBinarioEnPosicion(binario,i,espacioPorEntrada);
+		buffer= leerBinarioEnPosicion(almacenamiento ,i);
 		//printf("\n se leyó %s\n",buffer);
-		if(strcmp(buffer,valor) == 0){return i;}	
+		if(strcmp(buffer,valor) == 0){
+			fclose(binario);
+			return i;}	
 		i +=1;
 
 	}
+	fclose(binario);
 	return -1;
 }
-
-int buscarPosicionesEnBin(FILE*binario, int espacioPorEntrada, t_list* entradas, char* valorEntrada){
-
+/* esto ya no serviría, lo guardo por si sirve la lógica
+int buscarPosicionesEnBin(Almacenamiento almacenamietn, t_list* entradas, char* valorEntrada){
 	int tamanio= list_size(entradas);
 	t_entrada* entrada;
 	int i=0;
-
 	for(i=0;i<tamanio;i++){
 		entrada = list_get(entradas,i);
 		entrada->numeroDeEntrada = buscarPosicionEnBin(binario,espacioPorEntrada, valorEntrada);
 	}
-
 	bool se_Encontro_Todo(t_entrada* unaEntrada){
 		return unaEntrada->numeroDeEntrada>=0;
 	}
 	return list_all_satisfy(entradas, (void*)se_Encontro_Todo);
-}
+} */
 /******************INSTANCIA********************************************/
 
 // Actualizo el Diccionario con la Nueva Instancia Asignada

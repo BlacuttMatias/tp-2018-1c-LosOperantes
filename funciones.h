@@ -118,16 +118,16 @@
 	void persistirEntrada(t_entrada* unaEntrada);
 	/* Función para devolver un error */
 	void error(const char *s);
-	void procesoArchivo(char *archivo,t_list* tablaEntradas, char* punto_montaje);
+	void procesoArchivo(char *archivo,t_list* tablaEntradas, char* punto_montaje, Almacenamiento almacenamiento);
 	void dump(t_list* tablaEntradas);
 	int cantidadDirectoriosPath(char* pathDirectorio);
 	bool crearEstructuraDirectorios(char* pathArchivo);
 
-	char* leerBinarioEnPosicion(FILE* binario, int posicion, int espacioPorEntrada);
-	void escribirBinarioEnPosicion(FILE* binario, int posicion, int espacioPorEntrada, char* valor);
-	int buscarPosicionEnBin(FILE*binario,int espacioPorEntrada, char* valor);
-	int buscarPosicionesEnBin(FILE*binario, int espacioPorEntrada, t_list* entradas, char* valorEntrada);
-	void preCargarTablaEntradas(t_list *tablaEntradas,char* puntoMontaje);
+	char* leerBinarioEnPosicion(Almacenamiento almacenamiento, int posicion);
+	void escribirBinarioEnPosicion(Almacenamiento almacenamiento, int posicion, char* valor);
+	char* valorEntrada(t_entrada* entrada);
+	int buscarPosicionEnBin(Almacenamiento almacenamiento, char* valor);
+	void preCargarTablaEntradas(t_list *tablaEntradas,char* puntoMontaje, Almacenamiento almacenamiento);
 
 /* ---------------------------------------- */
 #endif

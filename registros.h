@@ -128,4 +128,9 @@ typedef struct{
 	int tamanioEntrada;
 } EntradasIntancias;
 
+typedef struct{ 
+	int socketHilo;
+} pthread_informacion;
+
+
 #endif

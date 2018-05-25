@@ -95,6 +95,22 @@ int aceptarconexion (int socket_escucha){
 	return newfd;
 }
 
+int aceptarConexionCliente(int socketServerFileDescriptor) {
+
+	struct sockaddr cliente;
+	socklen_t longitudCliente = sizeof(cliente);
+	int newSocketFileDescriptor;
+
+	newSocketFileDescriptor = accept(socketServerFileDescriptor, &cliente,
+			&longitudCliente);
+
+	if (newSocketFileDescriptor == -1) {
+		printf("No se pudo aceptar una nueva conexion FD: %d\n", socketServerFileDescriptor);
+		return -1;
+	}
+
+	return newSocketFileDescriptor;
+}
 
 Encabezado recibir_header(int* socket){
 	int num,tam_buf,codigo_ope;

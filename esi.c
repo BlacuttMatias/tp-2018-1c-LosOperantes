@@ -68,20 +68,11 @@ int main(int argc, char* argv[]){
 	Encabezado encabezado;
 	Paquete paquete;
     struct sockaddr_in servidor_addr,my_addr,master_addr; // información de la dirección de destino
-    int servidor, numbytes,escucha_master,fd_maximo,nuevo_fd,i,size, nbytes;
+    int numbytes,escucha_master,fd_maximo,nuevo_fd,i,size, nbytes;
+
     fd_set master,temporales;
     FD_ZERO(&master);
     FD_ZERO(&temporales);
-
-    // Creo conexión con Planificador
-    int planificador_fd = conectarseAservidor(config_get_string_value(cfg,"PLANIFICADOR_IP"),config_get_int_value(cfg,"PLANIFICADOR_PUERTO"));
-
-    if(planificador_fd == -1){
-        printf("Error de conexion con el Planificador\n");
-        return EXIT_FAILURE;
-    }else{
-        log_info(infoLogger, "Conexion establecida con el Planificador");
-    }
 
     // Creo conexión con el Coordinador
     int coordinador_fd = conectarseAservidor(config_get_string_value(cfg,"COORDINADOR_IP"),config_get_int_value(cfg,"COORDINADOR_PUERTO"));
@@ -93,9 +84,19 @@ int main(int argc, char* argv[]){
         log_info(infoLogger, "Conexion establecida con el Coordinador");
     }
 
-    FD_SET(planificador_fd, &master);
+    // Creo conexión con Planificador
+    int planificador_fd = conectarseAservidor(config_get_string_value(cfg,"PLANIFICADOR_IP"),config_get_int_value(cfg,"PLANIFICADOR_PUERTO"));
+
+    if(planificador_fd == -1){
+        printf("Error de conexion con el Planificador\n");
+        return EXIT_FAILURE;
+    }else{
+        log_info(infoLogger, "Conexion establecida con el Planificador");
+    }
+
     FD_SET(coordinador_fd, &master);
-    fd_maximo = coordinador_fd;
+    FD_SET(planificador_fd, &master);
+    fd_maximo = planificador_fd;
 
 
     // Si se pudieron cargar todas las instrucciones en la Lista
@@ -138,7 +139,7 @@ int main(int argc, char* argv[]){
 					 // error o conexión cerrada por el cliente
 					 if (nbytes == 0) {
 					 // conexión cerrada
-					 	printf("selectserver: socket %d se ha caído\n", i);
+					 	printf("El socket %d se ha caído\n", i);
 					 } else {
 					 	perror("recv");
 					 }
@@ -344,8 +345,6 @@ int main(int argc, char* argv[]){
     config_destroy(cfg);
     free(nombreProceso);
     list_destroy(listaInstrucciones);
-
-    close(servidor);
 
     return EXIT_SUCCESS;
 }

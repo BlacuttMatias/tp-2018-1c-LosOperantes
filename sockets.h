@@ -18,8 +18,7 @@
 #include <commons/log.h>
 #include "registros.h"
 #include "funciones.h"
-#define MAXDATASIZE 100 // máximo número de bytes que se pueden leer de una vez
-#define BACKLOG 10
+#define BACKLOG 250
 
 int crearServidor(int puerto);
 int conectarseAservidor(char *ip,int puerto);
@@ -30,6 +29,7 @@ void recibirString(int socket, char* buf);
 int sendall(int, void *, int);
 
 int aceptarconexion(int socket_escucha);
+int aceptarConexionCliente(int socketServerFileDescriptor);
 
 Encabezado recibir_header(int* socket);
 Paquete recibir_payload(int* socket,int* tam);

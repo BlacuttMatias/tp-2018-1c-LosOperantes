@@ -11,7 +11,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/select.h>
 #include <sys/socket.h>
 #include <sys/time.h>
 #include <sys/wait.h>
@@ -109,6 +108,12 @@ void* hiloConsolaInteractiva(void * unused) {
                     printf("\n\tstatus <clave> \t- Debido a que para la correcta coordinación de las sentencias de acuerdo a los algoritmos de distribución se requiere de cierta información sobre las instancias del sistema, el Coordinador proporcionará una consola que permita consultar esta información. \n\n");
 
                     printf("\n\tdeadlock\t- Permitirá analizar los deadlocks que existan en el sistema y a que ESI están asociados.\n\n");
+                }
+
+                // Comando interno para conocer el estado de las Estructuras Administrativas
+                if(string_starts_with(comandoConsola,"EXIT")){
+                    pthread_exit(EXIT_SUCCESS);
+                    return EXIT_SUCCESS;
                 }
 
                 // Comando interno para conocer el estado de las Estructuras Administrativas
@@ -326,7 +331,10 @@ void* hiloConsolaInteractiva(void * unused) {
 
 void* atenderConexiones(void* socketConexion){
 
-    int i = (int)socketConexion;
+    pthread_informacion* data_hilo = (pthread_informacion*) socketConexion;
+    int i = data_hilo->socketHilo;
+    free(data_hilo);
+
     int nbytes;
 
     Proceso registroProceso;
@@ -339,20 +347,22 @@ void* atenderConexiones(void* socketConexion){
 
     while(true){
 
-printf("recibir_header...Socket %d\n", i);
+//printf("recibir_header...Socket %d\n", i);
         // Recibo el Encabezado del Paquete
         encabezado=recibir_header(&i);
 
-printf("ya recibio el header...%d %c\n", encabezado.tam_payload, encabezado.proceso);
+//printf("MENSAJE RECIBIDO DE %c:%d\n", encabezado.proceso, encabezado.cod_operacion);
 
         if((nbytes = encabezado.tam_payload) <= 0){
             // error o conexión cerrada por el cliente
             if(nbytes == 0){
-                puts("Client Disconnected");
-                return 0;
+                printf("Socket %d se ha caído\n", i);
             }else{
                 perror("recv failed");
             }
+            close(i); // Cierro el Socket por desconexion
+            pthread_exit(EXIT_SUCCESS); // Finalizo el Hilo
+            return 0;
         }
 
         // Si el mensaje proviene de ESI
@@ -564,400 +574,41 @@ printf("ya recibio el header...%d %c\n", encabezado.tam_payload, encabezado.proc
             }
         }
 
-printf("Infinito???\n");
-
-
-
-        // Planifica los Procesos de la ColaReady
-        if(!planificadorPausado && planificarProcesos && respuestaEjecucionInstruccionEsi){
-
-            //ejecuta el algoritmo de planificacion
-            if(ejecutarAlgoritmoPlanificacion){
-
-                //si no es nulo el proceso seleccionado que estaba ejecutando, se le actualizan las rafagas
-                //antes de cambiar de proceso por la planificacion
-                if(procesoSeleccionado !=NULL){
-                    Rafagas* registroRafagaAux=NULL;
-                    registroRafagaAux = dictionary_get(diccionarioRafagas,procesoSeleccionado->nombreProceso);
-
-                    registroRafagaAux->rafagaAnterior = rafagaActual;
-                    registroRafagaAux->proximaEstimacion = estimarRafaga(registroRafagaAux->estimacionRafagaAnterior, registroRafagaAux->rafagaAnterior, alfa);
-                    registroRafagaAux->estimacionRafagaAnterior = registroRafagaAux->proximaEstimacion;
-                    //al salir de ejecutarse, se resetea su tiempo de espera de cpu
-                    registroRafagaAux->tiempoDeEsperaDeCpu = 0;
-                }
-
-                procesoSeleccionado = obtenerProximoProcesoPlanificado(listaReady, colaReady, diccionarioRafagas, algoritmoPlanificacion, alfa);
-
-                //este if solo lo pongo para informar qué proceso se selecciono en la planificacion
-                Rafagas* rafagasAux2=NULL;
-                if(procesoSeleccionado !=NULL){
-                    rafagasAux2= dictionary_get(diccionarioRafagas, procesoSeleccionado->nombreProceso);
-                    printf("\nProceso planificado para ejecutar: %s\n", procesoSeleccionado->nombreProceso);
-                }
-                rafagaActual=0;
-            }
-
-            // Desactivo la Planificacion de los Procesos
-            planificarProcesos = false;
-            ejecutarAlgoritmoPlanificacion=false;
-
-
-
-            // Si existe un Proceso para planificar
-            if(procesoSeleccionado != NULL){
-
-                // Cargo el Proceso en la Cola de Ejecucion y lo saco de la Cola Ready
-                eliminarProcesoCola(colaReady, procesoSeleccionado->socketProceso);
-                eliminarProcesoLista(listaReady, procesoSeleccionado->socketProceso);
-                cargarProcesoCola(listaESIconectados, colaEjecucion, procesoSeleccionado->socketProceso);
-
-//printf("Proximo Procesos a Planificar: Nombre: %s - Socket: %d\n", procesoSeleccionado->nombreProceso, procesoSeleccionado->socketProceso);                    
-                // Armo el Paquete de la orden de Ejectuar la proxima Instruccion
-                paquete = crearHeader('P', EJECUTAR_INSTRUCCION, 1);
-
-                // Envio el Paquetea a ESI
-                if(send(procesoSeleccionado->socketProceso,paquete.buffer,paquete.tam_buffer,0) != -1){
-
-                    free(paquete.buffer);
-                    log_info(infoLogger, "Se le pidio al ESI %s que ejecute la proxima Instruccion", procesoSeleccionado->nombreProceso);
-                    respuestaEjecucionInstruccionEsi=false;
-                }else{
-                    log_error(infoLogger, "No se pudo enviar al ESI %s la orden de ejecucion de la proxima Instruccion", procesoSeleccionado->nombreProceso);
-                }
-            }
-        }
-
-    }
-
-    close(i);
-
-
-    return 0;
-}
-
-
-
-void servidorPlanificador(void* puerto){
-
-    Encabezado encabezado;
-    Paquete paquete;
-    struct sockaddr_in servidor_addr,my_addr,master_addr; // información de la dirección de destino
-    int servidor,escucha_master,fd_maximo,nuevo_fd,i,size, nbytes;
-    int alfa = config_get_int_value(cfg,"ALFA"); //para el calculo de rafaga
-
-    fd_set master,temporales;
-    FD_ZERO(&master);
-    FD_ZERO(&temporales);
-
-
-    // Creo el Servidor para escuchar conexiones
-    servidor=crearServidor((int)puerto);
-    log_trace(infoLogger, "Escuchando conexiones" );
-
-    FD_SET(coordinador_fd, &master);
-    FD_SET(servidor, &master);
-    fd_maximo = servidor;   
-
-
-    Proceso registroProceso;
-    KeyBloqueada registroKeyBloqueada;
-    Proceso* procesoSeleccionado=NULL;
-    int indice = 0, resultadoEjecucion;
-    bool recursoOcupado;
-
-    while(1){
-
-        temporales=master;
-
-        if (select(fd_maximo + 1, &temporales, NULL, NULL, NULL) == -1) {
-            perror("select");
-            exit(1);
-        }
-
-        for(i = 0; i <= fd_maximo; i++) {
-
-            if (FD_ISSET(i, &temporales)) { // ¡¡tenemos datos!!
-                if (i == servidor) {
-                    // gestionar nuevas conexiones
-                    size = sizeof(master_addr);
-                    if ((nuevo_fd = accept(servidor, (struct sockaddr *)&master_addr, &size)) == -1) {
-                        perror("accept");
-                    } else {
-                        FD_SET(nuevo_fd, &master); // añadir al conjunto maestro
-                        if (nuevo_fd > fd_maximo) {    // actualizar el máximo
-                            fd_maximo = nuevo_fd;
-                        }
-                    }
-                } else { // Atiendo las conexiones ya establecidas, es decir, clientes
-
-                    // Recibo el Encabezado del Paquete
-                    encabezado=recibir_header(&i);
-
-                    // gestionar datos de un cliente
-                    if ((nbytes = encabezado.tam_payload) <= 0) {
-                         // error o conexión cerrada por el cliente
-                         if (nbytes == 0) {
-                            // conexión cerrada
-                            //printf("selectserver: socket %d se ha caído\n", i);
-                         } else {
-                            perror("recv");
-                         }
-                         close(i); // ¡Hasta luego!
-                         FD_CLR(i, &master); // eliminar del conjunto maestro
-                    } else {
-
-                        // Si el mensaje proviene de ESI
-                        if(encabezado.proceso == 'E'){
-                            switch(encabezado.cod_operacion){
-
-                                case HANDSHAKE:
-
-                                    // Recibo los datos del Nodo
-                                    paquete = recibir_payload(&i,&encabezado.tam_payload);
-                                    registroProceso = dsrlz_datosProceso(paquete.buffer);
-                                    free(paquete.buffer);
-
-                                    // Recibo de ESI el nombre del Proceso
-                                    log_info(infoLogger,"Proceso ESI %s conectado.", registroProceso.nombreProceso);
-
-                                    // Cargo el Registro del Proceso
-                                    Proceso* registroProcesoAux = NULL;
-                                    registroProcesoAux = malloc(sizeof(Proceso));
-
-                                    // Cargo el Registro del Proceso
-                                    registroProcesoAux->tipoProceso = registroProceso.tipoProceso;
-                                    registroProcesoAux->socketProceso = i;
-                                    registroProcesoAux->nombreProceso = malloc(strlen(registroProceso.nombreProceso)+1);
-                                    strcpy( registroProcesoAux->nombreProceso ,registroProceso.nombreProceso);
-                                    registroProcesoAux->nombreProceso[strlen(registroProceso.nombreProceso)] = '\0';
-
-                                    // Cargo los ESIs conectados en la Lista de ESIs conectados al Planificador
-                                    cargarListaProcesosConectados(listaESIconectados, registroProcesoAux);
-
-                                    // Cargo el Proceso en la listaReady
-                                    cargarProcesoLista(listaESIconectados, listaReady, i);
-
-                                    //cargo el proceso en dictionary
-                                    Rafagas* registroRafagaAux= malloc(sizeof(Rafagas));
-                                    registroRafagaAux->rafagaAnterior=0;
-                                    registroRafagaAux->estimacionRafagaAnterior=config_get_int_value(cfg,"ESTIMACION_INICIAL");
-                                    registroRafagaAux->proximaEstimacion=estimarRafaga(registroRafagaAux->estimacionRafagaAnterior, registroRafagaAux->rafagaAnterior, alfa);
-                                    registroRafagaAux->tiempoDeEsperaDeCpu=0;
-                                    dictionary_put(diccionarioRafagas,registroProcesoAux->nombreProceso,registroRafagaAux);
-
-
-                                    // Activo la Planificacion de los Procesos
-                                    planificarProcesos = true;
-                                    if(list_size(listaReady)==1 && queue_size(colaEjecucion)==0) ejecutarAlgoritmoPlanificacion=true;
-                                    break;
-
-                                case RESPUESTA_EJECUTAR_INSTRUCCION:
-
-                                    log_info(infoLogger,"Respuesta sobre la Ejecución de Instruccion recibida del Proceso ESI %s.", obtenerNombreProceso(listaESIconectados, i));
-
-
-                                    resultadoEjecucion = encabezado.tam_payload;
-
-                                    // Si la ejecucion de la instruccion no fallo
-                                    if(resultadoEjecucion == EJECUCION_EXITOSA){
-                                        rafagaActual += 1;
-
-                                        void actualizarTiempoDeEsperaDeLosProcesos(Proceso* registroProcesoAux){
-                                               Rafagas* registroRafagaAux;
-                                               registroRafagaAux = dictionary_get(diccionarioRafagas,registroProcesoAux->nombreProceso);
-                                               registroRafagaAux->tiempoDeEsperaDeCpu++;
-                                        }
-                                        //actualizo el tiempo de espera de CPU de cada proceso en la lista de ready
-                                        list_iterate(listaReady, (void *) actualizarTiempoDeEsperaDeLosProcesos);
-
-                                        // Pongo el proceso en la Cola Ready
-                                        cargarProcesoCola(listaESIconectados, colaReady, i);
-                                        cargarProcesoLista(listaESIconectados, listaReady, i);
-
-                                        log_info(infoLogger,"Respuesta sobre la Ejecución EXITOSA de la Instruccion recibida por el Proceso ESI.");
-
-                                    }else{ // Si la ejecucion de la instruccion fallo
-
-                                        log_info(infoLogger,"Respuesta sobre la Ejecución FALLIDA de la Instruccion recibida por el Proceso ESI.");
-
-                                        // Si el Resultado es fallido, puede ser porque quizo acceder a un Recurso que estaba tomado por otro proceso. En este caso, cambio al proceso a la ColaBloqueados
-                                        
-                                        // Cargar el Proceso en la Cola de Bloqueados
-                                        cargarProcesoCola(listaESIconectados, colaBloqueados, i);
-                                        eliminarProcesoLista(listaReady, i);
-                                        eliminarProcesoCola(colaReady, i);
-                                        //si se bloquea, activo la planificacion
-                                        ejecutarAlgoritmoPlanificacion=true;
-
-                                        log_info(infoLogger,"Actualizacion de las Estructuras Administrativas");
-                                    }
-
-                                    // Saco el Proceso de la Cola de Ejecucion y lo saco de
-                                    eliminarProcesoCola(colaEjecucion, i);
-
-                                    // Activo la Planificacion de los Procesos
-                                    planificarProcesos = true;
-                                    respuestaEjecucionInstruccionEsi=true;
-
-                                    break;
-
-                                case FINALIZACION_EJECUCION_ESI:
-                                    log_info(infoLogger,"Notificacion sobre la finalizacion del Proceso ESI %s.", obtenerNombreProceso(listaESIconectados, i));
-
-                                    // Libero los Recursos que tenia asignado en Lista de Claves Bloqueadas
-                                    liberarRecursosProceso(diccionarioClavesBloqueadas, obtenerNombreProceso(listaESIconectados, i));
-
-                                    // Cargar el Proceso en la Cola de Finalizados
-                                    cargarProcesoCola(listaESIconectados, colaFinalizados, i);
-
-                                    //si se estaba ejecutando y finalizo el proceso, el procesoSeleccionado lo pongo en NULL
-                                    //para evitarme problemas a la hora de planificar
-                                    if(obtenerRegistroProceso(listaESIconectados, i) == procesoSeleccionado) procesoSeleccionado = NULL;
-
-                                    // Elimino el Proceso ESI de las estrucutras Administrativas
-                                    dictionary_remove(diccionarioRafagas, obtenerNombreProceso(listaESIconectados,i));
-                                    eliminarProcesoLista(listaESIconectados, i);
-                                    eliminarProcesoLista(listaReady, i);
-                                    eliminarProcesoCola(colaReady, i);
-                                    eliminarProcesoCola(colaEjecucion, i);
-                                    eliminarProcesoCola(colaBloqueados, i);
-
-                                    log_info(infoLogger,"Actualizacion de las Estructuras Administrativas");
-
-                                    // Activo la Planificacion de los Procesos
-                                    planificarProcesos = true;
-                                    ejecutarAlgoritmoPlanificacion=true;
-                                    respuestaEjecucionInstruccionEsi=true;
-                                    break;                                
-                            }
-                        }
-
-                        // Si el mensaje proviene del COORDINADOR
-                        if(encabezado.proceso == 'C'){
-                            switch(encabezado.cod_operacion){
-
-                                case NOTIFICAR_LIBERACION_RECURSO:
-
-                                    // Recibo los datos del Key y Proceso
-                                    paquete = recibir_payload(&i,&encabezado.tam_payload);
-                                    registroKeyBloqueada = dsrlz_datosKeyBloqueada(paquete.buffer);
-                                    free(paquete.buffer);
-
-                                    log_info(infoLogger,"Notificacion del COORDINADOR que el Proceso ESI %s libera el Recurso %s.", registroKeyBloqueada.nombreProceso, registroKeyBloqueada.key);
-
-                                    // Libero un Recurso de la Lista de Claves Bloqueadas
-                                    dictionary_remove(diccionarioClavesBloqueadas, registroKeyBloqueada.key);
-
-                                    log_info(infoLogger,"Se libero el Recurso %s de la Lista de Claves Bloqueadas que lo tenia tomado el Proceso ESI %s.", registroKeyBloqueada.key, registroKeyBloqueada.nombreProceso);
-                                    break;
-
-
-                                case NOTIFICAR_USO_RECURSO:
-
-                                    // Recibo los datos del Key y Proceso
-                                    paquete = recibir_payload(&i,&encabezado.tam_payload);
-                                    registroKeyBloqueada = dsrlz_datosKeyBloqueada(paquete.buffer);
-                                    free(paquete.buffer);
-
-                                    log_info(infoLogger,"Notificacion del COORDINADOR que el Proceso ESI %s quiere acceder al Recurso %s.", registroKeyBloqueada.nombreProceso, registroKeyBloqueada.key);
-
-                                    recursoOcupado = false;
-
-                                    // Si el Recurso esta bloqueado por otro Proceso
-                                    if(dictionary_has_key(diccionarioClavesBloqueadas, registroKeyBloqueada.key) ){
-
-                                        // Guardo una Lista de las Claves Bloqueadas que quieren ser usadas por otros Procesos
-                                        list_add(listaClavesBloqueadasRequeridas, &registroKeyBloqueada);
-
-                                        log_info(infoLogger,"El Recurso %s ya se encuentra tomado por otro Proceso ESI.", registroKeyBloqueada.key);
-
-                                        // Serializado el Proceso y la Key
-                                        paquete = srlz_datosKeyBloqueada('P', RECURSO_OCUPADO, registroKeyBloqueada.nombreProceso, registroKeyBloqueada.operacion,registroKeyBloqueada.key,registroKeyBloqueada.dato);
-
-                                        recursoOcupado = true;
-
-
-                                    }else{ // Si el Recurso no esta bloqueado
-
-                                        // Bloqueo el Recurso y lo cargo en la Lista de Claves Bloqueadas
-                                        dictionary_put(diccionarioClavesBloqueadas, registroKeyBloqueada.key, &registroKeyBloqueada);
-
-                                        log_info(infoLogger,"Se agrego el Recurso %s en la Lista de Claves Bloqueadas que lo tomo el Proceso ESI %s.", registroKeyBloqueada.key, registroKeyBloqueada.nombreProceso);
-
-                                        // Serializado el Proceso y la Key
-                                        paquete = srlz_datosKeyBloqueada('P', RECURSO_LIBRE, registroKeyBloqueada.nombreProceso, registroKeyBloqueada.operacion,registroKeyBloqueada.key,registroKeyBloqueada.dato);
-                                    }
-
-
-                                    // Envio el Paquete al Coordinador con la notificacion
-                                    if(send(i,paquete.buffer,paquete.tam_buffer,0) != -1){
-
-                                        free(paquete.buffer);
-
-                                        if(recursoOcupado){
-                                            log_info(infoLogger, "Se le notifica al COORDINADOR que el Recurso %s ya estaba tomado por otro Proceso.", registroKeyBloqueada.key);    
-                                        }else{
-                                            log_info(infoLogger, "Se le notifica al COORDINADOR que el Recurso %s estaba libre y ahora quedo tomado por el Proceso ESI %s.",registroKeyBloqueada.key, registroKeyBloqueada.nombreProceso);    
-                                        }
-                                        
-                                    }else{
-                                        log_error(infoLogger, "No se pudo enviar la notificacion al COORDINADOR sobre el estado de  uso del Recurso %s.", registroKeyBloqueada.key);
-                                    }
-
-                                    break;
-
-
-                                case INSTANCIA_DESCONECTADA:
-                                    // TODO
-                                    log_info(infoLogger,"Respuesta sobre la Instancia que no existe recibida del COORDINADOR.");
-                                    break;
-
-
-                                case IS_ALIVE: 
-                                    break;                                     
-                                    
-                            }
-                        }
-
-                    }
-                }
-            } 
 
             // Planifica los Procesos de la ColaReady
             if(!planificadorPausado && planificarProcesos && respuestaEjecucionInstruccionEsi){
 
-            	//ejecuta el algoritmo de planificacion
+                //ejecuta el algoritmo de planificacion
                 if(ejecutarAlgoritmoPlanificacion){
 
-                	//si no es nulo el proceso seleccionado que estaba ejecutando, se le actualizan las rafagas
-                	//antes de cambiar de proceso por la planificacion
+                    //si no es nulo el proceso seleccionado que estaba ejecutando, se le actualizan las rafagas
+                    //antes de cambiar de proceso por la planificacion
                     if(procesoSeleccionado !=NULL){
-                    	Rafagas* registroRafagaAux=NULL;
-                    	registroRafagaAux = dictionary_get(diccionarioRafagas,procesoSeleccionado->nombreProceso);
+                        Rafagas* registroRafagaAux=NULL;
+                        registroRafagaAux = dictionary_get(diccionarioRafagas,procesoSeleccionado->nombreProceso);
 
-                    	registroRafagaAux->rafagaAnterior = rafagaActual;
-                    	registroRafagaAux->proximaEstimacion = estimarRafaga(registroRafagaAux->estimacionRafagaAnterior, registroRafagaAux->rafagaAnterior, alfa);
-                    	registroRafagaAux->estimacionRafagaAnterior = registroRafagaAux->proximaEstimacion;
-                    	//al salir de ejecutarse, se resetea su tiempo de espera de cpu
-                    	registroRafagaAux->tiempoDeEsperaDeCpu = 0;
+                        registroRafagaAux->rafagaAnterior = rafagaActual;
+                        registroRafagaAux->proximaEstimacion = estimarRafaga(registroRafagaAux->estimacionRafagaAnterior, registroRafagaAux->rafagaAnterior, alfa);
+                        registroRafagaAux->estimacionRafagaAnterior = registroRafagaAux->proximaEstimacion;
+                        //al salir de ejecutarse, se resetea su tiempo de espera de cpu
+                        registroRafagaAux->tiempoDeEsperaDeCpu = 0;
                     }
 
-                	procesoSeleccionado = obtenerProximoProcesoPlanificado(listaReady, colaReady, diccionarioRafagas, algoritmoPlanificacion, alfa);
+                    procesoSeleccionado = obtenerProximoProcesoPlanificado(listaReady, colaReady, diccionarioRafagas, algoritmoPlanificacion, alfa);
 
-                	//este if solo lo pongo para informar qué proceso se selecciono en la planificacion
-                	Rafagas* rafagasAux2=NULL;
-                	if(procesoSeleccionado !=NULL){
-                		rafagasAux2= dictionary_get(diccionarioRafagas, procesoSeleccionado->nombreProceso);
-                		printf("\nProceso planificado para ejecutar: %s\n", procesoSeleccionado->nombreProceso);
-                	}
-                	rafagaActual=0;
+                    //este if solo lo pongo para informar qué proceso se selecciono en la planificacion
+                    Rafagas* rafagasAux2=NULL;
+                    if(procesoSeleccionado !=NULL){
+                        rafagasAux2= dictionary_get(diccionarioRafagas, procesoSeleccionado->nombreProceso);
+                        printf("\nProceso planificado para ejecutar: %s\n", procesoSeleccionado->nombreProceso);
+                    }
+                    rafagaActual=0;
                 }
 
                 // Desactivo la Planificacion de los Procesos
                 planificarProcesos = false;
-            	ejecutarAlgoritmoPlanificacion=false;
-            	/*
+                ejecutarAlgoritmoPlanificacion=false;
+                /*
                 //si cambia el proceso, guarda nuevas rafagas
                 if(procesoAnterior == NULL){
                     procesoAnterior=procesoSeleccionado;
@@ -999,7 +650,7 @@ void servidorPlanificador(void* puerto){
                     if(send(procesoSeleccionado->socketProceso,paquete.buffer,paquete.tam_buffer,0) != -1){
 
                         free(paquete.buffer);
-                        log_info(infoLogger, "Se le pidio al ESI %s que ejecute la proxima Instruccion", procesoSeleccionado->nombreProceso);
+                        log_info(infoLogger, "Se le pidio al ESI %s (Socket %d) que ejecute la proxima Instruccion", procesoSeleccionado->nombreProceso, procesoSeleccionado->socketProceso);
                         respuestaEjecucionInstruccionEsi=false;
                     }else{
                         log_error(infoLogger, "No se pudo enviar al ESI %s la orden de ejecucion de la proxima Instruccion", procesoSeleccionado->nombreProceso);
@@ -1007,11 +658,11 @@ void servidorPlanificador(void* puerto){
                 }
             }
 
-        }
     }
 
-    close(servidor);
-    FD_CLR(servidor, &master);
+    pthread_exit(EXIT_SUCCESS);
+
+    return 0;
 }
 
 
@@ -1074,11 +725,12 @@ int main(int argc, char* argv[]){
         printf("Error de conexion con el Coordinador\n");
         return EXIT_FAILURE;        
     }else{
-        log_info(infoLogger, "Conexion establecida con el Coordinador");        
+        log_info(infoLogger, "Conexion establecida con el Coordinador");
     }
 
-    // Obtengo el valor Alfa para el Algoritmo HRRN
-    int alfa = config_get_int_value(cfg,"ALFA"); //para el calculo de rafaga
+    // Creo el Servidor para escuchar conexiones
+    int servidor=crearServidor(config_get_int_value(cfg,"PLANIFICADOR_PUERTO"));
+    log_trace(infoLogger, "Escuchando conexiones" );
 
     // Serializado el Proceso
     Paquete paquete = srlz_datosProceso('P', HANDSHAKE, "PLANIFICADOR", PLANIFICADOR, 0);
@@ -1089,447 +741,42 @@ int main(int argc, char* argv[]){
 
 
     pthread_t hiloConsola;
-    //pthread_create(&hiloConsola, NULL, (void*) hiloConsolaInteractiva, NULL);
-
+    pthread_create(&hiloConsola, NULL, (void*) hiloConsolaInteractiva, NULL);
+    pthread_detach(hiloConsola);
     //pthread_join(hiloConsola, NULL);
 
-    struct sockaddr_in servidor_addr,my_addr,master_addr; // información de la dirección de destino
-    int servidor,fd_maximo,nuevo_fd,i,size, nbytes;
+    // Creo Hilo que Atiende al Coordinador
+    pthread_t hiloConexionCoordinador;
 
-    fd_set master,temporales;
-    FD_ZERO(&master);
-    FD_ZERO(&temporales);
+    pthread_informacion* data_hilo = (pthread_informacion*) malloc(sizeof(*data_hilo));
+    data_hilo->socketHilo = coordinador_fd;
 
+    log_info(infoLogger,"Creando un hilo para atender al Coordinador con FD %d", coordinador_fd);
+    pthread_create(&hiloConexionCoordinador, NULL, (void*) atenderConexiones, data_hilo);
+    pthread_detach(hiloConexionCoordinador);
 
-    // Creo el Servidor para escuchar conexiones
-    servidor=crearServidor(config_get_int_value(cfg,"PLANIFICADOR_PUERTO"));
-    log_trace(infoLogger, "Escuchando conexiones" );
 
+    int new_fd;
 
-    FD_SET(coordinador_fd, &master);
-    FD_SET(servidor, &master);
-    fd_maximo = servidor;   
+    while(true){
 
-    // Creo un Hilo por cada nueva Conexion
-    pthread_t hiloConexiones;
+        // Acepto todas las conexiones
+        new_fd = aceptarConexionCliente(servidor);
 
+        if (new_fd != -1) {
 
+            // Creo un Hilo por cada nueva Conexion
+            pthread_t hiloConexiones;
 
+            pthread_informacion* data_hilo = (pthread_informacion*) malloc(sizeof(*data_hilo));
+            data_hilo->socketHilo = new_fd;
 
+            pthread_create(&hiloConexiones, NULL, (void*) atenderConexiones, data_hilo);
+            pthread_detach(hiloConexiones);
 
-
-    Encabezado encabezado;
-
-
-    Proceso registroProceso;
-    KeyBloqueada registroKeyBloqueada;
-    Proceso* procesoSeleccionado=NULL;
-    int indice = 0, resultadoEjecucion;
-    bool recursoOcupado;
-
-    while(1){
-
-        temporales=master;
-
-        if (select(fd_maximo + 1, &temporales, NULL, NULL, NULL) == -1) {
-            perror("select");
-            exit(1);
-        }
-
-        for(i = 0; i <= fd_maximo; i++) {
-
-            if (FD_ISSET(i, &temporales)) { // ¡¡tenemos datos!!
-                if (i == servidor) {
-                    // gestionar nuevas conexiones
-                    size = sizeof(master_addr);
-                    if ((nuevo_fd = accept(servidor, (struct sockaddr *)&master_addr, &size)) == -1) {
-                        perror("accept");
-                    } else {
-                        FD_SET(nuevo_fd, &master); // añadir al conjunto maestro
-                        if (nuevo_fd > fd_maximo) {    // actualizar el máximo
-                            fd_maximo = nuevo_fd;
-                        }
-                    }
-                } else { // Atiendo las conexiones ya establecidas, es decir, clientes
-
-                    // Recibo el Encabezado del Paquete
-                    encabezado=recibir_header(&i);
-
-                    // gestionar datos de un cliente
-                    if ((nbytes = encabezado.tam_payload) <= 0) {
-                         // error o conexión cerrada por el cliente
-                         if (nbytes == 0) {
-                            // conexión cerrada
-                            //printf("selectserver: socket %d se ha caído\n", i);
-                         } else {
-                            perror("recv");
-                         }
-                         close(i); // ¡Hasta luego!
-                         FD_CLR(i, &master); // eliminar del conjunto maestro
-                    } else {
-
-                        // Si el mensaje proviene de ESI
-                        if(encabezado.proceso == 'E'){
-                            switch(encabezado.cod_operacion){
-
-                                case HANDSHAKE:
-
-                                    // Recibo los datos del Nodo
-                                    paquete = recibir_payload(&i,&encabezado.tam_payload);
-                                    registroProceso = dsrlz_datosProceso(paquete.buffer);
-                                    free(paquete.buffer);
-
-                                    // Recibo de ESI el nombre del Proceso
-                                    log_info(infoLogger,"Proceso ESI %s conectado.", registroProceso.nombreProceso);
-
-                                    // Cargo el Registro del Proceso
-                                    Proceso* registroProcesoAux = NULL;
-                                    registroProcesoAux = malloc(sizeof(Proceso));
-
-                                    // Cargo el Registro del Proceso
-                                    registroProcesoAux->tipoProceso = registroProceso.tipoProceso;
-                                    registroProcesoAux->socketProceso = i;
-                                    registroProcesoAux->nombreProceso = malloc(strlen(registroProceso.nombreProceso)+1);
-                                    strcpy( registroProcesoAux->nombreProceso ,registroProceso.nombreProceso);
-                                    registroProcesoAux->nombreProceso[strlen(registroProceso.nombreProceso)] = '\0';
-
-                                    // Cargo los ESIs conectados en la Lista de ESIs conectados al Planificador
-                                    cargarListaProcesosConectados(listaESIconectados, registroProcesoAux);
-
-                                    // Cargo el Proceso en la listaReady
-                                    cargarProcesoLista(listaESIconectados, listaReady, i);
-
-                                    //cargo el proceso en dictionary
-                                    Rafagas* registroRafagaAux= malloc(sizeof(Rafagas));
-                                    registroRafagaAux->rafagaAnterior=0;
-                                    registroRafagaAux->estimacionRafagaAnterior=config_get_int_value(cfg,"ESTIMACION_INICIAL");
-                                    registroRafagaAux->proximaEstimacion=estimarRafaga(registroRafagaAux->estimacionRafagaAnterior, registroRafagaAux->rafagaAnterior, alfa);
-                                    registroRafagaAux->tiempoDeEsperaDeCpu=0;
-                                    dictionary_put(diccionarioRafagas,registroProcesoAux->nombreProceso,registroRafagaAux);
-
-
-                                    // Activo la Planificacion de los Procesos
-                                    planificarProcesos = true;
-                                    if(list_size(listaReady)==1 && queue_size(colaEjecucion)==0) ejecutarAlgoritmoPlanificacion=true;
-                                    break;
-
-                                case RESPUESTA_EJECUTAR_INSTRUCCION:
-
-                                    log_info(infoLogger,"Respuesta sobre la Ejecución de Instruccion recibida del Proceso ESI %s.", obtenerNombreProceso(listaESIconectados, i));
-
-
-                                    resultadoEjecucion = encabezado.tam_payload;
-
-                                    // Si la ejecucion de la instruccion no fallo
-                                    if(resultadoEjecucion == EJECUCION_EXITOSA){
-                                        rafagaActual += 1;
-
-                                        void actualizarTiempoDeEsperaDeLosProcesos(Proceso* registroProcesoAux){
-                                               Rafagas* registroRafagaAux;
-                                               registroRafagaAux = dictionary_get(diccionarioRafagas,registroProcesoAux->nombreProceso);
-                                               registroRafagaAux->tiempoDeEsperaDeCpu++;
-                                        }
-                                        //actualizo el tiempo de espera de CPU de cada proceso en la lista de ready
-                                        list_iterate(listaReady, (void *) actualizarTiempoDeEsperaDeLosProcesos);
-
-                                        // Pongo el proceso en la Cola Ready
-                                        cargarProcesoCola(listaESIconectados, colaReady, i);
-                                        cargarProcesoLista(listaESIconectados, listaReady, i);
-
-                                        log_info(infoLogger,"Respuesta sobre la Ejecución EXITOSA de la Instruccion recibida por el Proceso ESI.");
-
-                                    }else{ // Si la ejecucion de la instruccion fallo
-
-                                        log_info(infoLogger,"Respuesta sobre la Ejecución FALLIDA de la Instruccion recibida por el Proceso ESI.");
-
-                                        // Si el Resultado es fallido, puede ser porque quizo acceder a un Recurso que estaba tomado por otro proceso. En este caso, cambio al proceso a la ColaBloqueados
-                                        
-                                        // Cargar el Proceso en la Cola de Bloqueados
-                                        cargarProcesoCola(listaESIconectados, colaBloqueados, i);
-                                        eliminarProcesoLista(listaReady, i);
-                                        eliminarProcesoCola(colaReady, i);
-                                        //si se bloquea, activo la planificacion
-                                        ejecutarAlgoritmoPlanificacion=true;
-
-                                        log_info(infoLogger,"Actualizacion de las Estructuras Administrativas");
-                                    }
-
-                                    // Saco el Proceso de la Cola de Ejecucion y lo saco de
-                                    eliminarProcesoCola(colaEjecucion, i);
-
-                                    // Activo la Planificacion de los Procesos
-                                    planificarProcesos = true;
-                                    respuestaEjecucionInstruccionEsi=true;
-
-                                    break;
-
-                                case FINALIZACION_EJECUCION_ESI:
-                                    log_info(infoLogger,"Notificacion sobre la finalizacion del Proceso ESI %s.", obtenerNombreProceso(listaESIconectados, i));
-
-                                    // Libero los Recursos que tenia asignado en Lista de Claves Bloqueadas
-                                    liberarRecursosProceso(diccionarioClavesBloqueadas, obtenerNombreProceso(listaESIconectados, i));
-
-                                    // Cargar el Proceso en la Cola de Finalizados
-                                    cargarProcesoCola(listaESIconectados, colaFinalizados, i);
-
-                                    //si se estaba ejecutando y finalizo el proceso, el procesoSeleccionado lo pongo en NULL
-                                    //para evitarme problemas a la hora de planificar
-                                    if(obtenerRegistroProceso(listaESIconectados, i) == procesoSeleccionado) procesoSeleccionado = NULL;
-
-                                    // Elimino el Proceso ESI de las estrucutras Administrativas
-                                    dictionary_remove(diccionarioRafagas, obtenerNombreProceso(listaESIconectados,i));
-                                    eliminarProcesoLista(listaESIconectados, i);
-                                    eliminarProcesoLista(listaReady, i);
-                                    eliminarProcesoCola(colaReady, i);
-                                    eliminarProcesoCola(colaEjecucion, i);
-                                    eliminarProcesoCola(colaBloqueados, i);
-
-                                    log_info(infoLogger,"Actualizacion de las Estructuras Administrativas");
-
-                                    // Activo la Planificacion de los Procesos
-                                    planificarProcesos = true;
-                                    ejecutarAlgoritmoPlanificacion=true;
-                                    respuestaEjecucionInstruccionEsi=true;
-                                    break;                                
-                            }
-                        }
-
-                        // Si el mensaje proviene del COORDINADOR
-                        if(encabezado.proceso == 'C'){
-                            switch(encabezado.cod_operacion){
-
-                                case NOTIFICAR_LIBERACION_RECURSO:
-
-                                    // Recibo los datos del Key y Proceso
-                                    paquete = recibir_payload(&i,&encabezado.tam_payload);
-                                    registroKeyBloqueada = dsrlz_datosKeyBloqueada(paquete.buffer);
-                                    free(paquete.buffer);
-
-                                    log_info(infoLogger,"Notificacion del COORDINADOR que el Proceso ESI %s libera el Recurso %s.", registroKeyBloqueada.nombreProceso, registroKeyBloqueada.key);
-
-                                    // Libero un Recurso de la Lista de Claves Bloqueadas
-                                    dictionary_remove(diccionarioClavesBloqueadas, registroKeyBloqueada.key);
-
-                                    log_info(infoLogger,"Se libero el Recurso %s de la Lista de Claves Bloqueadas que lo tenia tomado el Proceso ESI %s.", registroKeyBloqueada.key, registroKeyBloqueada.nombreProceso);
-                                    break;
-
-
-                                case NOTIFICAR_USO_RECURSO:
-
-                                    // Recibo los datos del Key y Proceso
-                                    paquete = recibir_payload(&i,&encabezado.tam_payload);
-                                    registroKeyBloqueada = dsrlz_datosKeyBloqueada(paquete.buffer);
-                                    free(paquete.buffer);
-
-                                    log_info(infoLogger,"Notificacion del COORDINADOR que el Proceso ESI %s quiere acceder al Recurso %s.", registroKeyBloqueada.nombreProceso, registroKeyBloqueada.key);
-
-                                    recursoOcupado = false;
-
-                                    // Si el Recurso esta bloqueado por otro Proceso
-                                    if(dictionary_has_key(diccionarioClavesBloqueadas, registroKeyBloqueada.key) ){
-
-                                        // Guardo una Lista de las Claves Bloqueadas que quieren ser usadas por otros Procesos
-                                        list_add(listaClavesBloqueadasRequeridas, &registroKeyBloqueada);
-
-                                        log_info(infoLogger,"El Recurso %s ya se encuentra tomado por otro Proceso ESI.", registroKeyBloqueada.key);
-
-                                        // Serializado el Proceso y la Key
-                                        paquete = srlz_datosKeyBloqueada('P', RECURSO_OCUPADO, registroKeyBloqueada.nombreProceso, registroKeyBloqueada.operacion,registroKeyBloqueada.key,registroKeyBloqueada.dato);
-
-                                        recursoOcupado = true;
-
-
-                                    }else{ // Si el Recurso no esta bloqueado
-
-                                        // Bloqueo el Recurso y lo cargo en la Lista de Claves Bloqueadas
-                                        dictionary_put(diccionarioClavesBloqueadas, registroKeyBloqueada.key, &registroKeyBloqueada);
-
-                                        log_info(infoLogger,"Se agrego el Recurso %s en la Lista de Claves Bloqueadas que lo tomo el Proceso ESI %s.", registroKeyBloqueada.key, registroKeyBloqueada.nombreProceso);
-
-                                        // Serializado el Proceso y la Key
-                                        paquete = srlz_datosKeyBloqueada('P', RECURSO_LIBRE, registroKeyBloqueada.nombreProceso, registroKeyBloqueada.operacion,registroKeyBloqueada.key,registroKeyBloqueada.dato);
-                                    }
-
-
-                                    // Envio el Paquete al Coordinador con la notificacion
-                                    if(send(i,paquete.buffer,paquete.tam_buffer,0) != -1){
-
-                                        free(paquete.buffer);
-
-                                        if(recursoOcupado){
-                                            log_info(infoLogger, "Se le notifica al COORDINADOR que el Recurso %s ya estaba tomado por otro Proceso.", registroKeyBloqueada.key);    
-                                        }else{
-                                            log_info(infoLogger, "Se le notifica al COORDINADOR que el Recurso %s estaba libre y ahora quedo tomado por el Proceso ESI %s.",registroKeyBloqueada.key, registroKeyBloqueada.nombreProceso);    
-                                        }
-                                        
-                                    }else{
-                                        log_error(infoLogger, "No se pudo enviar la notificacion al COORDINADOR sobre el estado de  uso del Recurso %s.", registroKeyBloqueada.key);
-                                    }
-
-                                    break;
-
-
-                                case INSTANCIA_DESCONECTADA:
-                                    // TODO
-                                    log_info(infoLogger,"Respuesta sobre la Instancia que no existe recibida del COORDINADOR.");
-                                    break;
-
-
-                                case IS_ALIVE: 
-                                    break;                                     
-                                    
-                            }
-                        }
-
-                    }
-                }
-            } 
-
-            // Planifica los Procesos de la ColaReady
-            if(!planificadorPausado && planificarProcesos && respuestaEjecucionInstruccionEsi){
-
-                //ejecuta el algoritmo de planificacion
-                if(ejecutarAlgoritmoPlanificacion){
-
-                    //si no es nulo el proceso seleccionado que estaba ejecutando, se le actualizan las rafagas
-                    //antes de cambiar de proceso por la planificacion
-                    if(procesoSeleccionado !=NULL){
-                        Rafagas* registroRafagaAux=NULL;
-                        registroRafagaAux = dictionary_get(diccionarioRafagas,procesoSeleccionado->nombreProceso);
-
-                        registroRafagaAux->rafagaAnterior = rafagaActual;
-                        registroRafagaAux->proximaEstimacion = estimarRafaga(registroRafagaAux->estimacionRafagaAnterior, registroRafagaAux->rafagaAnterior, alfa);
-                        registroRafagaAux->estimacionRafagaAnterior = registroRafagaAux->proximaEstimacion;
-                        //al salir de ejecutarse, se resetea su tiempo de espera de cpu
-                        registroRafagaAux->tiempoDeEsperaDeCpu = 0;
-                    }
-
-                    procesoSeleccionado = obtenerProximoProcesoPlanificado(listaReady, colaReady, diccionarioRafagas, algoritmoPlanificacion, alfa);
-
-                    //este if solo lo pongo para informar qué proceso se selecciono en la planificacion
-                    Rafagas* rafagasAux2=NULL;
-                    if(procesoSeleccionado !=NULL){
-                        rafagasAux2= dictionary_get(diccionarioRafagas, procesoSeleccionado->nombreProceso);
-                        printf("\nProceso planificado para ejecutar: %s\n", procesoSeleccionado->nombreProceso);
-                    }
-                    rafagaActual=0;
-                }
-
-                // Desactivo la Planificacion de los Procesos
-                planificarProcesos = false;
-                ejecutarAlgoritmoPlanificacion=false;
-
-                // Si existe un Proceso para planificar
-                if(procesoSeleccionado != NULL){
-
-                    // Cargo el Proceso en la Cola de Ejecucion y lo saco de la Cola Ready
-                    eliminarProcesoCola(colaReady, procesoSeleccionado->socketProceso);
-                    eliminarProcesoLista(listaReady, procesoSeleccionado->socketProceso);
-                    cargarProcesoCola(listaESIconectados, colaEjecucion, procesoSeleccionado->socketProceso);
-
-//printf("Proximo Procesos a Planificar: Nombre: %s - Socket: %d\n", procesoSeleccionado->nombreProceso, procesoSeleccionado->socketProceso);                    
-                    // Armo el Paquete de la orden de Ejectuar la proxima Instruccion
-                    paquete = crearHeader('P', EJECUTAR_INSTRUCCION, 1);
-
-                    // Envio el Paquetea a ESI
-                    if(send(procesoSeleccionado->socketProceso,paquete.buffer,paquete.tam_buffer,0) != -1){
-
-                        free(paquete.buffer);
-                        log_info(infoLogger, "Se le pidio al ESI %s que ejecute la proxima Instruccion", procesoSeleccionado->nombreProceso);
-                        respuestaEjecucionInstruccionEsi=false;
-                    }else{
-                        log_error(infoLogger, "No se pudo enviar al ESI %s la orden de ejecucion de la proxima Instruccion", procesoSeleccionado->nombreProceso);
-                    }
-                }
-            }
-
+            log_info(infoLogger,"Creando un hilo para atender el nuevo cliente con FD %d", new_fd);
         }
     }
-
-    close(servidor);
-    FD_CLR(servidor, &master);
-
-
-
-
-
-
-
-
-
-
-
-
-/*
-    while(1){
-
-        temporales=master;
-
-        if (select(fd_maximo + 1, &temporales, NULL, NULL, NULL) == -1) {
-            perror("select");
-            exit(1);
-        }
-
-        for(i = 0; i <= fd_maximo; i++) {
-           
-            if (FD_ISSET(i, &temporales)) { // ¡¡tenemos datos!!
-                if (i == servidor) {
-                    // gestionar nuevas conexiones
-                    size = sizeof(master_addr);
-                    if ((nuevo_fd = accept(servidor, (struct sockaddr *)&master_addr, &size)) == -1) {
-                        perror("accept");
-                    } else {
-                        FD_SET(nuevo_fd, &master); // añadir al conjunto maestro la nueva conexion
-                        if (nuevo_fd > fd_maximo) {    // actualizar el máximo
-                            fd_maximo = nuevo_fd;
-                        }
-
-                        if( pthread_create( &hiloConexiones , NULL ,  (void*) atenderConexiones , (void*) nuevo_fd) < 0){
-                            perror("No se pudo crear el Hilo");
-                            return EXIT_FAILURE;
-                        }else{
-                            log_trace(infoLogger, "Nueva conexión atendida por un Hilo" );
-                            printf("Nueva conexión atendida por un Hilo (Socket: %d)\n", nuevo_fd );
-
-                            //pthread_join(hiloConexiones, NULL);
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    pthread_exit(NULL);
-
-    close(servidor);
-
-*/
-
-/*
-
-    // Acepto todas las conexiones y creo un Hilo por cada una de ellas
-    while(i = aceptarconexion(servidor)){
-
-printf("Sokcet Aceptado: %d\n", i );
-        //encabezado = recibir_header(&servidor);
-
-        // Creo un Hilo por cada nueva Conexion
-        pthread_t hiloConexiones;
-        nuevo_socket = malloc(1);
-        *nuevo_socket = i;
-
-        if( pthread_create( &hiloConexiones , NULL ,  (void*) atenderConexiones , (void*) i) < 0){
-            perror("No se pudo crear el Hilo");
-            return EXIT_FAILURE;
-        }else{
-            log_trace(infoLogger, "Nueva conexión atendida por un Hilo" );
-            printf("Nueva conexión atendida por un Hilo\n" );
-
-            //pthread_join(hiloConexiones, NULL);
-        }
-
-    }
-  */
 
 
 
@@ -1551,5 +798,6 @@ printf("Sokcet Aceptado: %d\n", i );
 
     free(algoritmoPlanificacion);
     free(arregloClavesInicialmenteBloqueadas);
+    close(servidor);
     return EXIT_SUCCESS;
 }

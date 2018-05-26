@@ -1051,6 +1051,23 @@ float estimarRafaga (float estimacionAnterior, int rafagaAnterior, int alfa){
 		return alfa/100.0 * rafagaAnterior + (1 - alfa/100.0) * estimacionAnterior;
 	}
 
+KeyBloqueada* sacarProcesoConClaveBloqueadaDeLaLista(t_list* listaClavesBloqueadasRequeridas, char* key){
+
+	KeyBloqueada* registroKeyBloqueada=NULL;
+
+	bool buscarProcesoConClaveBloqueada(KeyBloqueada* registroKeyBloqueadaAux){
+		return (!strcmp(key, registroKeyBloqueadaAux->key));
+	}
+	registroKeyBloqueada = list_remove_by_condition(listaClavesBloqueadasRequeridas, (void*)buscarProcesoConClaveBloqueada);
+	return registroKeyBloqueada;
+}
+
+void liberarKeyBloqueada(KeyBloqueada* registroKeyBloqueadaAux){
+	if(registroKeyBloqueadaAux->dato!=NULL) free(registroKeyBloqueadaAux->dato);
+	free(registroKeyBloqueadaAux->nombreProceso);
+	free(registroKeyBloqueadaAux);
+}
+
 KeyBloqueada* crearNodoDeUnaKeyBloqueada(KeyBloqueada keyBloqueada){
 
 	KeyBloqueada* registroKeyBloqueada = malloc(sizeof(KeyBloqueada));

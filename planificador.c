@@ -65,6 +65,7 @@ void* hiloConsolaInteractiva(void * unused) {
     char* comandoConsolaOriginal;
     bool comandoAceptado;
     char* comandoConsola;
+    KeyBloqueada* registroKeyBloqueada;
 
     while (1) {
         comandoAceptado = false;
@@ -208,6 +209,27 @@ void* hiloConsolaInteractiva(void * unused) {
 
                         // Libero un Recurso de la Lista de Claves Bloqueadas
                         dictionary_remove(diccionarioClavesBloqueadas, parametrosConsolaOriginal[1]);
+
+                        // Libero un Recurso de la Lista de Claves Bloqueadas
+                        dictionary_remove(diccionarioClavesBloqueadas, parametrosConsolaOriginal[1]);
+
+                        //Se verifica si un proceso estaba bloqueado esperando esa clave
+                        registroKeyBloqueada = sacarProcesoConClaveBloqueadaDeLaLista(listaClavesBloqueadasRequeridas, parametrosConsolaOriginal[1]);
+
+                        //de ser asi, se elimina el proceso de la cola de bloqueados y se pone en la cola de Ready
+                        //ademas, si el algoritmo de planificacion es con desalojo o si es el unico en la lista de Ready, se activa la planificacion
+                        if(registroKeyBloqueada!=NULL){
+
+                        	socketAux = obtenerSocketProceso(listaESIconectados,registroKeyBloqueada->nombreProceso);
+                        	eliminarProcesoCola(colaBloqueados, socketAux);
+                            cargarProcesoCola(listaESIconectados, colaReady, socketAux);
+                            cargarProcesoLista(listaESIconectados, listaReady, socketAux);
+                        	liberarKeyBloqueada(registroKeyBloqueada);
+                        	if(list_size(listaReady)==1 && queue_size(colaEjecucion)==0) ejecutarAlgoritmoPlanificacion=true;
+                        	else if(elAlgoritmoEsConDesalojo) ejecutarAlgoritmoPlanificacion=true;
+
+                        }
+
 
                     }else{
                         printf("[Error] Cantidad de parámetros incorrectos\n");
@@ -512,6 +534,22 @@ void* atenderConexiones(void* socketConexion){
 
                     // Libero un Recurso de la Lista de Claves Bloqueadas
                     dictionary_remove(diccionarioClavesBloqueadas, keyBloqueada.key);
+
+                    //Se verifica si un proceso estaba bloqueado esperando esa clave
+                    registroKeyBloqueada = sacarProcesoConClaveBloqueadaDeLaLista(listaClavesBloqueadasRequeridas, keyBloqueada.key);
+
+                    //de ser asi, se elimina el proceso de la cola de bloqueados y se pone en la cola de Ready
+                    //ademas, si el algoritmo de planificacion es con desalojo  se activa la planificacion
+                    if(registroKeyBloqueada!=NULL){
+
+                    	socketAux = obtenerSocketProceso(listaESIconectados,registroKeyBloqueada->nombreProceso);
+                    	eliminarProcesoCola(colaBloqueados, socketAux);
+                        cargarProcesoCola(listaESIconectados, colaReady, socketAux);
+                        cargarProcesoLista(listaESIconectados, listaReady, socketAux);
+                    	liberarKeyBloqueada(registroKeyBloqueada);
+                    	if(elAlgoritmoEsConDesalojo) ejecutarAlgoritmoPlanificacion=true;
+
+                    }
 
                     log_info(infoLogger,"Se libero el Recurso %s de la Lista de Claves Bloqueadas que lo tenia tomado el Proceso ESI %s.", keyBloqueada.key, keyBloqueada.nombreProceso);
                     break;

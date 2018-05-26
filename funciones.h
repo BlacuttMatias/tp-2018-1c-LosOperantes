@@ -89,6 +89,7 @@
 	void cargarProcesoCola(t_list* listaUtilizar, t_queue* colaUtilizar, int socketProcesoConsultar);
 	void cargarProcesoLista(t_list* listaUtilizar, t_list* listaProcesar, int socketProcesoCargar);
 
+	KeyBloqueada* crearNodoDeUnaKeyBloqueada(KeyBloqueada keyBloqueada);
 	float estimarRafaga(float estimacionAnterior, int rafagaAnterior, int alfa);
 	int countParametrosConsola(char * string);
 	void listarRecursosBloqueados(t_list* listaClavesBloqueadasRequeridas, char* key);

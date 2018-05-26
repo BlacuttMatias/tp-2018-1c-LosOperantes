@@ -124,9 +124,6 @@ void* atenderConexiones(void* socketConexion){
                     registrarLogOperaciones(listaProcesosConectados, registroKeyBloqueada.operacion, registroKeyBloqueada.key, registroKeyBloqueada.dato, socketESI);
                     log_info(infoLogger,"Operacion guardada en el Log de Operaciones:  %s %i %s %s", obtenerNombreProceso(listaProcesosConectados, socketESI), registroKeyBloqueada.operacion, registroKeyBloqueada.key, registroKeyBloqueada.dato);
 
-                    // Aplico Retardo de Ejecucion segun Archivo de Configuracion
-                    //usleep(config_get_int_value(cfg,"RETARDO"));
-
                     // Armo el Paquete del Resultado de la Ejecucion de la Instruccion
                     paquete = srlz_resultadoEjecucion('C', RESPUESTA_EJECUTAR_INSTRUCCION, registroKeyBloqueada.nombreProceso, EJECUCION_EXITOSA, "", registroKeyBloqueada.operacion, registroKeyBloqueada.key);
 
@@ -368,6 +365,8 @@ void* atenderConexiones(void* socketConexion){
 
                     log_info(infoLogger,"Pedido de Ejecución de una Instruccion recibida del Proceso ESI %s: %d %s %s", obtenerNombreProceso(listaProcesosConectados, i), registroInstruccion.operacion, registroInstruccion.key, registroInstruccion.dato);
 
+                    // Aplico Retardo de Ejecucion segun Archivo de Configuracion
+                    usleep(config_get_int_value(cfg,"RETARDO"));
 
                     // Si la operacion es GET, notificar al Planificador de la toma del recurso y la Instancia no participa
                     if(registroInstruccion.operacion == GET){
@@ -443,11 +442,6 @@ void* atenderConexiones(void* socketConexion){
                             }
                         }
 
-
-// Falta contemplar el caso Script que Aborta por desconexión de la instancia
-// TODO
-
-
                         // Si el Recurso ya fue recibido previamente por el Coordinador (2da y demas veces)
                         if(dictionary_has_key(diccionarioClavesInstancias, registroInstruccion.key) ){
 
@@ -497,16 +491,29 @@ void* atenderConexiones(void* socketConexion){
                         // Envio el Paquetea a la Instancia
                         if(enviarInstruccionInstancia(registroInstruccion, proximaInstancia->socketProceso)){
                             log_info(infoLogger, "Se le envio a la instancia %s la proxima Instruccion a ejecutar", proximaInstancia->nombreProceso);
+
+                            // Genero el Log de Operaciones
+                            registrarLogOperaciones(listaProcesosConectados, registroInstruccion.operacion, registroInstruccion.key, registroInstruccion.dato, i);
+                            log_info(infoLogger,"Operacion guardada en el Log de Operaciones:  %s %i %s %s", obtenerNombreProceso(listaProcesosConectados, i), registroInstruccion.operacion, registroInstruccion.key, registroInstruccion.dato);
+
                         }else{
-                            log_error(infoLogger, "No se pudo enviar a la instancia %s la proxima Instruccion a ejecutar",proximaInstancia->nombreProceso);
+                            log_error(infoLogger, "Se detecto que la Instancia %s esta desconectada.",proximaInstancia->nombreProceso);
+
+                            // ESI Aborta por desconexión de la instancia
+
+                            // Armo el Paquete del Resultado de la Ejecucion de la Instruccion
+                            paquete = srlz_resultadoEjecucion('C', RESPUESTA_EJECUTAR_INSTRUCCION, "COORDINADOR", EJECUCION_FALLIDA_FINALIZAR_ESI, "Error por Desconexión de la Instancia", registroInstruccion.operacion, registroInstruccion.key);
+
+                            // Envio el Paquetea a ESI
+                            if(send(i,paquete.buffer,paquete.tam_buffer,0) != -1){
+
+                                free(paquete.buffer);
+                                log_info(infoLogger, "Se cancela el ESI %s por Desconexión de la Instancia %s", obtenerNombreProceso(listaProcesosConectados, i), proximaInstancia->nombreProceso);
+                            }else{
+                                log_error(infoLogger, "No se pudo notificar al ESI %s por Desconexión de la Instancia %s", obtenerNombreProceso(listaProcesosConectados, i), proximaInstancia->nombreProceso);
+                            }
                         }
 
-                        // Genero el Log de Operaciones
-                        registrarLogOperaciones(listaProcesosConectados, registroInstruccion.operacion, registroInstruccion.key, registroInstruccion.dato, i);
-                        log_info(infoLogger,"Operacion guardada en el Log de Operaciones:  %s %i %s %s", obtenerNombreProceso(listaProcesosConectados, i), registroInstruccion.operacion, registroInstruccion.key, registroInstruccion.dato);
-
-                        // Aplico Retardo de Ejecucion segun Archivo de Configuracion
-                        usleep(config_get_int_value(cfg,"RETARDO"));
                     }
                     break;
 

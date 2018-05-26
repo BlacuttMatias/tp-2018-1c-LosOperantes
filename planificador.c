@@ -334,7 +334,8 @@ void* hiloConsolaInteractiva(void * unused) {
                     if(countParametrosConsola(comandoConsola) == 1){
 
                         // Lista los Procesos que quiere usar el Recurso indicado por consola
-                        listarRecursosBloqueados(listaClavesBloqueadasRequeridas, parametrosConsolaOriginal[1]);
+                        listarRecursosBloqueados(listaClavesBloqueadasRequeridas, diccionarioClavesBloqueadas, parametrosConsolaOriginal[1]);
+
                     }else{
                         printf("[Error] Cantidad de parámetros incorrectos\n");
                     }

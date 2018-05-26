@@ -898,9 +898,22 @@ void showContenidolistaInstanciasConectadas(t_list* listaInstanciasConectadas){
 //**************************************************************************//
 // Devuelve el Proceso que quiere usar un Recurso
 //**************************************************************************//
-void listarRecursosBloqueados(t_list* listaClavesBloqueadasRequeridas, char* key){ 
+void listarRecursosBloqueados(t_list* listaClavesBloqueadasRequeridas, t_dictionary* diccionarioClavesBloqueadas, char* key){ 
 
 	int indice = 0;
+
+	// Si el Recurso esta bloqueado por Archivo de Configuracion
+    if(dictionary_has_key(diccionarioClavesBloqueadas, key) ){
+
+
+		KeyBloqueada* registroKeyBloqueada=NULL;
+		registroKeyBloqueada = dictionary_get(diccionarioClavesBloqueadas,key);
+
+		if(registroKeyBloqueada->nombreProceso == NULL){
+			printf("\nEl Recurso fue bloqueado por archivo de configuración\n");
+			return;
+		}				
+    }
 
 	// Si el Recurso esta bloqueado por otro Proceso
 	if(list_size(listaClavesBloqueadasRequeridas) > 0){

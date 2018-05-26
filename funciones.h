@@ -94,7 +94,7 @@
 	KeyBloqueada* crearNodoDeUnaKeyBloqueada(KeyBloqueada keyBloqueada);
 	float estimarRafaga(float estimacionAnterior, int rafagaAnterior, int alfa);
 	int countParametrosConsola(char * string);
-	void listarRecursosBloqueados(t_list* listaClavesBloqueadasRequeridas, char* key);
+	void listarRecursosBloqueados(t_list* listaClavesBloqueadasRequeridas, t_dictionary* diccionarioClavesBloqueadas, char* key);
 	void liberarRecursosProceso(t_dictionary * dictionario, char* nombreProceso);
 	int cargarClavesInicialmenteBloqueadas(t_dictionary* diccionarioClavesBloqueadas, char** arregloClavesInicialmenteBloqueadas);
 

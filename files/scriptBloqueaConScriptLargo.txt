@@ -1,0 +1,27 @@
+GET clave20 
+SET clave20 valor20
+STORE clave20
+GET clave21 
+SET clave21 valor21
+STORE clave21
+GET clave22 
+SET clave22 valor22
+STORE clave22
+GET clave23
+SET clave23 valor23
+STORE clave23
+GET clave24 
+SET clave24 valor24
+STORE clave24
+GET clave25 
+SET clave25 valor25
+STORE clave25
+GET clave 28
+SET clave28 valor28
+STORE clave28
+GET clave26 
+SET clave26 valor26
+STORE clave26
+GET clave27
+SET clave27 valor27
+STORE clave27

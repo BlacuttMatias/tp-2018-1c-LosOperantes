@@ -16,9 +16,8 @@ STORE clave24
 GET clave25 
 SET clave25 valor25
 STORE clave25
-GET clave 28
+GET clave28
 SET clave28 valor28
-STORE clave28
 GET clave26 
 SET clave26 valor26
 STORE clave26

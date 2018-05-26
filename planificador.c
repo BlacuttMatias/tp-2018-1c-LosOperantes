@@ -35,6 +35,9 @@
     t_list* listaReady;
     t_list* listaESIconectados;
 
+    bool elAlgoritmoEsConDesalojo;
+    int socketAux;
+
     bool respuestaEjecucionInstruccionEsi;
     bool ejecutarAlgoritmoPlanificacion;
     bool planificadorPausado;
@@ -401,6 +404,7 @@ void* atenderConexiones(void* socketConexion){
                     registroRafagaAux->rafagaAnterior=0;
                     registroRafagaAux->estimacionRafagaAnterior=config_get_int_value(cfg,"ESTIMACION_INICIAL");
                     registroRafagaAux->proximaEstimacion=estimarRafaga(registroRafagaAux->estimacionRafagaAnterior, registroRafagaAux->rafagaAnterior, alfa);
+                    registroRafagaAux->estimacionRafagaAnterior = registroRafagaAux->proximaEstimacion;
                     registroRafagaAux->tiempoDeEsperaDeCpu=0;
                     dictionary_put(diccionarioRafagas,registroProcesoAux->nombreProceso,registroRafagaAux);
 
@@ -408,6 +412,7 @@ void* atenderConexiones(void* socketConexion){
                     // Activo la Planificacion de los Procesos
 
                     if(list_size(listaReady)==1 && queue_size(colaEjecucion)==0) ejecutarAlgoritmoPlanificacion=true;
+                    if(elAlgoritmoEsConDesalojo) ejecutarAlgoritmoPlanificacion=true;
                     break;
 
                 case RESPUESTA_EJECUTAR_INSTRUCCION:
@@ -699,6 +704,8 @@ int main(int argc, char* argv[]){
     algoritmoPlanificacion = string_new();
     string_append(&algoritmoPlanificacion,config_get_string_value(cfg,"ALGORITMO_PLANIFICACION"));
     
+    if(string_starts_with(algoritmoPlanificacion,"SJF-CD")) elAlgoritmoEsConDesalojo=true;
+
     //cargo el valor Alfa del archivo cfg
     alfa=config_get_int_value(cfg,"ALFA");
 

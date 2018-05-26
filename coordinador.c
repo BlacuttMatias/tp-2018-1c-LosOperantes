@@ -510,7 +510,7 @@ void* atenderConexiones(void* socketConexion){
                             // ESI Aborta por desconexión de la instancia
 
                             // Armo el Paquete del Resultado de la Ejecucion de la Instruccion
-                            paquete = srlz_resultadoEjecucion('C', RESPUESTA_EJECUTAR_INSTRUCCION, "COORDINADOR", EJECUCION_FALLIDA_FINALIZAR_ESI, "Error por Desconexión de la Instancia", registroInstruccion.operacion, registroInstruccion.key);
+                            paquete = srlz_resultadoEjecucion('C', RESPUESTA_EJECUTAR_INSTRUCCION, "COORDINADOR", EJECUCION_FALLIDA_FINALIZAR_ESI, "Error de Clave Innacesible", registroInstruccion.operacion, registroInstruccion.key);
 
                             // Envio el Paquetea a ESI
                             if(send(i,paquete.buffer,paquete.tam_buffer,0) != -1){

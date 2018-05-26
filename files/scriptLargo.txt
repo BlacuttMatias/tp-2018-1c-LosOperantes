@@ -38,8 +38,6 @@ GET clave32
 SET clave32 valor32
 STORE clave32
 STORE clave28
-STORE clave29
-STORE clave30
 GET clave33 
 SET clave33 valor33
 STORE clave33

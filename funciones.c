@@ -1051,6 +1051,47 @@ float estimarRafaga (float estimacionAnterior, int rafagaAnterior, int alfa){
 		return alfa/100.0 * rafagaAnterior + (1 - alfa/100.0) * estimacionAnterior;
 	}
 
+KeyBloqueada* sacarProcesoConClaveBloqueadaDeLaLista(t_list* listaClavesBloqueadasRequeridas, char* key){
+
+	KeyBloqueada* registroKeyBloqueada=NULL;
+
+	bool buscarProcesoConClaveBloqueada(KeyBloqueada* registroKeyBloqueadaAux){
+		return (!strcmp(key, registroKeyBloqueadaAux->key));
+	}
+	registroKeyBloqueada = list_remove_by_condition(listaClavesBloqueadasRequeridas, (void*)buscarProcesoConClaveBloqueada);
+	return registroKeyBloqueada;
+}
+
+void liberarKeyBloqueada(KeyBloqueada* registroKeyBloqueadaAux){
+	if(registroKeyBloqueadaAux->dato!=NULL) free(registroKeyBloqueadaAux->dato);
+	free(registroKeyBloqueadaAux->nombreProceso);
+	free(registroKeyBloqueadaAux);
+}
+
+KeyBloqueada* crearNodoDeUnaKeyBloqueada(KeyBloqueada keyBloqueada){
+
+	KeyBloqueada* registroKeyBloqueada = malloc(sizeof(KeyBloqueada));
+
+	registroKeyBloqueada->nombreProceso = malloc(strlen(keyBloqueada.nombreProceso)+1);
+	strcpy(registroKeyBloqueada->nombreProceso, keyBloqueada.nombreProceso);
+	registroKeyBloqueada->nombreProceso[strlen(keyBloqueada.nombreProceso)] = '\0';
+
+	registroKeyBloqueada->operacion = keyBloqueada.operacion;
+
+	strcpy(registroKeyBloqueada->key, keyBloqueada.key);
+	registroKeyBloqueada->key[strlen(keyBloqueada.key)] = '\0';
+
+	if(keyBloqueada.dato!=NULL){
+		registroKeyBloqueada->dato = malloc(strlen(keyBloqueada.dato)+1);
+		strcpy(registroKeyBloqueada->dato, keyBloqueada.dato);
+		registroKeyBloqueada->dato[strlen(keyBloqueada.dato)] = '\0';
+	}
+	else registroKeyBloqueada->dato = NULL;
+
+	return registroKeyBloqueada;
+
+}
+
 Proceso* obtenerProximoProcesoPlanificado(t_list* listaReady, t_queue* colaReady,t_dictionary* diccionarioRafagas, char* algoritmoPlanificacion, int alfa){
 
 	Proceso* proximoProcesoPlanificado = NULL;

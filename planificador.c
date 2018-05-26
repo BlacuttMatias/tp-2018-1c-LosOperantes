@@ -35,6 +35,9 @@
     t_list* listaReady;
     t_list* listaESIconectados;
 
+    bool elAlgoritmoEsConDesalojo;
+    int socketAux;
+
     bool respuestaEjecucionInstruccionEsi;
     bool ejecutarAlgoritmoPlanificacion;
     bool planificadorPausado;
@@ -62,6 +65,7 @@ void* hiloConsolaInteractiva(void * unused) {
     char* comandoConsolaOriginal;
     bool comandoAceptado;
     char* comandoConsola;
+    KeyBloqueada* registroKeyBloqueada;
 
     while (1) {
         comandoAceptado = false;
@@ -206,6 +210,27 @@ void* hiloConsolaInteractiva(void * unused) {
                         // Libero un Recurso de la Lista de Claves Bloqueadas
                         dictionary_remove(diccionarioClavesBloqueadas, parametrosConsolaOriginal[1]);
 
+                        // Libero un Recurso de la Lista de Claves Bloqueadas
+                        dictionary_remove(diccionarioClavesBloqueadas, parametrosConsolaOriginal[1]);
+
+                        //Se verifica si un proceso estaba bloqueado esperando esa clave
+                        registroKeyBloqueada = sacarProcesoConClaveBloqueadaDeLaLista(listaClavesBloqueadasRequeridas, parametrosConsolaOriginal[1]);
+
+                        //de ser asi, se elimina el proceso de la cola de bloqueados y se pone en la cola de Ready
+                        //ademas, si el algoritmo de planificacion es con desalojo o si es el unico en la lista de Ready, se activa la planificacion
+                        if(registroKeyBloqueada!=NULL){
+
+                        	socketAux = obtenerSocketProceso(listaESIconectados,registroKeyBloqueada->nombreProceso);
+                        	eliminarProcesoCola(colaBloqueados, socketAux);
+                            cargarProcesoCola(listaESIconectados, colaReady, socketAux);
+                            cargarProcesoLista(listaESIconectados, listaReady, socketAux);
+                        	liberarKeyBloqueada(registroKeyBloqueada);
+                        	if(list_size(listaReady)==1 && queue_size(colaEjecucion)==0) ejecutarAlgoritmoPlanificacion=true;
+                        	else if(elAlgoritmoEsConDesalojo) ejecutarAlgoritmoPlanificacion=true;
+
+                        }
+
+
                     }else{
                         printf("[Error] Cantidad de parámetros incorrectos\n");
                     }
@@ -338,7 +363,9 @@ void* atenderConexiones(void* socketConexion){
     int nbytes;
 
     Proceso registroProceso;
-    KeyBloqueada registroKeyBloqueada;
+    KeyBloqueada keyBloqueada;
+	KeyBloqueada* registroKeyBloqueada;
+
 
     int indice = 0, resultadoEjecucion;
     bool recursoOcupado;
@@ -401,6 +428,7 @@ void* atenderConexiones(void* socketConexion){
                     registroRafagaAux->rafagaAnterior=0;
                     registroRafagaAux->estimacionRafagaAnterior=config_get_int_value(cfg,"ESTIMACION_INICIAL");
                     registroRafagaAux->proximaEstimacion=estimarRafaga(registroRafagaAux->estimacionRafagaAnterior, registroRafagaAux->rafagaAnterior, alfa);
+                    registroRafagaAux->estimacionRafagaAnterior = registroRafagaAux->proximaEstimacion;
                     registroRafagaAux->tiempoDeEsperaDeCpu=0;
                     dictionary_put(diccionarioRafagas,registroProcesoAux->nombreProceso,registroRafagaAux);
 
@@ -408,6 +436,7 @@ void* atenderConexiones(void* socketConexion){
                     // Activo la Planificacion de los Procesos
 
                     if(list_size(listaReady)==1 && queue_size(colaEjecucion)==0) ejecutarAlgoritmoPlanificacion=true;
+                    if(elAlgoritmoEsConDesalojo) ejecutarAlgoritmoPlanificacion=true;
                     break;
 
                 case RESPUESTA_EJECUTAR_INSTRUCCION:
@@ -498,15 +527,31 @@ void* atenderConexiones(void* socketConexion){
 
                     // Recibo los datos del Key y Proceso
                     paquete = recibir_payload(&i,&encabezado.tam_payload);
-                    registroKeyBloqueada = dsrlz_datosKeyBloqueada(paquete.buffer);
+                    keyBloqueada = dsrlz_datosKeyBloqueada(paquete.buffer);
                     free(paquete.buffer);
 
-                    log_info(infoLogger,"Notificacion del COORDINADOR que el Proceso ESI %s libera el Recurso %s.", registroKeyBloqueada.nombreProceso, registroKeyBloqueada.key);
+                    log_info(infoLogger,"Notificacion del COORDINADOR que el Proceso ESI %s libera el Recurso %s.", keyBloqueada.nombreProceso, keyBloqueada.key);
 
                     // Libero un Recurso de la Lista de Claves Bloqueadas
-                    dictionary_remove(diccionarioClavesBloqueadas, registroKeyBloqueada.key);
+                    dictionary_remove(diccionarioClavesBloqueadas, keyBloqueada.key);
 
-                    log_info(infoLogger,"Se libero el Recurso %s de la Lista de Claves Bloqueadas que lo tenia tomado el Proceso ESI %s.", registroKeyBloqueada.key, registroKeyBloqueada.nombreProceso);
+                    //Se verifica si un proceso estaba bloqueado esperando esa clave
+                    registroKeyBloqueada = sacarProcesoConClaveBloqueadaDeLaLista(listaClavesBloqueadasRequeridas, keyBloqueada.key);
+
+                    //de ser asi, se elimina el proceso de la cola de bloqueados y se pone en la cola de Ready
+                    //ademas, si el algoritmo de planificacion es con desalojo  se activa la planificacion
+                    if(registroKeyBloqueada!=NULL){
+
+                    	socketAux = obtenerSocketProceso(listaESIconectados,registroKeyBloqueada->nombreProceso);
+                    	eliminarProcesoCola(colaBloqueados, socketAux);
+                        cargarProcesoCola(listaESIconectados, colaReady, socketAux);
+                        cargarProcesoLista(listaESIconectados, listaReady, socketAux);
+                    	liberarKeyBloqueada(registroKeyBloqueada);
+                    	if(elAlgoritmoEsConDesalojo) ejecutarAlgoritmoPlanificacion=true;
+
+                    }
+
+                    log_info(infoLogger,"Se libero el Recurso %s de la Lista de Claves Bloqueadas que lo tenia tomado el Proceso ESI %s.", keyBloqueada.key, keyBloqueada.nombreProceso);
                     break;
 
 
@@ -514,23 +559,24 @@ void* atenderConexiones(void* socketConexion){
 
                     // Recibo los datos del Key y Proceso
                     paquete = recibir_payload(&i,&encabezado.tam_payload);
-                    registroKeyBloqueada = dsrlz_datosKeyBloqueada(paquete.buffer);
+                    keyBloqueada = dsrlz_datosKeyBloqueada(paquete.buffer);
+                    registroKeyBloqueada = crearNodoDeUnaKeyBloqueada(keyBloqueada);
                     free(paquete.buffer);
 
-                    log_info(infoLogger,"Notificacion del COORDINADOR que el Proceso ESI %s quiere acceder al Recurso %s.", registroKeyBloqueada.nombreProceso, registroKeyBloqueada.key);
+                    log_info(infoLogger,"Notificacion del COORDINADOR que el Proceso ESI %s quiere acceder al Recurso %s.", registroKeyBloqueada->nombreProceso, registroKeyBloqueada->key);
 
                     recursoOcupado = false;
 
                     // Si el Recurso esta bloqueado por otro Proceso
-                    if(dictionary_has_key(diccionarioClavesBloqueadas, registroKeyBloqueada.key) ){
+                    if(dictionary_has_key(diccionarioClavesBloqueadas, registroKeyBloqueada->key) ){
 
                         // Guardo una Lista de las Claves Bloqueadas que quieren ser usadas por otros Procesos
-                        list_add(listaClavesBloqueadasRequeridas, &registroKeyBloqueada);
+                        list_add(listaClavesBloqueadasRequeridas, registroKeyBloqueada);
 
-                        log_info(infoLogger,"El Recurso %s ya se encuentra tomado por otro Proceso ESI.", registroKeyBloqueada.key);
+                        log_info(infoLogger,"El Recurso %s ya se encuentra tomado por otro Proceso ESI.", registroKeyBloqueada->key);
 
                         // Serializado el Proceso y la Key
-                        paquete = srlz_datosKeyBloqueada('P', RECURSO_OCUPADO, registroKeyBloqueada.nombreProceso, registroKeyBloqueada.operacion,registroKeyBloqueada.key,registroKeyBloqueada.dato);
+                        paquete = srlz_datosKeyBloqueada('P', RECURSO_OCUPADO, registroKeyBloqueada->nombreProceso, registroKeyBloqueada->operacion,registroKeyBloqueada->key,registroKeyBloqueada->dato);
 
                         recursoOcupado = true;
 
@@ -538,12 +584,12 @@ void* atenderConexiones(void* socketConexion){
                     }else{ // Si el Recurso no esta bloqueado
 
                         // Bloqueo el Recurso y lo cargo en la Lista de Claves Bloqueadas
-                        dictionary_put(diccionarioClavesBloqueadas, registroKeyBloqueada.key, &registroKeyBloqueada);
+                        dictionary_put(diccionarioClavesBloqueadas, registroKeyBloqueada->key, registroKeyBloqueada);
 
-                        log_info(infoLogger,"Se agrego el Recurso %s en la Lista de Claves Bloqueadas que lo tomo el Proceso ESI %s.", registroKeyBloqueada.key, registroKeyBloqueada.nombreProceso);
+                        log_info(infoLogger,"Se agrego el Recurso %s en la Lista de Claves Bloqueadas que lo tomo el Proceso ESI %s.", registroKeyBloqueada->key, registroKeyBloqueada->nombreProceso);
 
                         // Serializado el Proceso y la Key
-                        paquete = srlz_datosKeyBloqueada('P', RECURSO_LIBRE, registroKeyBloqueada.nombreProceso, registroKeyBloqueada.operacion,registroKeyBloqueada.key,registroKeyBloqueada.dato);
+                        paquete = srlz_datosKeyBloqueada('P', RECURSO_LIBRE, registroKeyBloqueada->nombreProceso, registroKeyBloqueada->operacion,registroKeyBloqueada->key,registroKeyBloqueada->dato);
                     }
 
 
@@ -553,13 +599,13 @@ void* atenderConexiones(void* socketConexion){
                         free(paquete.buffer);
 
                         if(recursoOcupado){
-                            log_info(infoLogger, "Se le notifica al COORDINADOR que el Recurso %s ya estaba tomado por otro Proceso.", registroKeyBloqueada.key);    
+                            log_info(infoLogger, "Se le notifica al COORDINADOR que el Recurso %s ya estaba tomado por otro Proceso.", registroKeyBloqueada->key);
                         }else{
-                            log_info(infoLogger, "Se le notifica al COORDINADOR que el Recurso %s estaba libre y ahora quedo tomado por el Proceso ESI %s.",registroKeyBloqueada.key, registroKeyBloqueada.nombreProceso);    
+                            log_info(infoLogger, "Se le notifica al COORDINADOR que el Recurso %s estaba libre y ahora quedo tomado por el Proceso ESI %s.",registroKeyBloqueada->key, registroKeyBloqueada->nombreProceso);
                         }
                         
                     }else{
-                        log_error(infoLogger, "No se pudo enviar la notificacion al COORDINADOR sobre el estado de  uso del Recurso %s.", registroKeyBloqueada.key);
+                        log_error(infoLogger, "No se pudo enviar la notificacion al COORDINADOR sobre el estado de  uso del Recurso %s.", registroKeyBloqueada->key);
                     }
                     break;
 
@@ -699,6 +745,8 @@ int main(int argc, char* argv[]){
     algoritmoPlanificacion = string_new();
     string_append(&algoritmoPlanificacion,config_get_string_value(cfg,"ALGORITMO_PLANIFICACION"));
     
+    if(string_starts_with(algoritmoPlanificacion,"SJF-CD")) elAlgoritmoEsConDesalojo=true;
+
     //cargo el valor Alfa del archivo cfg
     alfa=config_get_int_value(cfg,"ALFA");
 

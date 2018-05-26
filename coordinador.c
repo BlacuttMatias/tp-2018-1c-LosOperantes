@@ -26,6 +26,7 @@
     t_dictionary* diccionarioClavesInstancias;
     t_dictionary* diccionarioClavesBloqueadas;
     int fd_planificador;
+    pthread_t hiloConexiones;
 
 /* ---------------------------------------- */
 
@@ -64,6 +65,13 @@ void* atenderConexiones(void* socketConexion){
                 perror("recv");
             }
             close(i); // Cierro el Socket por desconexion
+
+            // Si el Socket caido es del Planificador, finaliza el Coordinador
+            if(fd_planificador == i){
+                printf("Se cayo el Planificador. El Coordinador finaliza.\n");
+                exit(EXIT_SUCCESS);
+            }
+
             pthread_exit(EXIT_SUCCESS); // Finalizo el Hilo
             return 0;
             break;
@@ -584,8 +592,6 @@ int main(int argc, char* argv[]){
         if (new_fd != -1) {
 
             // Creo un Hilo por cada nueva Conexion
-            pthread_t hiloConexiones;
-
             pthread_informacion* data_hilo = (pthread_informacion*) malloc(sizeof(*data_hilo));
             data_hilo->socketHilo = new_fd;
 

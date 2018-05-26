@@ -48,11 +48,104 @@
     Proceso* procesoAnterior;
     char** arregloClavesInicialmenteBloqueadas = NULL;
     Proceso* procesoSeleccionado=NULL;
+    pthread_t hiloConexiones;
+    pthread_t hiloConsola;
+    bool finalizarConsolaInteractiva;
+
+
+/* ---------------------------------------- */
+/*  Funcion de Planificacion de Procesos    */
+/* ---------------------------------------- */
+void planificarProcesos(){
+    // Planifica los Procesos de la ColaReady
+    if(!planificadorPausado && respuestaEjecucionInstruccionEsi){
+
+        //ejecuta el algoritmo de planificacion
+        if(ejecutarAlgoritmoPlanificacion){
+
+            //si no es nulo el proceso seleccionado que estaba ejecutando, se le actualizan las rafagas
+            //antes de cambiar de proceso por la planificacion
+            if(procesoSeleccionado !=NULL){
+                Rafagas* registroRafagaAux=NULL;
+                registroRafagaAux = dictionary_get(diccionarioRafagas,procesoSeleccionado->nombreProceso);
+
+                registroRafagaAux->rafagaAnterior = rafagaActual;
+                registroRafagaAux->proximaEstimacion = estimarRafaga(registroRafagaAux->estimacionRafagaAnterior, registroRafagaAux->rafagaAnterior, alfa);
+                registroRafagaAux->estimacionRafagaAnterior = registroRafagaAux->proximaEstimacion;
+                //al salir de ejecutarse, se resetea su tiempo de espera de cpu
+                registroRafagaAux->tiempoDeEsperaDeCpu = 0;
+            }
+
+            procesoSeleccionado = obtenerProximoProcesoPlanificado(listaReady, colaReady, diccionarioRafagas, algoritmoPlanificacion, alfa);
+
+ 
+/*            
+            //este if solo lo pongo para informar qué proceso se selecciono en la planificacion
+            Rafagas* rafagasAux2=NULL;
+            if(procesoSeleccionado !=NULL){
+                rafagasAux2= dictionary_get(diccionarioRafagas, procesoSeleccionado->nombreProceso);
+                printf("\nProceso planificado para ejecutar: %s\n", procesoSeleccionado->nombreProceso);
+            }
+*/
+            rafagaActual=0;
+        }
+
+        // Desactivo la Planificacion de los Procesos
+        ejecutarAlgoritmoPlanificacion=false;
+        /*
+        //si cambia el proceso, guarda nuevas rafagas
+        if(procesoAnterior == NULL){
+            procesoAnterior=procesoSeleccionado;
+            //puts("asigno actual al anterior");
+        }
+           // puts("\n\n entro a if \n\n");
+        if(procesoSeleccionado == NULL){
+            //puts("proceso seleccionado es nulo");
+        }else{
+            if(procesoSeleccionado != procesoAnterior){
+                //chekeo que el procesi anterior siga conectado
+                
+                printf(" proceso seleccionado %s y proceso anterior %s  \n" ,procesoSeleccionado->nombreProceso, procesoAnterior->nombreProceso);
+                    if( obtenerSocketProceso(listaESIconectados, procesoAnterior->nombreProceso) != 0){
+                        Rafagas* rafagasAux=NULL;
+                        rafagasAux= dictionary_get(diccionarioRafagas, procesoAnterior->nombreProceso);
+                        rafagasAux->estimacionRafagaAnterior= rafagasAux->proximaEstimacion;
+                        rafagasAux->rafagaAnterior= rafagaActual;
+                        rafagasAux->proximaEstimacion= estimarRafaga(rafagasAux->estimacionRafagaAnterior,rafagaActual,alfa);
+                        rafagaActual=0;
+                }
+                procesoAnterior= procesoSeleccionado;
+            }
+        }*/
+
+        // Si existe un Proceso para planificar
+        if(procesoSeleccionado != NULL){
+
+            // Cargo el Proceso en la Cola de Ejecucion y lo saco de la Cola Ready
+            eliminarProcesoCola(colaReady, procesoSeleccionado->socketProceso);
+            eliminarProcesoLista(listaReady, procesoSeleccionado->socketProceso);
+            cargarProcesoCola(listaESIconectados, colaEjecucion, procesoSeleccionado->socketProceso);
+
+//printf("Proximo Procesos a Planificar: Nombre: %s - Socket: %d\n", procesoSeleccionado->nombreProceso, procesoSeleccionado->socketProceso);                    
+            // Armo el Paquete de la orden de Ejectuar la proxima Instruccion
+            Paquete paquete = crearHeader('P', EJECUTAR_INSTRUCCION, 1);
+
+            // Envio el Paquetea a ESI
+            if(send(procesoSeleccionado->socketProceso,paquete.buffer,paquete.tam_buffer,0) != -1){
+
+                free(paquete.buffer);
+                log_info(infoLogger, "Se le pidio al ESI %s (Socket %d) que ejecute la proxima Instruccion", procesoSeleccionado->nombreProceso, procesoSeleccionado->socketProceso);
+                respuestaEjecucionInstruccionEsi=false;
+            }else{
+                log_error(infoLogger, "No se pudo enviar al ESI %s la orden de ejecucion de la proxima Instruccion", procesoSeleccionado->nombreProceso);
+            }
+        }
+    }    
+}    
 
 /* ---------------------------------------- */
 /*  Consola interactiva                     */
 /* ---------------------------------------- */
-
 void* hiloConsolaInteractiva(void * unused) {
 
     // Mensaje de Bienvenida de la Consola
@@ -67,7 +160,9 @@ void* hiloConsolaInteractiva(void * unused) {
     char* comandoConsola;
     KeyBloqueada* registroKeyBloqueada;
 
-    while (1) {
+    finalizarConsolaInteractiva = false;
+
+    while (!finalizarConsolaInteractiva){
         comandoAceptado = false;
         comandoConsola = readline("#> ");
         if (!comandoConsola || string_equals_ignore_case(comandoConsola, "")) {
@@ -146,13 +241,8 @@ void* hiloConsolaInteractiva(void * unused) {
                     planificadorPausado = false;
                     printf("Planificador Resumido...\n");
 
-                    // Armo el Paquete
-                    Paquete paquete = crearHeader('P', IS_ALIVE, COORDINADOR);
-
-                    // Envio el Paquete al Coordinador para activar el Socket y poder Planificar
-                    if(send(coordinador_fd,paquete.buffer,paquete.tam_buffer,0) != -1){
-                        free(paquete.buffer);
-                    }
+                    // Ejecutar el Planificador de Procesos
+                    planificarProcesos();
                 }
 
                 if(string_starts_with(comandoConsola,"BLOQUEAR")){
@@ -386,9 +476,18 @@ void* atenderConexiones(void* socketConexion){
                 printf("Socket %d se ha caído\n", i);
             }else{
                 perror("recv failed");
-            }
+            }            
             close(i); // Cierro el Socket por desconexion
+
+
+            // Si el Socket caido es del Coordinador, finaliza el Planificador
+            if(coordinador_fd == i){
+                printf("Se cayo el Coordinador. El Planificador finaliza.\n");
+                finalizarConsolaInteractiva = true;
+                exit(EXIT_SUCCESS);
+            }
             pthread_exit(EXIT_SUCCESS); // Finalizo el Hilo
+
             return 0;
         }
 
@@ -619,88 +718,8 @@ void* atenderConexiones(void* socketConexion){
             }
         }
 
-
-            // Planifica los Procesos de la ColaReady
-            if(!planificadorPausado && respuestaEjecucionInstruccionEsi){
-
-                //ejecuta el algoritmo de planificacion
-                if(ejecutarAlgoritmoPlanificacion){
-
-                    //si no es nulo el proceso seleccionado que estaba ejecutando, se le actualizan las rafagas
-                    //antes de cambiar de proceso por la planificacion
-                    if(procesoSeleccionado !=NULL){
-                        Rafagas* registroRafagaAux=NULL;
-                        registroRafagaAux = dictionary_get(diccionarioRafagas,procesoSeleccionado->nombreProceso);
-
-                        registroRafagaAux->rafagaAnterior = rafagaActual;
-                        registroRafagaAux->proximaEstimacion = estimarRafaga(registroRafagaAux->estimacionRafagaAnterior, registroRafagaAux->rafagaAnterior, alfa);
-                        registroRafagaAux->estimacionRafagaAnterior = registroRafagaAux->proximaEstimacion;
-                        //al salir de ejecutarse, se resetea su tiempo de espera de cpu
-                        registroRafagaAux->tiempoDeEsperaDeCpu = 0;
-                    }
-
-                    procesoSeleccionado = obtenerProximoProcesoPlanificado(listaReady, colaReady, diccionarioRafagas, algoritmoPlanificacion, alfa);
-
-                    //este if solo lo pongo para informar qué proceso se selecciono en la planificacion
-                    Rafagas* rafagasAux2=NULL;
-                    if(procesoSeleccionado !=NULL){
-                        rafagasAux2= dictionary_get(diccionarioRafagas, procesoSeleccionado->nombreProceso);
-                        printf("\nProceso planificado para ejecutar: %s\n", procesoSeleccionado->nombreProceso);
-                    }
-                    rafagaActual=0;
-                }
-
-                // Desactivo la Planificacion de los Procesos
-                ejecutarAlgoritmoPlanificacion=false;
-                /*
-                //si cambia el proceso, guarda nuevas rafagas
-                if(procesoAnterior == NULL){
-                    procesoAnterior=procesoSeleccionado;
-                    //puts("asigno actual al anterior");
-                }
-                   // puts("\n\n entro a if \n\n");
-                if(procesoSeleccionado == NULL){
-                    //puts("proceso seleccionado es nulo");
-                }else{
-                    if(procesoSeleccionado != procesoAnterior){
-                        //chekeo que el procesi anterior siga conectado
-                        
-                        printf(" proceso seleccionado %s y proceso anterior %s  \n" ,procesoSeleccionado->nombreProceso, procesoAnterior->nombreProceso);
-                            if( obtenerSocketProceso(listaESIconectados, procesoAnterior->nombreProceso) != 0){
-                                Rafagas* rafagasAux=NULL;
-                                rafagasAux= dictionary_get(diccionarioRafagas, procesoAnterior->nombreProceso);
-                                rafagasAux->estimacionRafagaAnterior= rafagasAux->proximaEstimacion;
-                                rafagasAux->rafagaAnterior= rafagaActual;
-                                rafagasAux->proximaEstimacion= estimarRafaga(rafagasAux->estimacionRafagaAnterior,rafagaActual,alfa);
-                                rafagaActual=0;
-                        }
-                        procesoAnterior= procesoSeleccionado;
-                    }
-                }*/
-
-                // Si existe un Proceso para planificar
-                if(procesoSeleccionado != NULL){
-
-                    // Cargo el Proceso en la Cola de Ejecucion y lo saco de la Cola Ready
-                    eliminarProcesoCola(colaReady, procesoSeleccionado->socketProceso);
-                    eliminarProcesoLista(listaReady, procesoSeleccionado->socketProceso);
-                    cargarProcesoCola(listaESIconectados, colaEjecucion, procesoSeleccionado->socketProceso);
-
-//printf("Proximo Procesos a Planificar: Nombre: %s - Socket: %d\n", procesoSeleccionado->nombreProceso, procesoSeleccionado->socketProceso);                    
-                    // Armo el Paquete de la orden de Ejectuar la proxima Instruccion
-                    paquete = crearHeader('P', EJECUTAR_INSTRUCCION, 1);
-
-                    // Envio el Paquetea a ESI
-                    if(send(procesoSeleccionado->socketProceso,paquete.buffer,paquete.tam_buffer,0) != -1){
-
-                        free(paquete.buffer);
-                        log_info(infoLogger, "Se le pidio al ESI %s (Socket %d) que ejecute la proxima Instruccion", procesoSeleccionado->nombreProceso, procesoSeleccionado->socketProceso);
-                        respuestaEjecucionInstruccionEsi=false;
-                    }else{
-                        log_error(infoLogger, "No se pudo enviar al ESI %s la orden de ejecucion de la proxima Instruccion", procesoSeleccionado->nombreProceso);
-                    }
-                }
-            }
+        // Ejecutar el Planificador de Procesos
+        planificarProcesos();
 
     }
 
@@ -785,7 +804,6 @@ int main(int argc, char* argv[]){
     free(paquete.buffer);
 
 
-    pthread_t hiloConsola;
     pthread_create(&hiloConsola, NULL, (void*) hiloConsolaInteractiva, NULL);
     pthread_detach(hiloConsola);
     //pthread_join(hiloConsola, NULL);
@@ -804,7 +822,6 @@ int main(int argc, char* argv[]){
     int new_fd;
 
 
-
     while(true){
 
         // Acepto todas las conexiones
@@ -813,8 +830,6 @@ int main(int argc, char* argv[]){
         if (new_fd != -1) {
 
             // Creo un Hilo por cada nueva Conexion
-            pthread_t hiloConexiones;
-
             pthread_informacion* data_hilo = (pthread_informacion*) malloc(sizeof(*data_hilo));
             data_hilo->socketHilo = new_fd;
 

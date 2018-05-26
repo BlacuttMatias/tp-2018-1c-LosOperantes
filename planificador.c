@@ -38,13 +38,13 @@
     bool respuestaEjecucionInstruccionEsi;
     bool ejecutarAlgoritmoPlanificacion;
     bool planificadorPausado;
-    bool planificarProcesos;
     char* algoritmoPlanificacion = NULL;
     float alfa;
     int coordinador_fd;
     int rafagaActual;
     Proceso* procesoAnterior;
     char** arregloClavesInicialmenteBloqueadas = NULL;
+    Proceso* procesoSeleccionado=NULL;
 
 /* ---------------------------------------- */
 /*  Consola interactiva                     */
@@ -339,7 +339,7 @@ void* atenderConexiones(void* socketConexion){
 
     Proceso registroProceso;
     KeyBloqueada registroKeyBloqueada;
-    Proceso* procesoSeleccionado=NULL;
+
     int indice = 0, resultadoEjecucion;
     bool recursoOcupado;
     Paquete paquete;
@@ -406,7 +406,7 @@ void* atenderConexiones(void* socketConexion){
 
 
                     // Activo la Planificacion de los Procesos
-                    planificarProcesos = true;
+
                     if(list_size(listaReady)==1 && queue_size(colaEjecucion)==0) ejecutarAlgoritmoPlanificacion=true;
                     break;
 
@@ -455,7 +455,6 @@ void* atenderConexiones(void* socketConexion){
                     eliminarProcesoCola(colaEjecucion, i);
 
                     // Activo la Planificacion de los Procesos
-                    planificarProcesos = true;
                     respuestaEjecucionInstruccionEsi=true;
 
                     break;
@@ -484,7 +483,7 @@ void* atenderConexiones(void* socketConexion){
                     log_info(infoLogger,"Actualizacion de las Estructuras Administrativas");
 
                     // Activo la Planificacion de los Procesos
-                    planificarProcesos = true;
+
                     ejecutarAlgoritmoPlanificacion=true;
                     respuestaEjecucionInstruccionEsi=true;
                     break;                                
@@ -576,7 +575,7 @@ void* atenderConexiones(void* socketConexion){
 
 
             // Planifica los Procesos de la ColaReady
-            if(!planificadorPausado && planificarProcesos && respuestaEjecucionInstruccionEsi){
+            if(!planificadorPausado && respuestaEjecucionInstruccionEsi){
 
                 //ejecuta el algoritmo de planificacion
                 if(ejecutarAlgoritmoPlanificacion){
@@ -606,7 +605,6 @@ void* atenderConexiones(void* socketConexion){
                 }
 
                 // Desactivo la Planificacion de los Procesos
-                planificarProcesos = false;
                 ejecutarAlgoritmoPlanificacion=false;
                 /*
                 //si cambia el proceso, guarda nuevas rafagas
@@ -714,7 +712,6 @@ int main(int argc, char* argv[]){
 
     // Inicializo los estados del Planificador
     planificadorPausado = false;
-    planificarProcesos = false;
     ejecutarAlgoritmoPlanificacion=false;
     respuestaEjecucionInstruccionEsi=true;
 
@@ -757,6 +754,8 @@ int main(int argc, char* argv[]){
 
 
     int new_fd;
+
+
 
     while(true){
 

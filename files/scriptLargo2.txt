@@ -1,0 +1,48 @@
+SET clave20 valor20
+GET clave20 
+STORE clave20
+SET clave21 valor21
+GET clave21 
+STORE clave21 
+SET clave22 valor22
+GET clave22
+STORE clave22
+SET clave23 valor23
+GET clave23
+STORE clave23 
+SET clave24 valor24
+GET clave24
+STORE clave24 
+SET clave25 valor25
+GET clave25
+STORE clave25 
+SET clave26 valor26
+GET clave26
+STORE clave26
+SET clave27 valor27
+GET clave27
+STORE clave27 
+SET clave28 valor28
+GET clave28 
+SET clave29 valor29
+GET clave29 
+SET clave30 valor30
+GET clave30
+GET MATERIAS:K3001
+STORE  MATERIAS:K3001
+SET clave31 valor31
+GET clave31
+STORE clave31 
+SET clave32 valor32
+GET clave32
+STORE clave32
+STORE clave28
+SET clave33 valor33
+GET clave33
+STORE clave33 
+SET clave34 valor34
+GET clave34
+STORE clave34
+SET clave35 valor35
+GET clave35
+STORE clave35

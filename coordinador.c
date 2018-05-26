@@ -243,7 +243,6 @@ void* atenderConexiones(void* socketConexion){
                     // Muestro por pantalla el contenido de listaProcesosConectados
                     showContenidolistaProcesosConectados(listaProcesosConectados);
 
-
                     // Obtengo la Cantidad y Tamano de Entradas y se lo envio a la Instancia
                     paquete = srlz_datosEntradas('C', OBTENCION_CONFIG_ENTRADAS, config_get_int_value(cfg,"CANTIDAD_ENTRADAS"), config_get_int_value(cfg,"TAMANO_ENTRADA"));
 
@@ -305,12 +304,12 @@ void* atenderConexiones(void* socketConexion){
 
                     log_info(infoLogger,"Recepcion de la Instancia %s (Socket %d) del pedido de Compactacion Global", obtenerNombreProceso(listaProcesosConectados, i), i);
 
-
                     // Determino todas las Instancias que deben realizar la Compactacion Local
                     if(list_size(listaInstanciasConectadas) > 0){
 
-                        void _each_elemento_(Proceso* registroProcesoAux)
+                        void _each_elemento_(Instancia* registroProcesoAux)
                         {
+
                             // Si la Instancia es diferente de la que pidio la Compactacion Global
                             if(registroProcesoAux->socketProceso != i){
 
@@ -319,15 +318,13 @@ void* atenderConexiones(void* socketConexion){
                                 if( send(registroProcesoAux->socketProceso,paquete.buffer,paquete.tam_buffer,1) != -1 ){
                                     log_info(infoLogger,"Se le envio a la Instancia %s el aviso para que realice su Compactacion Local", obtenerNombreProceso(listaProcesosConectados, registroProcesoAux->socketProceso));
                                 }else{
-                                    log_info(infoLogger,"No se pudo enviar a la Instancia %s el aviso para que realice su Compactacion Local", obtenerNombreProceso(listaInstanciasConectadas, registroProcesoAux->socketProceso));
+                                    log_info(infoLogger,"No se pudo enviar a la Instancia %s (Socket %d) el aviso para que realice su Compactacion Local", obtenerNombreProceso(listaProcesosConectados, registroProcesoAux->socketProceso), registroProcesoAux->socketProceso);
                                 }
                             }
                         }
                         list_iterate(listaInstanciasConectadas, (void*)_each_elemento_);
                     }
-
                     break;                                
-
             }
         }
 
@@ -464,6 +461,7 @@ void* atenderConexiones(void* socketConexion){
                                 char* algoritmoDistribucion = string_new();
                                 string_append(&algoritmoDistribucion,config_get_string_value(cfg,"ALGORITMO_DISTRIBUCION"));
 
+
                                 // Obtengo la Instancia segun el Algoritmo de Distribucion
                                 //proximaInstancia = NULL;
                                 proximaInstancia = obtenerInstanciaNueva(listaInstanciasConectadas,&registroInstruccion,algoritmoDistribucion);
@@ -484,8 +482,10 @@ void* atenderConexiones(void* socketConexion){
                             char* algoritmoDistribucion = string_new();
                             string_append(&algoritmoDistribucion,config_get_string_value(cfg,"ALGORITMO_DISTRIBUCION"));
 
+
                             // Obtengo la Instancia segun el Algoritmo de Distribucion
                             proximaInstancia = obtenerInstanciaNueva(listaInstanciasConectadas,&registroInstruccion,algoritmoDistribucion);
+
 
                             log_info(infoLogger, "Se aplico el Algoritmo de Distribución %s y se obtuvo la Instancia %s", algoritmoDistribucion, proximaInstancia->nombreProceso);
 

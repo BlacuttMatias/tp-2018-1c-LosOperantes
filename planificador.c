@@ -482,9 +482,9 @@ void* atenderConexiones(void* socketConexion){
 
             // Si el Socket caido es del Coordinador, finaliza el Planificador
             if(coordinador_fd == i){
-                printf("Se cayo el Coordinador. El Planificador finaliza.\n");
-                finalizarConsolaInteractiva = true;
-                exit(EXIT_SUCCESS);
+                printf("El Coordinador ha finalizado. El Sistema quedó en un estado INVALIDO!!.\n");
+                //finalizarConsolaInteractiva = true;
+                //exit(EXIT_SUCCESS);
             }
             pthread_exit(EXIT_SUCCESS); // Finalizo el Hilo
 

@@ -300,6 +300,34 @@ void* atenderConexiones(void* socketConexion){
                         log_error(infoLogger, "No se pudo enviar al ESI %s el Resultado de la Ejecución de la Instrucción", registroResultadoEjecucion.nombreEsiDestino);
                     }
                     break;
+
+                case COMPACTACION_GLOBAL:
+
+                    log_info(infoLogger,"Recepcion de la Instancia %s (Socket %d) del pedido de Compactacion Global", obtenerNombreProceso(listaProcesosConectados, i), i);
+
+
+                    // Determino todas las Instancias que deben realizar la Compactacion Local
+                    if(list_size(listaInstanciasConectadas) > 0){
+
+                        void _each_elemento_(Proceso* registroProcesoAux)
+                        {
+                            // Si la Instancia es diferente de la que pidio la Compactacion Global
+                            if(registroProcesoAux->socketProceso != i){
+
+                                // Le aviso a las demas Instancias que realicen sus Compactaciones Locales
+                                Paquete paquete= crearHeader('C',COMPACTACION_LOCAL,1);
+                                if( send(registroProcesoAux->socketProceso,paquete.buffer,paquete.tam_buffer,1) != -1 ){
+                                    log_info(infoLogger,"Se le envio a la Instancia %s el aviso para que realice su Compactacion Local", obtenerNombreProceso(listaProcesosConectados, registroProcesoAux->socketProceso));
+                                }else{
+                                    log_info(infoLogger,"No se pudo enviar a la Instancia %s el aviso para que realice su Compactacion Local", obtenerNombreProceso(listaInstanciasConectadas, registroProcesoAux->socketProceso));
+                                }
+                            }
+                        }
+                        list_iterate(listaInstanciasConectadas, (void*)_each_elemento_);
+                    }
+
+                    break;                                
+
             }
         }
 

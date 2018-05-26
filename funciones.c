@@ -1656,3 +1656,8 @@ void actualizarDiccionarioClavesInstancias(t_dictionary* dictionario, char key[4
 	}
     dictionary_iterator(dictionario, (void*)_each_elemento_);
 }
+
+// Realizar la Compactacion del Archivo Binario de una Instancia
+void realizarCompactacionLocal(Almacenamiento almacenamiento){
+	// TODO
+}

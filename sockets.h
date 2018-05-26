@@ -28,7 +28,6 @@ void recibirString(int socket, char* buf);
 
 int sendall(int, void *, int);
 
-int aceptarconexion(int socket_escucha);
 int aceptarConexionCliente(int socketServerFileDescriptor);
 
 Encabezado recibir_header(int* socket);

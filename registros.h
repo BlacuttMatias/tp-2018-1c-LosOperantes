@@ -22,6 +22,8 @@ enum cod_operacion {
 	ESI_MUERE = 11,
 	IS_ALIVE = 12,	
 	OBTENCION_CONFIG_ENTRADAS = 13,
+	COMPACTACION_GLOBAL = 14,
+	COMPACTACION_LOCAL = 15,
 };
 
 // Defino los Tipos de Procesos

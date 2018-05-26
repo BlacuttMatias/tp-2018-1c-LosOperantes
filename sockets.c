@@ -84,17 +84,6 @@ int sendall(int socket, void *buf, int size){
 	return enviado; // devuelve -1 si hay fallo, 0 en otro caso
 }
 
-int aceptarconexion (int socket_escucha){
-	struct sockaddr_in cliente_addr;
-	int newfd;
-	int size =sizeof(cliente_addr);
-	if ((  newfd = accept(socket_escucha, (struct sockaddr *)&cliente_addr, &size)) == -1) {
-		perror("error aceptar\n");
-		exit(1);
-	}
-	return newfd;
-}
-
 int aceptarConexionCliente(int socketServerFileDescriptor) {
 
 	struct sockaddr cliente;

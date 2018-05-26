@@ -28,6 +28,7 @@
     int entradas;
     int espacioPorEntrada;
     t_list* tablaEntradas;
+    Almacenamiento almacenamiento;
 
 /* ---------------------------------------- */
 
@@ -261,6 +262,7 @@ Almacenamiento almacenamiento;
 
                                     // Realizo el Dump de la Tabla de Entradas
                                     dump(tablaEntradas);
+
                                 }
 
                                 if(registroInstruccion.operacion == STORE){                                
@@ -271,6 +273,23 @@ Almacenamiento almacenamiento;
                                     // Realizo el Dump de la Tabla de Entradas
                                     dump(tablaEntradas);
                                 }
+
+
+
+                                // Realizo la Compactacion del Archivo Binario
+                                realizarCompactacionLocal(almacenamiento);
+
+                                log_info(infoLogger,"Se realizo la Compactacion Local en la Instancia %s", config_get_string_value(cfg,"INSTANCIA_NOMBRE"));
+
+                                // Le aviso al Coordinador para que las demas Instancias realicen sus Compactaciones
+                                Paquete paquete= crearHeader('I',COMPACTACION_GLOBAL,1);
+                                if( send(coordinador_fd,paquete.buffer,paquete.tam_buffer,1) != -1 ){
+                                    log_info(infoLogger,"Se le envio al COORDINADOR el aviso para que las demas Instancias realicen sus Compactaciones Locales");
+                                }else{
+                                    log_info(infoLogger,"No se pudo enviar al COORDINADOR el aviso para que las demas Instancias realicen sus Compactaciones Locales");
+                                }
+
+
 
                                 // TODO
                                 // Determinar si fallo o no y corregir el mensaje de abajo. Ahora esta harcodeado a EJECUCION_EXITOSA
@@ -288,6 +307,7 @@ Almacenamiento almacenamiento;
                                     log_error(infoLogger, "No se pudo notificar al COORDINADOR el resultado de la ejecución de la Instrucción");
                                 }
 								break;
+
 
                             case OBTENCION_CONFIG_ENTRADAS:
 
@@ -326,7 +346,6 @@ Almacenamiento almacenamiento;
                                     
                                 }
                                 //creo estructura de datos con info de almacenamiento
-                                    Almacenamiento almacenamiento;
                                     almacenamiento.cantidadEntradas=entradas;
                                     almacenamiento.tamPorEntrada=espacioPorEntrada;
                                     almacenamiento.binario=string_new();
@@ -336,6 +355,13 @@ Almacenamiento almacenamiento;
                                 // Se precarga la Tabla de Entradas con datos del Dump
                                 preCargarTablaEntradas(tablaEntradas,config_get_string_value(cfg,"PUNTO_MONTAJE"), almacenamiento);
                                 break;
+
+                            case COMPACTACION_LOCAL:
+                                // Realizar la Compactacion del Archivo Binario a pedido del Coordinador
+                                realizarCompactacionLocal(almacenamiento);                            
+
+                                log_info(infoLogger,"Se realizo la Compactacion Local en la Instancia %s a pedido del COORDINADOR", config_get_string_value(cfg,"INSTANCIA_NOMBRE"));
+                                break;                                
 						}
 					}
                 }

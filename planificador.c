@@ -14,7 +14,9 @@
 #include <sys/socket.h>
 #include <sys/time.h>
 #include <sys/wait.h>
+#include <signal.h>
 #include <unistd.h>
+#include <sys/prctl.h>
 #include <pthread.h>
 
 #include "funciones.h"
@@ -50,8 +52,6 @@
     Proceso* procesoSeleccionado=NULL;
     pthread_t hiloConexiones;
     pthread_t hiloConsola;
-    bool finalizarConsolaInteractiva;
-
 
 /* ---------------------------------------- */
 /*  Funcion de Planificacion de Procesos    */
@@ -160,9 +160,14 @@ void* hiloConsolaInteractiva(void * unused) {
     char* comandoConsola;
     KeyBloqueada* registroKeyBloqueada;
 
-    finalizarConsolaInteractiva = false;
+    // Cambio el Nombre del Hilo para poder verlo en HTOP
+    char* nombreHilo = string_new();
+    string_append_with_format(&nombreHilo, "./P_Consola\0");
 
-    while (!finalizarConsolaInteractiva){
+    prctl(PR_SET_NAME,nombreHilo,0,0,0);
+    free(nombreHilo);
+
+    while (true){
         comandoAceptado = false;
         comandoConsola = readline("#> ");
         if (!comandoConsola || string_equals_ignore_case(comandoConsola, "")) {
@@ -207,12 +212,6 @@ void* hiloConsolaInteractiva(void * unused) {
                     printf("\n\tstatus <clave> \t- Debido a que para la correcta coordinación de las sentencias de acuerdo a los algoritmos de distribución se requiere de cierta información sobre las instancias del sistema, el Coordinador proporcionará una consola que permita consultar esta información. \n\n");
 
                     printf("\n\tdeadlock\t- Permitirá analizar los deadlocks que existan en el sistema y a que ESI están asociados.\n\n");
-                }
-
-                // Comando interno para conocer el estado de las Estructuras Administrativas
-                if(string_starts_with(comandoConsola,"EXIT")){
-                    pthread_exit(EXIT_SUCCESS);
-                    return EXIT_SUCCESS;
                 }
 
                 // Comando interno para conocer el estado de las Estructuras Administrativas
@@ -373,15 +372,8 @@ void* hiloConsolaInteractiva(void * unused) {
                             }else{
                                 log_info(infoLogger,"No se pudo avisar a esi de que muera");
                                 printf("\n\n NO SE PUDO ENVIAR ORDEN A ESI %s DE QUE MUERA \n\n",parametrosConsolaOriginal[1]);
-                            }
-
-                                         
-                            
-                                          
+                            }                 
                         }
-
-
-
                     }else{
                         printf("[Error] Cantidad de parámetros incorrectos\n");
                     }
@@ -441,6 +433,8 @@ void* hiloConsolaInteractiva(void * unused) {
             free(parametrosConsolaOriginal);
         }
     }
+    pthread_exit(EXIT_SUCCESS);
+
     return 0;
 }
 
@@ -463,6 +457,18 @@ void* atenderConexiones(void* socketConexion){
     Paquete paquete;
     Encabezado encabezado;
 
+    // Cambio el Nombre del Hilo para poder verlo en HTOP
+    char* nombreHilo = string_new();
+
+    if(coordinador_fd == i){
+        string_append_with_format(&nombreHilo, "./P_Coordinador\0");
+    }else{
+        string_append_with_format(&nombreHilo, "./P_S_%d\0", i);
+    }
+
+    prctl(PR_SET_NAME,nombreHilo,0,0,0);
+    free(nombreHilo);
+
     while(true){
 
 //printf("recibir_header...Socket %d\n", i);
@@ -484,8 +490,12 @@ void* atenderConexiones(void* socketConexion){
             // Si el Socket caido es del Coordinador, finaliza el Planificador
             if(coordinador_fd == i){
                 printf("El Coordinador ha finalizado. El Sistema quedó en un estado INVALIDO!!.\n");
-                //finalizarConsolaInteractiva = true;
-                //exit(EXIT_SUCCESS);
+
+                // Fuerzo el cierre de la Consola y la Finalizacion del Proceso Principal
+                pthread_kill(hiloConsola, SIGTERM);
+                killpg(getpid(),SIGTERM);
+
+                return 0;
             }
             pthread_exit(EXIT_SUCCESS); // Finalizo el Hilo
 
@@ -804,10 +814,8 @@ int main(int argc, char* argv[]){
     send(coordinador_fd,paquete.buffer,paquete.tam_buffer,0);
     free(paquete.buffer);
 
-
     pthread_create(&hiloConsola, NULL, (void*) hiloConsolaInteractiva, NULL);
     pthread_detach(hiloConsola);
-    //pthread_join(hiloConsola, NULL);
 
     // Creo Hilo que Atiende al Coordinador
     pthread_t hiloConexionCoordinador;
@@ -816,9 +824,8 @@ int main(int argc, char* argv[]){
     data_hilo->socketHilo = coordinador_fd;
 
     log_info(infoLogger,"Creando un hilo para atender al Coordinador con FD %d", coordinador_fd);
-    pthread_create(&hiloConexionCoordinador, NULL, (void*) atenderConexiones, data_hilo);
-    pthread_detach(hiloConexionCoordinador);
-
+    pthread_create(&hiloConexiones, NULL, (void*) atenderConexiones, data_hilo);
+    pthread_detach(hiloConexiones);
 
     int new_fd;
 
@@ -838,6 +845,10 @@ int main(int argc, char* argv[]){
             pthread_detach(hiloConexiones);
 
             log_info(infoLogger,"Creando un hilo para atender el nuevo cliente con FD %d", new_fd);
+        }else{
+            // Si no se pudo aceptar la conexion, finalizo TODO
+            pthread_kill(hiloConsola, SIGTERM);
+            pthread_kill(hiloConexiones, SIGTERM);
         }
     }
 

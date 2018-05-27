@@ -104,7 +104,7 @@ EntradasIntancias dsrlz_datosEntradas(void* buffer)
 	return solicitud;
 }
 
-Paquete srlz_datosInstancia(char proceso, int codigoOperacion, char* nombreProceso, int entradasLibres, int socketProceso){
+Paquete srlz_datosStatusRecurso(char proceso, int codigoOperacion, char* nombreInstanciaActual, char* nombreInstanciaFutura, char* valorRecurso, char key[40]){
 
 	int posicion = 0;
 	int sizeBuffer = 0;
@@ -114,41 +114,60 @@ Paquete srlz_datosInstancia(char proceso, int codigoOperacion, char* nombreProce
 
 
 	sizeBuffer =sizeof(char)+
-			(sizeof(int)*5)
-			+ strlen(nombreProceso);
+			(sizeof(int)*6)
+			+ strlen(nombreInstanciaActual) + strlen(nombreInstanciaFutura) + strlen(valorRecurso) + strlen(key);
 
 	paquete.tam_buffer = sizeBuffer;
 	paquete.buffer = malloc( sizeBuffer );
 	tamPayload = sizeBuffer - (sizeof(int)*2) - sizeof(char);
 
-	memcpy(paquete.buffer                                                   ,&(proceso)                     ,sizeof(char));
-	memcpy(paquete.buffer + (posicion=sizeof(char))							,&(codigoOperacion)				,sizeof(int));
-	memcpy(paquete.buffer + (posicion += sizeof(int))						,&(tamPayload)					,sizeof(int));
+	memcpy(paquete.buffer                                           ,&(proceso)                     ,sizeof(char));
+	memcpy(paquete.buffer + (posicion=sizeof(char))					,&(codigoOperacion)				,sizeof(int));
+	memcpy(paquete.buffer + (posicion += sizeof(int))				,&(tamPayload)					,sizeof(int));
 
-	tamString = strlen(nombreProceso);
-	memcpy(paquete.buffer + (posicion += sizeof(tamPayload))				,&(tamString)					,sizeof(int) ); //guardo el tam del siguiente array
-	memcpy(paquete.buffer + (posicion += sizeof(int) )						,nombreProceso					,strlen(nombreProceso)); //se copia el nombre
+	tamString = strlen(nombreInstanciaActual);
+	memcpy(paquete.buffer + (posicion += sizeof(int))				,&(tamString)					,sizeof(int) );
+	memcpy(paquete.buffer + (posicion += sizeof(int) )				,nombreInstanciaActual			,strlen(nombreInstanciaActual));
 
-	memcpy(paquete.buffer + (posicion += strlen(nombreProceso))				,&(entradasLibres)				,sizeof(int));
-	memcpy(paquete.buffer + (posicion += sizeof(int))						,&(socketProceso)				,sizeof(int));
+	tamString = strlen(nombreInstanciaFutura);
+	memcpy(paquete.buffer + (posicion += strlen(nombreInstanciaActual))			,&(tamString)					,sizeof(int) );
+	memcpy(paquete.buffer + (posicion += sizeof(int) )				,nombreInstanciaFutura			,strlen(nombreInstanciaFutura));
+
+	tamString = strlen(valorRecurso);
+	memcpy(paquete.buffer + (posicion += strlen(nombreInstanciaFutura))			,&(tamString)					,sizeof(int) );
+	memcpy(paquete.buffer + (posicion += sizeof(int) )				,valorRecurso					,strlen(valorRecurso));
+
+	tamString = strlen(key);
+	memcpy(paquete.buffer + (posicion += strlen(valorRecurso))		,&(tamString)					,sizeof(int) );
+	memcpy(paquete.buffer + (posicion += sizeof(int) )				,key							,strlen(key));
 
 	return paquete;
 }
 
-Instancia dsrlz_datosInstancia(void* buffer)
+StatusRecurso dsrlz_datosStatusRecurso(void* buffer)
 {
 	int posicion = 0; 
 	int tamString = 0;
-	Instancia solicitud;
-
+	StatusRecurso solicitud;
 
 	memcpy(&(tamString)					 	,buffer+posicion										,sizeof(int));
-	solicitud.nombreProceso = malloc(sizeof(char) * tamString+1);
-	memcpy(solicitud.nombreProceso			,buffer+(posicion+=sizeof(int))							,sizeof(char)*tamString);
-	solicitud.nombreProceso[tamString]='\0';
+	solicitud.nombreInstanciaActual = malloc(sizeof(char) * tamString+1);
+	memcpy(solicitud.nombreInstanciaActual			,buffer+(posicion+=sizeof(int))					,sizeof(char)*tamString);
+	solicitud.nombreInstanciaActual[tamString]='\0';
 
-	memcpy(&solicitud.entradasLibres 			,buffer+(posicion+=sizeof(char) * tamString)			,sizeof(int));
-	memcpy(&solicitud.socketProceso 			,buffer+(posicion+=sizeof(int))							,sizeof(int));
+	memcpy(&(tamString)					 	,buffer+(posicion+=sizeof(char)*tamString)				,sizeof(int));
+	solicitud.nombreInstanciaFutura = malloc(sizeof(char) * tamString+1);
+	memcpy(solicitud.nombreInstanciaFutura			,buffer+(posicion+=sizeof(int))					,sizeof(char)*tamString);
+	solicitud.nombreInstanciaFutura[tamString]='\0';
+
+	memcpy(&(tamString)					 	,buffer+(posicion+=sizeof(char)*tamString)				,sizeof(int));
+	solicitud.valorRecurso = malloc(sizeof(char) * tamString+1);
+	memcpy(solicitud.valorRecurso			,buffer+(posicion+=sizeof(int))							,sizeof(char)*tamString);
+	solicitud.valorRecurso[tamString]='\0';
+
+	memcpy(&(tamString)					 	,buffer+(posicion+=sizeof(char)*tamString)				,sizeof(int));
+	memcpy(solicitud.key					,buffer+(posicion+=sizeof(int))							,sizeof(char)*tamString);
+	solicitud.key[tamString]='\0';
 
 	return solicitud;
 }
@@ -749,6 +768,13 @@ Instancia* obtenerInstanciaAsignada(t_dictionary * dictionario, char* key){
 
 	if(dictionary_size(dictionario) > 0){	
 		instancia = dictionary_get(dictionario, key);
+	}else{
+
+	    // Creo Registro Nuevo pero VACIO
+	    instancia = malloc(sizeof(Instancia));
+	    instancia->nombreProceso = NULL;
+	    instancia->socketProceso = 0;
+	    instancia->entradasLibres = 0;
 	}
 
 	return instancia;
@@ -788,7 +814,6 @@ Instancia* obtenerInstanciaNueva(t_list* listaInstanciasConectadas, Instruccion*
 		case EL:
 			//saco la primer instancia de la lista
 			instanciaElegida = list_remove(listaInstanciasConectadas, 0);
-
 			//ahora la pongo al final de la lista
 			list_add(listaInstanciasConectadas,instanciaElegida);			
 			break;
@@ -830,7 +855,6 @@ Instancia* obtenerInstanciaNueva(t_list* listaInstanciasConectadas, Instruccion*
 //	puts("\n\n\n");
 //	showContenidolistaInstanciasConectadas(listaInstanciasConectadas);
 //	puts("\n\n\n");
-// TODO
 
 	return instanciaElegida;
 }

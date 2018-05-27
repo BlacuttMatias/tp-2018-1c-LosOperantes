@@ -117,6 +117,14 @@ typedef struct
 	int entradasLibres;
 }Instancia;
 
+typedef struct
+{
+	char* nombreInstanciaActual;
+	char* nombreInstanciaFutura;
+	char* valorRecurso;
+	char key[40];	
+}StatusRecurso;
+
 
 //Instancia
 typedef struct{ //tipo entrada

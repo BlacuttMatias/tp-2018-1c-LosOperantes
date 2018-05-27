@@ -27,7 +27,7 @@
     t_dictionary* diccionarioClavesBloqueadas;
     int fd_planificador;
     pthread_t hiloConexiones;
-
+    char* algoritmoDistribucion;
 /* ---------------------------------------- */
 
 void* atenderConexiones(void* socketConexion){
@@ -180,24 +180,65 @@ void* atenderConexiones(void* socketConexion){
                     registroKeyBloqueada = dsrlz_datosKeyBloqueada(paquete.buffer);
                     free(paquete.buffer);
 
-                    log_info(infoLogger,"El PLANIFICADOR solicita informacion sobre el Recurso %s.", registroKeyBloqueada.key);
-
+                    log_info(infoLogger,"El PLANIFICADOR solicita información sobre el Recurso %s.", registroKeyBloqueada.key);
 
                     // TODO 
-                    // Falta generar la informacion de la Instancia y devolverlo al Planificador. Hoy esta harcodeado
+                    // Obtener VALOR si existe
+
+                    char* nombreInstanciaActual = string_new();
+                    char* nombreInstanciaFutura = string_new();
+                    char* valorRecurso = string_new();
+
+                    // Si el Recurso ya fue recibido previamente por el Coordinador
+                    if(dictionary_has_key(diccionarioClavesInstancias, registroKeyBloqueada.key) ){
+
+                        // Obtener la Instancia ya asignado al Recurso
+                        proximaInstancia = obtenerInstanciaAsignada(diccionarioClavesInstancias,registroKeyBloqueada.key);
+
+                        // Si el Recurso habia tenido un GET pero todavia nunca se asigno una Instancia
+                        if(proximaInstancia->nombreProceso == NULL){
+                            string_append_with_format(&nombreInstanciaActual, "Ninguno");
+                        }else{
+                            string_append_with_format(&nombreInstanciaActual, "%s", proximaInstancia->nombreProceso);
+                        }
+                    }else{ // Si el Recurso nunca fue atendido por una Instancia
+                        string_append_with_format(&nombreInstanciaActual, "Ninguno");
+                    }
+
+                    // Creo un Registro Instruccion para simular una Distribucion
+                    Instruccion* registroInstruccion = NULL;
+                    registroInstruccion = malloc(sizeof(Instruccion));
+
+                    registroInstruccion->operacion= 1;
+                    strcpy(registroInstruccion->key, registroKeyBloqueada.key);
+                    registroInstruccion->key[strlen(registroKeyBloqueada.key)] = '\0';
+                    registroInstruccion->dato=NULL;
+                    registroInstruccion->nombreEsiOrigen=NULL;
+
+                    // Obtengo la Instancia segun el Algoritmo de Distribucion
+                    proximaInstancia = obtenerInstanciaNueva(listaInstanciasConectadas,registroInstruccion,algoritmoDistribucion);
+                    string_append_with_format(&nombreInstanciaFutura, "%s", proximaInstancia->nombreProceso);
+
+                    // TODO
+                    // Obtener el valor del Recurso almacenado en la Instancia
+                    string_append_with_format(&valorRecurso, "VALOR HARCODEADO");
 
                     // Serializado la Respuesta (ESTE MENSAJE LLEGA DIRECTAMENTE A LA CONSOLA)
-                    paquete = srlz_datosInstancia('C', OBTENER_STATUS_CLAVE, "Instancia1", 2, 3);
+                    paquete = srlz_datosStatusRecurso('C', OBTENER_STATUS_CLAVE, nombreInstanciaActual, nombreInstanciaFutura, valorRecurso, registroKeyBloqueada.key);
 
                     // Envio el Paquete al Planificador
-                    if(send(i,paquete.buffer,paquete.tam_buffer,0) != -1){
+                    if(send(fd_planificador,paquete.buffer,paquete.tam_buffer,0) != -1){
 
                         free(paquete.buffer);
-                        log_info(infoLogger, "Se le envio informacion al PLANIFICADOR sobre la Instancia");
+                        log_info(infoLogger, "Se le envió información al PLANIFICADOR (Socket: %d) sobre el Recurso. Instancia Actual: %s - Instancia Distribuida: %s - Valor: %s", fd_planificador, nombreInstanciaActual, nombreInstanciaFutura, valorRecurso);
 
                     }else{
-                        log_error(infoLogger, "No se pudo enviar informacion al PLANIFICADOR sobre la Instancia");
+                        log_error(infoLogger, "No se pudo enviar información al PLANIFICADOR sobre el Recurso");
                     }
+
+                    free(nombreInstanciaActual);
+                    free(nombreInstanciaFutura);
+                    free(valorRecurso);                    
                     break;   
 
                 case IS_ALIVE: 
@@ -459,11 +500,6 @@ void* atenderConexiones(void* socketConexion){
                             // Si el Recurso habia tenido un GET pero todavia nunca se asigno una Instancia
                             if(proximaInstancia->nombreProceso == NULL){
 
-                                // Defino el Algoritmo de Distribucion a utlizar
-                                char* algoritmoDistribucion = string_new();
-                                string_append(&algoritmoDistribucion,config_get_string_value(cfg,"ALGORITMO_DISTRIBUCION"));
-
-
                                 // Obtengo la Instancia segun el Algoritmo de Distribucion
                                 //proximaInstancia = NULL;
                                 proximaInstancia = obtenerInstanciaNueva(listaInstanciasConectadas,&registroInstruccion,algoritmoDistribucion);
@@ -472,18 +508,11 @@ void* atenderConexiones(void* socketConexion){
 
                                 // Actualizo el diccionario con la Instancia nueva asignada
                                 actualizarDiccionarioClavesInstancias(diccionarioClavesInstancias, registroInstruccion.key, proximaInstancia);
-
-                                free(algoritmoDistribucion);
                             }
 
                             log_info(infoLogger, "Se reconoció que el Recurso %s lo tiene asignado la Instancia %s", registroInstruccion.key, proximaInstancia->nombreProceso);
 
                         }else{ // Si el Recurso nunca fue atendido por una Instancia
-
-                            // Defino el Algoritmo de Distribucion a utlizar
-                            char* algoritmoDistribucion = string_new();
-                            string_append(&algoritmoDistribucion,config_get_string_value(cfg,"ALGORITMO_DISTRIBUCION"));
-
 
                             // Obtengo la Instancia segun el Algoritmo de Distribucion
                             proximaInstancia = obtenerInstanciaNueva(listaInstanciasConectadas,&registroInstruccion,algoritmoDistribucion);
@@ -493,7 +522,6 @@ void* atenderConexiones(void* socketConexion){
 
                             // Guardo en el Dictionary que Instancia posee un Key
                             dictionary_put(diccionarioClavesInstancias, registroInstruccion.key, proximaInstancia);  
-                            free(algoritmoDistribucion);
                         }
                         
                         // Envio el Paquetea a la Instancia
@@ -568,6 +596,10 @@ int main(int argc, char* argv[]){
     log_trace(infoLogger, "Escuchando conexiones" );
 
 
+    // Defino el Algoritmo de Distribucion a utlizar
+    algoritmoDistribucion = string_new();
+    string_append(&algoritmoDistribucion,config_get_string_value(cfg,"ALGORITMO_DISTRIBUCION"));
+
     // Creo la lista de Todos los Procesos conectados al Coordinador
     listaProcesosConectados = list_create();
 
@@ -613,6 +645,7 @@ int main(int argc, char* argv[]){
     list_destroy(listaInstanciasConectadas);
     dictionary_destroy(diccionarioClavesInstancias);
     dictionary_destroy(diccionarioClavesBloqueadas);
+    free(algoritmoDistribucion);
 
     return EXIT_SUCCESS;
 }

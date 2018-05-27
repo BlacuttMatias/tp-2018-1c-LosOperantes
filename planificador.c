@@ -393,21 +393,7 @@ void* hiloConsolaInteractiva(void * unused) {
                         if(send(coordinador_fd,paquete.buffer,paquete.tam_buffer,0) != -1){
 
                             free(paquete.buffer);
-                            log_info(infoLogger, "Se le pide al COORDINADOR infomarcion sobre el Recurso %s.", parametrosConsolaOriginal[1]);
-
-                            // Recibo la informacion de la Instancia 
-                            Encabezado encabezado=recibir_header(&coordinador_fd);
-                            paquete = recibir_payload(&coordinador_fd,&encabezado.tam_payload);
-                            Instancia registroInstancia = dsrlz_datosInstancia(paquete.buffer);
-                            free(paquete.buffer);
-
-                            // Determino si el Recurso fue distribuido en alguna Instancia
-                            if(strcmp(registroInstancia.nombreProceso, "NONE") == 0){
-                                printf("El Recurso %s no se encuentra distribuido aun\n", parametrosConsolaOriginal[1]);
-                            }else{
-                                printf("El Recurso %s se encuentra distribuido en la Instancia %s\n", parametrosConsolaOriginal[1],registroInstancia.nombreProceso);                                
-                            }
-
+                            log_info(infoLogger, "Se le pide al COORDINADOR infomarción sobre el Recurso %s.", parametrosConsolaOriginal[1]);
                         }else{
                             printf("No se pudo pedir infomacion al COORDINADOR sobre el Recurso %s\n", parametrosConsolaOriginal[1]);
                         }
@@ -450,7 +436,7 @@ void* atenderConexiones(void* socketConexion){
     Proceso registroProceso;
     KeyBloqueada keyBloqueada;
 	KeyBloqueada* registroKeyBloqueada;
-
+    StatusRecurso registroStatusRecurso;
 
     int indice = 0, resultadoEjecucion;
     bool recursoOcupado;
@@ -471,11 +457,8 @@ void* atenderConexiones(void* socketConexion){
 
     while(true){
 
-//printf("recibir_header...Socket %d\n", i);
         // Recibo el Encabezado del Paquete
         encabezado=recibir_header(&i);
-
-//printf("MENSAJE RECIBIDO DE %c:%d\n", encabezado.proceso, encabezado.cod_operacion);
 
         if((nbytes = encabezado.tam_payload) <= 0){
             // error o conexión cerrada por el cliente
@@ -725,7 +708,20 @@ void* atenderConexiones(void* socketConexion){
                     break;
 
                 case IS_ALIVE: 
-                    break;                                     
+                    break;
+
+                case OBTENER_STATUS_CLAVE:
+                    // Recibo la informacion del Recurso (Fue originado desde la Consola)
+                    paquete = recibir_payload(&i,&encabezado.tam_payload);
+                    registroStatusRecurso = dsrlz_datosStatusRecurso(paquete.buffer);
+                    free(paquete.buffer);
+
+                    printf("El Recurso %s posee el siguiente STATUS:\n", registroStatusRecurso.key);
+                    printf("---------------------------------------\n");
+                    printf("Instancia donde se encuentra el Recurso: %s\n", registroStatusRecurso.nombreInstanciaActual);
+                    printf("Instancia donde se guardaría el Recurso: %s\n", registroStatusRecurso.nombreInstanciaFutura);
+                    printf("Valor del Recurso: %s\n", registroStatusRecurso.valorRecurso);
+                    break;
             }
         }
 

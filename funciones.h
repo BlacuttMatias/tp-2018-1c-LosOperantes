@@ -46,8 +46,8 @@
 	Paquete srlz_datosKeyBloqueada(char proceso, int codigoOperacion, char* nombreProceso, int operacion, char key[40], char* dato);
 	KeyBloqueada dsrlz_datosKeyBloqueada(void* buffer);
 
-	Paquete srlz_datosInstancia(char proceso, int codigoOperacion, char* nombreProceso, int entradasLibres, int socketProceso);
-	Instancia dsrlz_datosInstancia(void* buffer);
+	Paquete srlz_datosStatusRecurso(char proceso, int codigoOperacion, char* nombreInstanciaActual, char* nombreInstanciaFutura, char* valorRecurso, char key[40]);
+	StatusRecurso dsrlz_datosStatusRecurso(void* buffer);
 
 	Paquete srlz_datosEntradas(char proceso, int codigoOperacion, int cantEntrada, int tamanioEntrada);
 	EntradasIntancias dsrlz_datosEntradas(void* buffer);

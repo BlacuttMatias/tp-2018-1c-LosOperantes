@@ -1444,7 +1444,7 @@ void cargarTablaEntradas(t_list *tablaEntradas,Instruccion* estructuraInstruccio
 
 
 void procesoArchivo(char *archivo,t_list* tablaEntradas, char* punto_montaje, Almacenamiento almacenamiento){
-	printf("\n se quiere abrir archivo %s \n",archivo);
+	//printf("\n se quiere abrir archivo %s \n",archivo);
 
 	char *carpeta_archivo = string_new();
 	string_append_with_format(&carpeta_archivo, "%s%s", punto_montaje, archivo); // para que lea ficheros de la carpeta "entradas"
@@ -1467,14 +1467,16 @@ void procesoArchivo(char *archivo,t_list* tablaEntradas, char* punto_montaje, Al
 	fseek(fichero,0,SEEK_SET);
 
 
-	printf( "Fichero: %s -> ", archivo );
-	if( fichero )
-       printf( "existe (ABIERTO)\n" );
+	//printf( "Fichero: %s -> ", archivo );
+	if( fichero ){
+       //printf( "existe (ABIERTO)\n" );
+	   }
     else{
        printf( "Error (NO ABIERTO)\n" );
     }
-    printf( "Contenido/clave-key con formato del fichero: %s\n\n", archivo ); //muestro key con formato ".txt"
-    printf( "Valor: %s\n", fgets(contenido_fichero,tamanio, fichero) ); 
+	fgets(contenido_fichero,tamanio,fichero);
+    //printf( "Contenido/clave-key con formato del fichero: %s\n\n", archivo ); //muestro key con formato ".txt"
+    //printf( "Valor: %s\n", contenido_fichero ); 
     printf ("Clave/key: %s\n\n",nombre_archivo_sin_extension); //muestro key sin formato ".txt"
 
 		/*
@@ -1499,13 +1501,16 @@ void procesoArchivo(char *archivo,t_list* tablaEntradas, char* punto_montaje, Al
 	nuevaEntrada->clave[strlen(nombre_archivo_sin_extension)] = '\0';
 	nuevaEntrada->tamanioValorAlmacenado = strlen(contenido_fichero);
 	nuevaEntrada->numeroDeEntrada = buscarPosicionEnBin(almacenamiento,contenido_fichero);
+	if(nuevaEntrada->numeroDeEntrada>=0){
+		grabarPosicionEnVector(almacenamiento,nuevaEntrada->numeroDeEntrada);
+	}
 
 	list_add(tablaEntradas,nuevaEntrada);
 	//muestro entrada "elementoDeTabla" para testear que esté todo correcto
     
 	elementoDeTabla = list_get(tablaEntradas,list_size(tablaEntradas)-1);
 
-	printf("Clave:%s - Numero:%d - Tamanio:%d - Posicion en tabla:%d \n",elementoDeTabla->clave,elementoDeTabla->numeroDeEntrada,elementoDeTabla->tamanioValorAlmacenado,list_size(tablaEntradas)); //prueba imprimir por pantalla el elemento obtenido
+	printf("\nClave:%s - Numero:%d - Tamanio:%d - Posicion en tabla:%d \n",elementoDeTabla->clave,elementoDeTabla->numeroDeEntrada,elementoDeTabla->tamanioValorAlmacenado,list_size(tablaEntradas)); //prueba imprimir por pantalla el elemento obtenido
 // ------------------------------------------------------------------
 
 	fclose(fichero);
@@ -1646,6 +1651,14 @@ void escribirBinarioEnPosicion(Almacenamiento almacenamiento, int posicion, char
 	fclose(binario);
 }
 
+void grabarPosicionEnVector(Almacenamiento almacenamiento, int posicion){
+	FILE* vectorBin=fopen(almacenamiento.vector,"r+");
+	fseek(vectorBin,posicion,SEEK_SET);
+	int uno ='1';
+	fwrite(&uno,1,sizeof(char),vectorBin);
+	fclose(vectorBin);
+}
+
 char* valorEntrada(t_entrada* entrada){
 	char* valor = string_new();
 	char* archivo= string_new();
@@ -1672,7 +1685,7 @@ int buscarPosicionEnBin(Almacenamiento almacenamiento, char* valor){
 	int espacioPorEntrada= almacenamiento.tamPorEntrada;
 	fseek(binario,0,SEEK_END);
 	int tamanio= ftell(binario);
-	printf("\n tamanio archivo es %d          espacio por entrada es  %d 		cantidad de entradas es %d\n",tamanio, espacioPorEntrada, almacenamiento.cantidadEntradas);
+	//printf("\n tamanio archivo es %d          espacio por entrada es  %d 		cantidad de entradas es %d\n",tamanio, espacioPorEntrada, almacenamiento.cantidadEntradas);
 	int entradas= tamanio/espacioPorEntrada;
 
 	if(tamanio%espacioPorEntrada != 0){
@@ -1680,7 +1693,7 @@ int buscarPosicionEnBin(Almacenamiento almacenamiento, char* valor){
 		fclose(binario);
 		return -2;
 	}else{
-		printf("\n se calculo bien cant.entradas igual a %d\n",entradas);
+		//printf("\n se calculo bien cant.entradas igual a %d\n",entradas);
 	}
 	
 	int posicion=0;

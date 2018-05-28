@@ -253,6 +253,12 @@ Almacenamiento almacenamiento;
 
                                     // TODO
                                     // Persistir el Valor en el Archivo Binario
+									//Prototipado
+                                	//int posicion = buscarPosicionEnBin(Almacenamiento almacenamiento, registroInstruccion.dato);
+                                	//escribirBinarioEnPosicion(Almacenamiento almacenamiento, int posicion, registroInstruccion.dato);
+
+
+
 
                                     // Cargo la Tabla de Entradas
                                     cargarTablaEntradas(tablaEntradas,&registroInstruccion);

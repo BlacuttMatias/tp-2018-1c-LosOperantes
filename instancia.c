@@ -24,7 +24,7 @@
 /* ---------------------------------------- */
 /*  Variables Globales                      */
 /* ---------------------------------------- */
-
+    int* puntero;
     int entradas;
     int espacioPorEntrada;
     t_list* tablaEntradas;
@@ -165,7 +165,7 @@ Almacenamiento almacenamiento;
     string_append(&algoritmoAlmacenamiento,"CIRCULAR");
 
 
-    if(persistirDatos(datosInstruccion, algoritmoAlmacenamiento)){
+    if(persistirDatos(almacenamiento,datosInstruccion, algoritmoAlmacenamiento,puntero)){
         // Proceso a realizar si se persistiron correctamente los datos
     }else{
         // Proceso a realizar si fallo la persistencia
@@ -338,6 +338,7 @@ Almacenamiento almacenamiento;
                                     almacenamiento.vector=string_new();
                                     strcpy(almacenamiento.binario,"vectorBin.txt");
                                     strcpy(almacenamiento.vector,"storage.bin");
+                                    almacenamiento.tablaEntradas=tablaEntradas;
                                 // Se precarga la Tabla de Entradas con datos del Dump
                                 preCargarTablaEntradas(config_get_string_value(cfg,"PUNTO_MONTAJE"), almacenamiento);
                                 break;
@@ -363,4 +364,5 @@ Almacenamiento almacenamiento;
 
     return 0;
 }
+
 

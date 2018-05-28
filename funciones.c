@@ -1345,26 +1345,109 @@ int cargarClavesInicialmenteBloqueadas(t_dictionary* diccionarioClavesBloqueadas
 
 
 /******************INSTANCIA********************************************/
+int espacioLibre(Almacenamiento almacenamiento){
+	FILE* vectorBin= fopen(almacenamiento.vector,"r");
+	fseek(vectorBin,0,SEEK_SET);
+	char valor;
+	int contador;
+	while(fread(&valor, sizeof(char),1,vectorBin) != EOF){
+		if(valor=='0'){contador += contador;}
+	}
+	return contador;
+}
+void liberarUnEspacio(Almacenamiento almacenamiento, int* puntero){
+	
+	bool esAtomica(t_entrada* entradaAux){
+		return	(entradaAux->numeroDeEntrada==*puntero 
+				&& entradaAux->tamanioValorAlmacenado <= almacenamiento.tamPorEntrada);
+	}
 
-bool persistirDatos(Instruccion* datosInstruccion, char* algoritmoDistribucion){
-	if(string_starts_with(algoritmoDistribucion, "CIRCULAR")){
-			//TODO
+	t_entrada* reemplazada=NULL;
+	while(reemplazada==NULL){
+		reemplazada = list_find(almacenamiento.tablaEntradas,(void*)esAtomica);
+		incrementarPuntero(almacenamiento,puntero);
+	}
+	liberarEntradaEnVector(almacenamiento,reemplazada);
+	
+	
+}
+
+void incrementarPuntero(Almacenamiento almacenamiento,int* puntero) {
+	if(*puntero == (almacenamiento.cantidadEntradas-1) ){
+		puntero=0;
+	}
+	else{puntero= puntero+1;
+	}
+}
+
+bool esEntradaAtomica(Almacenamiento almacenamiento, t_entrada* entrada){
+	return entrada->tamanioValorAlmacenado <= almacenamiento.tamPorEntrada;
+}
+
+void destruirEntradaEnPosicion(Almacenamiento almacenamiento, int posicion){
+	t_entrada* destruida= list_remove(almacenamiento.tablaEntradas,posicion);
+	liberarPosicionEnVector(almacenamiento,destruida->numeroDeEntrada);
+	free(destruida->clave);
+	free(destruida);
+}
+
+bool persistirDatos(Almacenamiento almacenamiento,Instruccion* datosInstruccion, char* algoritmoDistribucion, int* puntero){
+	int tamanio= string_length(datosInstruccion->dato);
+	int i=0;
+	tamanio= tamanio/almacenamiento.tamPorEntrada +1; //calculo cuantas entradas necesita el valor nuevo
+	if(tamanio % almacenamiento.tamPorEntrada==0){tamanio -= 1;}
+	int espaciosLibres= espacioLibre(almacenamiento);
+	t_entrada* entradaAux=NULL;
+
+	bool porTamanio(t_entrada* entrada1, t_entrada* entrada2){
+		return entrada1->tamanioValorAlmacenado > entrada2->tamanioValorAlmacenado;
+	}
 
 
 
-	}	else {if(string_starts_with(algoritmoDistribucion, "BSU")){
-			//TODO
+	if(espaciosLibres<tamanio){//aplico algoritmo en caso de tener que sacar un valor del bin
+		if(string_starts_with(algoritmoDistribucion, "CIRCULAR")){
+				
+				
+				while(espaciosLibres<tamanio){//aplico algoritmo hasta tener espacio suficiente
+					liberarUnEspacio(almacenamiento, puntero);
+					espaciosLibres=espacioLibre(almacenamiento);
+				}
 
 
 
-	} else {if (string_starts_with(algoritmoDistribucion, "LRU")){
-			//TODO
+		}	else {if(string_starts_with(algoritmoDistribucion, "BSU")){
+					list_sort(almacenamiento.tablaEntradas,(void*)porTamanio);
+					while(espaciosLibres<tamanio || i< almacenamiento.cantidadEntradas){//aplico algoritmo hasta tener espacio suficiente
+						entradaAux=list_get(almacenamiento.tablaEntradas,i);
+						if(esEntradaAtomica(almacenamiento,entradaAux)){
+							destruirEntradaEnPosicion(almacenamiento,i);
+						}
+						else{i++;}
+						espaciosLibres=espacioLibre(almacenamiento);
+					}
+
+
+
+		} else {if (string_starts_with(algoritmoDistribucion, "LRU")){
+				i=0;
+				while(espaciosLibres<tamanio || i<almacenamiento.cantidadEntradas){								//aplico algoritmo hasta tener espacio suficiente
+					entradaAux=list_get(almacenamiento.tablaEntradas,i); //saca valores atomicos en el orden de la lista
+					if(esEntradaAtomica(almacenamiento, entradaAux)){					//estoy suponiendo que la lista esta ordenada de menos usado a mas recientemente usado, al igual que en el algoritmo de distribucion
+						destruirEntradaEnPosicion(almacenamiento,i);	// y tambien asumo que siempre habrá un valor atómico para sacar. Leí en el issue  1097 que no sucederá ese caso
+						
+					}
+					else{i++;}
+					espaciosLibres=espacioLibre(almacenamiento);
+				}
 
 
 
 
-	}	else {printf("\n no se pudo leer el algoritmo de reemplazo %s \n", algoritmoDistribucion);}}}
-	// Dependiendo el algoritmoDistricucion, persistir los datos localmente
+		}	else {printf("\n no se pudo leer el algoritmo de reemplazo %s \n", algoritmoDistribucion);}}}
+	}		// Dependiendo el algoritmoDistricucion, persistir los datos localmente
+			//en este caso tengo espacio suficiente sin reemplazar, analizo si compactar o simplemente guardar
+
 
 	return true;
 }

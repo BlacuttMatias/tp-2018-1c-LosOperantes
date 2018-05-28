@@ -105,18 +105,15 @@ Almacenamiento almacenamiento;
 
    if(list_size(tablaEntradas)>1){
         
-        t_entrada* entrada= list_get(tablaEntradas,0);
         char *buffer=string_new();
 
-
-        buffer= leerBinarioEnPosicion(almacenamiento,0);
-        entrada= list_get(tablaEntradas,1);
         buffer=leerBinarioEnPosicion(almacenamiento,1);
         printf("\n el segundo valor en el binario es:   %s  \n",buffer);
         grabarPosicionEnVector(almacenamiento,8);
 	
         printf("\n en el vector Bin deberían estas las posiciones 0 y 4 escritas con 1\n");
 
+        liberarEntradaEnVector(almacenamiento,entrada1);
 	}
     //*/
 

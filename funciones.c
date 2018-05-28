@@ -1675,8 +1675,9 @@ void grabarEntradaEnVector(Almacenamiento almacenamiento, int posicion, t_entrad
 	}
 }
 
-void liberarEntradaEnVector(Almacenamiento almacenamiento, int posicion, t_entrada* entrada){
+void liberarEntradaEnVector(Almacenamiento almacenamiento, t_entrada* entrada){
 	int espaciosOcupados= entrada->tamanioValorAlmacenado/almacenamiento.tamPorEntrada;
+	int posicion = entrada->numeroDeEntrada; 
 	if(entrada->tamanioValorAlmacenado%almacenamiento.tamPorEntrada != 0) {
 		espaciosOcupados += 1;}
 	int i;

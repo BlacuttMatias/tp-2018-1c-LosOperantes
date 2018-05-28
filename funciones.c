@@ -1502,7 +1502,7 @@ void procesoArchivo(char *archivo,t_list* tablaEntradas, char* punto_montaje, Al
 	nuevaEntrada->tamanioValorAlmacenado = strlen(contenido_fichero);
 	nuevaEntrada->numeroDeEntrada = buscarPosicionEnBin(almacenamiento,contenido_fichero);
 	if(nuevaEntrada->numeroDeEntrada>=0){
-		grabarPosicionEnVector(almacenamiento,nuevaEntrada->numeroDeEntrada);
+		grabarEntradaEnVector(almacenamiento,nuevaEntrada->numeroDeEntrada,nuevaEntrada);
 	}
 
 	list_add(tablaEntradas,nuevaEntrada);
@@ -1658,6 +1658,35 @@ void grabarPosicionEnVector(Almacenamiento almacenamiento, int posicion){
 	fwrite(&uno,1,sizeof(char),vectorBin);
 	fclose(vectorBin);
 }
+
+void liberarPosicionEnVector(Almacenamiento almacenamiento, int posicion){
+	FILE* vectorBin=fopen(almacenamiento.vector,"r+");
+	fseek(vectorBin,posicion,SEEK_SET);
+	int cero ='0';
+	fwrite(&cero,1,sizeof(char),vectorBin);
+	fclose(vectorBin);
+}
+
+void grabarEntradaEnVector(Almacenamiento almacenamiento, int posicion, t_entrada* entrada){
+	int espaciosOcupados= entrada->tamanioValorAlmacenado/almacenamiento.tamPorEntrada;
+	int i;
+	for(i=0;i<=espaciosOcupados;i+=1){
+		grabarPosicionEnVector(almacenamiento,posicion + i);
+	}
+}
+
+void liberarEntradaEnVector(Almacenamiento almacenamiento, int posicion, t_entrada* entrada){
+	int espaciosOcupados= entrada->tamanioValorAlmacenado/almacenamiento.tamPorEntrada;
+	if(entrada->tamanioValorAlmacenado%almacenamiento.tamPorEntrada != 0) {
+		espaciosOcupados += 1;}
+	int i;
+	for(i=0;i<=espaciosOcupados;i+=1){
+		liberarPosicionEnVector(almacenamiento,posicion + i);
+	}
+}
+
+
+
 
 char* valorEntrada(t_entrada* entrada){
 	char* valor = string_new();

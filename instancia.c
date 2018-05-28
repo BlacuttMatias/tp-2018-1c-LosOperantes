@@ -63,11 +63,11 @@ int main(int argc, char* argv[]){
 //PRUEBA ARCHIVO BINARIO					/////
 	// creo el archivo binario
   
-/*
+
 
 Almacenamiento almacenamiento;
-        almacenamiento.cantidadEntradas=15;
-        almacenamiento.tamPorEntrada=15;
+        almacenamiento.cantidadEntradas=10;
+        almacenamiento.tamPorEntrada=4;
          almacenamiento.binario=malloc(13);
         almacenamiento.vector=malloc(15);
         strcpy(almacenamiento.binario,"storage.bin");

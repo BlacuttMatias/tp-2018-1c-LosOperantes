@@ -133,6 +133,9 @@
 	void preCargarTablaEntradas(t_list *tablaEntradas,char* puntoMontaje, Almacenamiento almacenamiento);
 	void realizarCompactacionLocal(Almacenamiento almacenamiento);
 	void grabarPosicionEnVector(Almacenamiento almacenamiento, int posicion);
+	void liberarVectorEnPosicion(Almacenamiento almacenamiento, int posicion);
+	void liberarEntradaEnVector(Almacenamiento almacenamiento, int posicion, t_entrada* entrada);
+	void grabarEntradaEnVector(Almacenamiento almacenamiento, int posicion, t_entrada* entrada);
 
 /* ---------------------------------------- */
 #endif

@@ -1387,7 +1387,7 @@ bool enviarInstruccionInstancia(Instruccion registroInstruccion, int socketInsta
 }
 
 // Cuando se inicia una Instancia, se precarga la Tabla de Entradas con la info del Dump
-void preCargarTablaEntradas(t_list *tablaEntradas,char* puntoMontaje, Almacenamiento almacenamiento){
+void preCargarTablaEntradas(char* puntoMontaje, Almacenamiento almacenamiento){
 
     // Con un puntero a DIR abro el directorio 
     DIR *dir;
@@ -1413,7 +1413,7 @@ void preCargarTablaEntradas(t_list *tablaEntradas,char* puntoMontaje, Almacenami
             string_append_with_format(&nombreArchivoProcesar, "%s", ent->d_name);
 
             // Una vez tenemos el archivo, lo pasamos a una función para procesarlo. //
-            procesoArchivo(nombreArchivoProcesar, tablaEntradas, config_get_string_value(cfg,"PUNTO_MONTAJE"), almacenamiento);  
+            procesoArchivo(nombreArchivoProcesar, config_get_string_value(cfg,"PUNTO_MONTAJE"), almacenamiento);  
 
             free(nombreArchivoProcesar);
         }
@@ -1443,9 +1443,9 @@ void cargarTablaEntradas(t_list *tablaEntradas,Instruccion* estructuraInstruccio
 
 
 
-void procesoArchivo(char *archivo,t_list* tablaEntradas, char* punto_montaje, Almacenamiento almacenamiento){
+void procesoArchivo(char *archivo, char* punto_montaje, Almacenamiento almacenamiento){
 	//printf("\n se quiere abrir archivo %s \n",archivo);
-
+	t_list* tablaEntradas=almacenamiento.tablaEntradas;
 	char *carpeta_archivo = string_new();
 	string_append_with_format(&carpeta_archivo, "%s%s", punto_montaje, archivo); // para que lea ficheros de la carpeta "entradas"
 
@@ -1780,5 +1780,5 @@ void actualizarDiccionarioClavesInstancias(t_dictionary* dictionario, char key[4
 
 // Realizar la Compactacion del Archivo Binario de una Instancia
 void realizarCompactacionLocal(Almacenamiento almacenamiento){
-	// TODO
+//TODO
 }

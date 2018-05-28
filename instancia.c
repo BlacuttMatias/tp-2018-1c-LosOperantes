@@ -64,7 +64,7 @@ int main(int argc, char* argv[]){
 	// creo el archivo binario
   
 
-
+/*
 Almacenamiento almacenamiento;
         almacenamiento.cantidadEntradas=10;
         almacenamiento.tamPorEntrada=4;
@@ -72,6 +72,7 @@ Almacenamiento almacenamiento;
         almacenamiento.vector=malloc(15);
         strcpy(almacenamiento.binario,"storage.bin");
         strcpy(almacenamiento.vector,"vectorBin.txt");
+        almacenamiento.tablaEntradas=tablaEntradas;
 
     //hardcodeo la posicion 0 y 4  del binario 
     puts("abro binario");
@@ -99,7 +100,7 @@ Almacenamiento almacenamiento;
 
 
 
-    preCargarTablaEntradas(tablaEntradas,config_get_string_value(cfg,"PUNTO_MONTAJE"), almacenamiento);
+    preCargarTablaEntradas(config_get_string_value(cfg,"PUNTO_MONTAJE"), almacenamiento);
     t_entrada* entrada1= list_get(tablaEntradas,0);
     printf("\nla primer clave de la lista es     %s", entrada1->clave);
 
@@ -338,7 +339,7 @@ Almacenamiento almacenamiento;
                                     strcpy(almacenamiento.binario,"vectorBin.txt");
                                     strcpy(almacenamiento.vector,"storage.bin");
                                 // Se precarga la Tabla de Entradas con datos del Dump
-                                preCargarTablaEntradas(tablaEntradas,config_get_string_value(cfg,"PUNTO_MONTAJE"), almacenamiento);
+                                preCargarTablaEntradas(config_get_string_value(cfg,"PUNTO_MONTAJE"), almacenamiento);
                                 break;
 
                             case COMPACTACION_LOCAL:

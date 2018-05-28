@@ -6,6 +6,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+#include <commons/collections/list.h>
 
 // Defino los Codigo de Operaciones
 enum cod_operacion {
@@ -138,6 +139,7 @@ typedef struct{ //para mejor manejo en la instancia
 	int tamPorEntrada;
 	char* binario;
 	char* vector;
+	t_list* tablaEntradas;
 }Almacenamiento;
 
 

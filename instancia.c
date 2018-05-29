@@ -119,6 +119,23 @@ Almacenamiento almacenamiento;
     //*/
 
 
+	//TEST PARA INSTRUCCION SET TODAVIA NO FUNCIONA
+	t_entrada* nuevaEntrada = NULL;
+	nuevaEntrada=malloc(sizeof(t_entrada));
+ 	nuevaEntrada->clave = malloc(strlen("a")+1);
+	strcpy(nuevaEntrada->clave, "a");
+	nuevaEntrada->clave[strlen("a")] = '\0';
+	list_add(tablaEntradas,nuevaEntrada);
+
+	if(existeEntradaEnTabla(tablaEntradas,"a") == true){
+		printf("EXISTE");
+	}else{printf("NO EXISTE");}
+	//TERMINA TEST PARA INSTRUCCION SET
+
+
+
+
+
 	printf("Iniciando INSTANCIA\n");
 
 

@@ -127,7 +127,7 @@ Almacenamiento almacenamiento;
 	nuevaEntrada->clave[strlen("a")] = '\0';
 	list_add(tablaEntradas,nuevaEntrada);
 
-	if(existeEntradaEnTabla(tablaEntradas,"a") == true){
+	if(existeEntradaEnTabla(tablaEntradas,"a")){
 		printf("EXISTE");
 	}else{printf("NO EXISTE");}
 	//TERMINA TEST PARA INSTRUCCION SET

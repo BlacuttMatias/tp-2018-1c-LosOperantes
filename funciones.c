@@ -1862,8 +1862,76 @@ void actualizarDiccionarioClavesInstancias(t_dictionary* dictionario, char key[4
 }
 
 // Realizar la Compactacion del Archivo Binario de una Instancia
-void realizarCompactacionLocal(Almacenamiento almacenamiento){
-//TODO
+//Devuelve True si se compacto y False si no se tuvo que compactar porque no era necesario
+bool realizarCompactacionLocal(Almacenamiento almacenamiento){
+
+	int tamEntrada = almacenamiento.tamPorEntrada;
+	int cantEntradas = almacenamiento.cantidadEntradas;
+	char contenidoVectortxt[cantEntradas];
+	char nuevoContenidoVectortxt[cantEntradas+1];
+	char letra='z';
+	char letraAnterior = '1';
+	char* valoresDelBinario[cantEntradas];
+	bool compactar=false;
+	//cuenta la cantidad de espacios ocupados por valores en el binario
+	int contadorEspaciosOcupados = 0;
+	//cuenta la cantidad de valores que hay almacenados en el binario. No es lo mismo que el espacio,
+	//ya que un valor puede ocupar mas de un espacio
+	int contadorValoresAlmacenados=0;
+
+	FILE* vectorTxt = fopen(almacenamiento.vector,"r+");
+	fseek(vectorTxt,0,SEEK_SET);
+
+	//se lee el txt y se carga en un vector lo leido. si se detecta un '0' seguido de un '1' significa que hay que compactar
+	for(int i=0; i<cantEntradas; i++){
+		fread(&letra,sizeof(char),1,vectorTxt);
+		contenidoVectortxt[i]=letra;
+		if(letraAnterior=='0' && letra=='1') compactar=true;
+		letraAnterior=letra;
+	}
+
+	if(compactar){
+		//se recorre el vector del txt. Cuando se detecta un 1, se usa esa posicion para ir leyendo los valores del binario
+		//y poniendolos en un vector
+		for(int i=0; i<cantEntradas; i++){
+			if(contenidoVectortxt[i]=='1'){
+				valoresDelBinario[contadorValoresAlmacenados] = leerBinarioEnPosicion(almacenamiento,i);
+				//cuando se lee un valor del binario, puede que este ocupe mas de una entrada(espacio)
+				//por eso hago la cuenta que sigue, para cambiar la posicion siguiente de la cual leer en caso de que haya ocupado
+				//mas de una entrada. La cuenta devuelve 0 si ocupa una entrada, 1 si ocupa 2, etc.
+				i += string_length(valoresDelBinario[contadorValoresAlmacenados])/tamEntrada;
+				contadorEspaciosOcupados += string_length(valoresDelBinario[contadorValoresAlmacenados])/tamEntrada;
+				contadorEspaciosOcupados++;
+				contadorValoresAlmacenados++;
+			}
+		}
+		//se va armando el nuevo contenido del txt, que seran todos unos seguidos de ceros
+		for(int i=0;i<contadorEspaciosOcupados;i++){
+			nuevoContenidoVectortxt[i] = '1';
+		}
+		//se llenan los espacios restantes del txt con ceros
+		for(int i=contadorEspaciosOcupados; i<cantEntradas; i++){
+			nuevoContenidoVectortxt[i] = '0';
+		}
+		nuevoContenidoVectortxt[cantEntradas] = '\0';
+
+		contadorValoresAlmacenados=0;
+		//se escribe el binario con el vector donde se almacenaron los valores
+		for(int i=0; i<contadorEspaciosOcupados; i++){
+			escribirBinarioEnPosicion(almacenamiento,i,valoresDelBinario[contadorValoresAlmacenados]);
+			//lo mismo que antes, si un valor que escribo ocupa mas de una entrada
+			//se debe cambiar la siguiente posicion de escritura
+			i += string_length(valoresDelBinario[contadorValoresAlmacenados])/tamEntrada;
+			//se libera el valor leido
+			free(valoresDelBinario[contadorValoresAlmacenados]);
+			contadorValoresAlmacenados++;
+		}
+		//se escribe el nuevo contenido del txt
+		fseek(vectorTxt,0,SEEK_SET);
+		fwrite(nuevoContenidoVectortxt,sizeof(char),cantEntradas+1,vectorTxt);
+	}
+	fclose(vectorTxt);
+	return compactar;
 }
 
 // no sirve lo guardo por si sirve la lógica

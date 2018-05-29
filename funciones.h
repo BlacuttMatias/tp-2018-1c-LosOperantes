@@ -136,7 +136,7 @@
 	char* valorEntrada(t_entrada* entrada);
 	int buscarPosicionEnBin(Almacenamiento almacenamiento, char* valor);
 	void preCargarTablaEntradas(char* puntoMontaje, Almacenamiento almacenamiento);
-	void realizarCompactacionLocal(Almacenamiento almacenamiento);
+	bool realizarCompactacionLocal(Almacenamiento almacenamiento);
 	void grabarPosicionEnVector(Almacenamiento almacenamiento, int posicion);
 	void liberarPosicionEnVector(Almacenamiento almacenamiento, int posicion);
 	void liberarEntradaEnVector(Almacenamiento almacenamiento, t_entrada* entrada);

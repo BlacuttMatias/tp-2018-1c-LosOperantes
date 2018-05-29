@@ -126,6 +126,10 @@
 	int cantidadDirectoriosPath(char* pathDirectorio);
 	bool crearEstructuraDirectorios(char* pathArchivo);
 
+	bool esIgualAKey(t_entrada* unaEntrada,char key[40]);
+	bool existeEntradaEnTabla(t_list* tablaEntradas, char key[40]);
+
+
 	char* leerBinarioEnPosicion(Almacenamiento almacenamiento, int posicion);
 	void escribirBinarioEnPosicion(Almacenamiento almacenamiento, int posicion, char* valor);
 	char* valorEntrada(t_entrada* entrada);

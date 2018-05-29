@@ -1870,7 +1870,7 @@ void realizarCompactacionLocal(Almacenamiento almacenamiento){
 //TODAVIA NO FUNCIONA P/INSTRUCCION SET
 bool existeEntradaEnTabla(t_list* tablaEntradas, char key[40]){
 
-	bool esIgualAKey(t_entrada* unaEntrada,char key[40]){
+	bool esIgualAKey(t_entrada* unaEntrada){
 		if(strcmp(unaEntrada->clave,key) == 0){;
 			printf("Existe");
 			return true;
@@ -1880,10 +1880,10 @@ bool existeEntradaEnTabla(t_list* tablaEntradas, char key[40]){
 		}
 	}
 
-//		if(list_any_satisfy(tablaEntradas, (void*)esIgualAKey)){
-//			printf("EXISTE");
-//			return true;
-//		}else{printf("NO EXISTE");
-//				return false;
-//		}
+		if(list_any_satisfy(tablaEntradas, (void*)esIgualAKey)){
+			printf("EXISTE");
+			return true;
+		}else{printf("NO EXISTE");
+				return false;
+		}
 }

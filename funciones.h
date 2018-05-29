@@ -126,7 +126,7 @@
 	int cantidadDirectoriosPath(char* pathDirectorio);
 	bool crearEstructuraDirectorios(char* pathArchivo);
 
-	bool esIgualAKey(t_entrada* unaEntrada,char key[40]);
+	bool esIgualAKey(t_entrada* unaEntrada);
 	bool existeEntradaEnTabla(t_list* tablaEntradas, char key[40]);
 
 

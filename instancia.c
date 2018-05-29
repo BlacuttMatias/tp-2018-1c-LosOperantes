@@ -119,7 +119,7 @@ Almacenamiento almacenamiento;
     //*/
 
 
-	//TEST PARA INSTRUCCION SET TODAVIA NO FUNCIONA
+	//TEST PARA INSTRUCCION SET TODAVIA YA FUNCIONA
 	t_entrada* nuevaEntrada = NULL;
 	nuevaEntrada=malloc(sizeof(t_entrada));
  	nuevaEntrada->clave = malloc(strlen("a")+1);

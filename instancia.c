@@ -130,6 +130,22 @@ Almacenamiento almacenamiento;
 	if(existeEntradaEnTabla(tablaEntradas,"a")){
 		printf("EXISTE");
 	}else{printf("NO EXISTE");}
+
+	bool esIgualA(t_entrada* unaEntrada){
+		if(strcmp(nuevaEntrada->clave,"a") == 0){;
+			printf("Existe");
+			return true;
+		}else{
+			printf("No Existe");
+			return false;
+		}
+	}
+
+
+	t_entrada* entradaEncontrada = list_find(tablaEntradas,(void*)esIgualA);
+	printf("   KEY:%s numero de entrada: %d    ",entradaEncontrada->clave,entradaEncontrada->numeroDeEntrada);
+
+
 	//TERMINA TEST PARA INSTRUCCION SET
 
 
@@ -251,8 +267,40 @@ Almacenamiento almacenamiento;
                                     // TODO
                                     // Persistir el Valor en el Archivo Binario
 									//Prototipado
-                                	//int posicion = buscarPosicionEnBin(Almacenamiento almacenamiento, registroInstruccion.dato);
-                                	//escribirBinarioEnPosicion(Almacenamiento almacenamiento, int posicion, registroInstruccion.dato);
+
+                                	if(existeEntradaEnTabla(tablaEntradas,registroInstruccion.key)){
+                                		//si ya existe la entrada en la tabla
+
+                                		bool esIgualA(t_entrada* unaEntrada){
+                                			if(strcmp(unaEntrada->clave,registroInstruccion.key) == 0){;
+                                				printf(" Existe ");
+                                				return true;
+                                			}else{
+                                				printf(" No Existe ");
+                                				return false;
+                                			}
+                                		}
+
+                                		//la busco dentro de la tabla asi saco su numero de entrada por ende su posicion en el binario
+                                		t_entrada* entradaEncontrada = list_find(tablaEntradas,(void*)esIgualA);
+
+                                    	int posicion = entradaEncontrada->numeroDeEntrada; //posicion del binario
+
+                                    	//escribo en el binario
+                                    	escribirBinarioEnPosicion(almacenamiento, posicion, registroInstruccion.dato);
+
+
+
+
+
+                                	}else{
+
+                                		//si NO existe la entrada en la tabla
+                                		//hay que ver si hay entradas libres
+                                		//si hay se persiste en la siguiente entrada libre
+                                		//si no hay hay que correr algoritmo de reemplazo
+                                	}
+
 
 
 

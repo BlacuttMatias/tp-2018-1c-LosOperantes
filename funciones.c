@@ -1866,6 +1866,25 @@ void realizarCompactacionLocal(Almacenamiento almacenamiento){
 //TODO
 }
 
+// no sirve lo guardo por si sirve la lógica
+//void reemplazoValor(t_entrada* unaEntrada, char* valor, char key[40]){
+
+//	if(strcmp(unaEntrada->clave,key) == 0){
+
+// 	unaEntrada->clave = malloc(strlen(valor)+1);
+//	strcpy(unaEntrada->clave, valor);
+//	unaEntrada->clave[strlen(valor)] = '\0';
+
+//	}
+
+//}
+
+//void actualizarTablaDeEntradas(t_list* tablaEntradas,t_entrada* unaEntrada, char* valor){
+
+//	list_map(tablaEntradas,(void*)reemplazoValor);
+
+//}
+
 
 //TODAVIA NO FUNCIONA P/INSTRUCCION SET
 bool existeEntradaEnTabla(t_list* tablaEntradas, char key[40]){

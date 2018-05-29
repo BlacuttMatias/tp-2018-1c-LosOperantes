@@ -1865,3 +1865,25 @@ void actualizarDiccionarioClavesInstancias(t_dictionary* dictionario, char key[4
 void realizarCompactacionLocal(Almacenamiento almacenamiento){
 //TODO
 }
+
+
+//TODAVIA NO FUNCIONA P/INSTRUCCION SET
+bool existeEntradaEnTabla(t_list* tablaEntradas, char key[40]){
+
+	bool esIgualAKey(t_entrada* unaEntrada,char key[40]){
+		if(strcmp(unaEntrada->clave,key) == 0){;
+			printf("Existe");
+			return true;
+		}else{
+			printf("No Existe");
+			return false;
+		}
+	}
+
+//		if(list_any_satisfy(tablaEntradas, (void*)esIgualAKey)){
+//			printf("EXISTE");
+//			return true;
+//		}else{printf("NO EXISTE");
+//				return false;
+//		}
+}

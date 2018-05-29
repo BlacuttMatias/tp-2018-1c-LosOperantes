@@ -1891,18 +1891,18 @@ bool existeEntradaEnTabla(t_list* tablaEntradas, char key[40]){
 
 	bool esIgualAKey(t_entrada* unaEntrada){
 		if(strcmp(unaEntrada->clave,key) == 0){;
-			printf("Existe");
+			printf(" Existe ");
 			return true;
 		}else{
-			printf("No Existe");
+			printf(" No Existe ");
 			return false;
 		}
 	}
 
 		if(list_any_satisfy(tablaEntradas, (void*)esIgualAKey)){
-			printf("EXISTE");
+			printf(" EXISTE ");
 			return true;
-		}else{printf("NO EXISTE");
+		}else{printf(" NO EXISTE ");
 				return false;
 		}
 }

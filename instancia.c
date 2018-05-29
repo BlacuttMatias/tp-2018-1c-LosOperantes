@@ -128,22 +128,20 @@ Almacenamiento almacenamiento;
 	list_add(tablaEntradas,nuevaEntrada);
 
 	if(existeEntradaEnTabla(tablaEntradas,"a")){
-		printf("EXISTE");
-	}else{printf("NO EXISTE");}
+		printf(" EXISTE ");
+	}else{printf(" NO EXISTE ");}
 
 	bool esIgualA(t_entrada* unaEntrada){
 		if(strcmp(nuevaEntrada->clave,"a") == 0){;
-			printf("Existe");
+			printf(" Existe ");
 			return true;
 		}else{
-			printf("No Existe");
+			printf(" No Existe ");
 			return false;
 		}
 	}
 
 
-	t_entrada* entradaEncontrada = list_find(tablaEntradas,(void*)esIgualA);
-	printf("   KEY:%s numero de entrada: %d    ",entradaEncontrada->clave,entradaEncontrada->numeroDeEntrada);
 
 
 	//TERMINA TEST PARA INSTRUCCION SET

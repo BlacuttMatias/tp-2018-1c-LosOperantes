@@ -1954,7 +1954,6 @@ bool realizarCompactacionLocal(Almacenamiento almacenamiento){
 //}
 
 
-//TODAVIA NO FUNCIONA P/INSTRUCCION SET
 bool existeEntradaEnTabla(t_list* tablaEntradas, char key[40]){
 
 	bool esIgualAKey(t_entrada* unaEntrada){
@@ -1974,3 +1973,38 @@ bool existeEntradaEnTabla(t_list* tablaEntradas, char key[40]){
 				return false;
 		}
 }
+
+void mostrarHola(){
+
+	printf("HOLA");
+
+}
+
+void ejecutarCadaXTiempo(void funcionAEjecutar(), int tiempo ){
+
+	time_t tiempoAux, tiempoActual;
+	   int diferencia = 0;
+	   int minutos;
+	   int segundos = 0;
+	   int temp;
+
+	   tiempoAux = time(NULL); // se obtiene tiempo auxiliar de comienzo
+
+	   while (diferencia < tiempo ){
+	      tiempoActual = time(NULL); //se obtiene tiempo actual
+	      diferencia = difftime(tiempoActual, tiempoAux);
+	      minutos = diferencia / 60.0;
+	      segundos = diferencia - minutos * 60;
+
+	      if (temp != segundos){ //transcurrió un segundo
+	         temp = segundos; //guardo valor previo
+	         //printf("%02d\n", segundos);
+	      }
+
+	      if(diferencia == tiempo){
+	    	  funcionAEjecutar();
+	    	  //printf("ejecuto");
+	      }
+	   }
+}
+

@@ -12,6 +12,7 @@
 #include <sys/time.h>
 #include <sys/wait.h>
 #include <unistd.h>
+#include <time.h>
 
 #include <sys/types.h>
 #include <dirent.h>
@@ -143,11 +144,12 @@ Almacenamiento almacenamiento;
 
 
 
-
 	//TERMINA TEST PARA INSTRUCCION SET
 
-
-
+	//TEST PARA EJECUTAR DUMP CADA CIERTO TIEMPO
+	ejecutarCadaXTiempo(mostrarHola,config_get_int_value(cfg,"INTERVALO_DUMP"));
+	//TERMINA TEST EXITOSO PROBADO CON MOSTRAR HOLA, TOMA EL VALOR "10" DE LA CONFIG (ESTIMAMOS EN SEGUNDOS SINO SE MODIFICA SIN PROBLEMA) Y LO APLICA.
+	//config_get_int_value(cfg,"INTERVALO_DUMP") TOMA EL VALOR DE LA CONFIG,
 
 
 	printf("Iniciando INSTANCIA\n");

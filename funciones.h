@@ -129,7 +129,8 @@
 	bool esIgualAKey(t_entrada* unaEntrada);
 	bool esIgualA(t_entrada* unaEntrada, char key[40]);
 	bool existeEntradaEnTabla(t_list* tablaEntradas, char key[40]);
-
+	void ejecutarCadaXTiempo(void funcionAEjecutar(), int tiempo );
+	void mostrarHola();
 
 	char* leerBinarioEnPosicion(Almacenamiento almacenamiento, int posicion);
 	void escribirBinarioEnPosicion(Almacenamiento almacenamiento, int posicion, char* valor);

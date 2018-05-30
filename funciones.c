@@ -1351,8 +1351,9 @@ int espacioLibre(Almacenamiento almacenamiento){
 	char valor;
 	int contador;
 	while(fread(&valor, sizeof(char),1,vectorBin) != EOF){
-		if(valor=='0'){contador += contador;}
+		if(valor=='0'){contador += 1 ;}
 	}
+	fclose(vectorBin);
 	return contador;
 }
 void liberarUnEspacio(Almacenamiento almacenamiento, int* puntero){
@@ -1374,9 +1375,9 @@ void liberarUnEspacio(Almacenamiento almacenamiento, int* puntero){
 
 void incrementarPuntero(Almacenamiento almacenamiento,int* puntero) {
 	if(*puntero == (almacenamiento.cantidadEntradas-1) ){
-		puntero=0;
+		*puntero=0;
 	}
-	else{puntero= puntero+1;
+	else{*puntero= *puntero+1;
 	}
 }
 
@@ -1391,9 +1392,14 @@ void destruirEntradaEnPosicion(Almacenamiento almacenamiento, int posicion){
 	free(destruida);
 }
 
-bool persistirDatos(Almacenamiento almacenamiento,Instruccion* datosInstruccion, char* algoritmoDistribucion, int* puntero){
+int persistirDatos(Almacenamiento almacenamiento,Instruccion* datosInstruccion, char* algoritmoDistribucion, int* puntero){
+	char*valor=datosInstruccion->dato;
+
+	
 	int tamanio= string_length(datosInstruccion->dato);
 	int i=0;
+	int j=0;
+	char letra;
 	tamanio= tamanio/almacenamiento.tamPorEntrada +1; //calculo cuantas entradas necesita el valor nuevo
 	if(tamanio % almacenamiento.tamPorEntrada==0){tamanio -= 1;}
 	int espaciosLibres= espacioLibre(almacenamiento);
@@ -1444,12 +1450,52 @@ bool persistirDatos(Almacenamiento almacenamiento,Instruccion* datosInstruccion,
 
 
 
-		}	else {printf("\n no se pudo leer el algoritmo de reemplazo %s \n", algoritmoDistribucion);}}}
+		}	else {printf("\n no se pudo leer el algoritmo de reemplazo %s \n", algoritmoDistribucion);
+				return -2;}}}
 	}		// Dependiendo el algoritmoDistricucion, persistir los datos localmente
 			//en este caso tengo espacio suficiente sin reemplazar, analizo si compactar o simplemente guardar
+	if(espaciosLibres<tamanio){
+		log_info(infoLogger,"no se pueden borrar datos atomicos en la instancia para guardar nuevos datos");
+		return -1; }//retorno -1 si no se puede encontrar espacio suficiente para guardar el dato
+	FILE* vectorBin= fopen(almacenamiento.vector,"r+");
+	for(i=0;i<almacenamiento.cantidadEntradas;i++){//busco primer 0 en vectorBin
+		fseek(vectorBin,i,SEEK_SET);
+		fread(&letra,sizeof(char),1,vectorBin);
+		if(letra=='0'){
+			j=1;
+			while(letra=='0' && j<tamanio){//cuento cuantas posiciones libres consecutivas hay hasta conseguir la cantidad necesaria
+				
+				fread(&letra,sizeof(char),1,vectorBin);
+				if(letra=='0'){j++;}
 
-
-	return true;
+			}
+			fclose(vectorBin);
+			if(j==tamanio){
+				escribirBinarioEnPosicion(almacenamiento,i,valor);//retorno i que es la posicion donde se guarda el comienzo del valor
+				for(j=0;j<tamanio;j++){
+					grabarPosicionEnVector(almacenamiento,i+j);
+				}
+				return i;
+			}
+			vectorBin= fopen(almacenamiento.vector,"r+");
+		}
+	}
+	fclose(vectorBin);
+	realizarCompactacionLocal(almacenamiento);
+	vectorBin= fopen(almacenamiento.vector,"r+");
+	fseek(vectorBin,0,SEEK_SET);
+	i=0;
+	fread(&letra,sizeof(char),1,vectorBin);
+	while(letra!='0'){
+		i++;
+		fread(&letra,sizeof(char),1,vectorBin);
+	}
+	escribirBinarioEnPosicion(almacenamiento,i,valor);
+	fclose(vectorBin);
+	for(j=0;j<tamanio;j++){
+		grabarPosicionEnVector(almacenamiento,i+j);
+	}
+	return i;
 }
 
 bool enviarInstruccionInstancia(Instruccion registroInstruccion, int socketInstancia){

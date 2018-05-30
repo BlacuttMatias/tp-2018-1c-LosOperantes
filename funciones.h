@@ -116,7 +116,7 @@
 /*  Funciones de Instancia 					*/
 /* ---------------------------------------- */
 
-	bool persistirDatos(Almacenamiento almacenamiento,Instruccion* datosInstruccion ,char* algoritmoAlmacenamiento, int* puntero);
+	int persistirDatos(Almacenamiento almacenamiento,Instruccion* datosInstruccion ,char* algoritmoAlmacenamiento, int* puntero);
 	void cargarTablaEntradas(t_list *tablaEntradas,Instruccion* estructuraInstruccion);
 	void persistirEntrada(t_entrada* unaEntrada);
 	/* Función para devolver un error */

@@ -283,9 +283,10 @@ Almacenamiento almacenamiento;
                                 		t_entrada* entradaEncontrada = list_find(tablaEntradas,(void*)esIgualA);
 
                                     	int posicion = entradaEncontrada->numeroDeEntrada; //posicion del binario
+                                        liberarEntradaEnVector(almacenamiento,entradaEncontrada);
 
                                     	//escribo en el binario
-                                    	escribirBinarioEnPosicion(almacenamiento, posicion, registroInstruccion.dato);
+                                    	persistirDatos(almacenamiento,&registroInstruccion,algoritmoAlmacenamiento,puntero);
 
 
 

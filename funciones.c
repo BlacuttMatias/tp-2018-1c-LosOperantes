@@ -2048,9 +2048,3 @@ void ejecutarCadaXTiempo(void funcionAEjecutar(), int tiempo ){
 	      }
 	   }
 }
-
-void mostrarHola(int s) { //FUNCION PARA TEST DE INTERVALO DUMP
-     printf("--HOLA--\n" );
-     alarm(config_get_int_value(cfg,"INTERVALO_DUMP"));    //cada intervalo de dump
-     signal(SIGALRM, mostrarHola);
-}

@@ -34,11 +34,18 @@
 /* ---------------------------------------- */
 
 
+// Gestor del Intervalo del Dump
+void handle_alarm(int sig) {
+
+    // Realizo el Dump de la Tabla de Entradas
+    dump(tablaEntradas);
+
+     printf("Dump automatizado cada %d segundos...\n", config_get_int_value(cfg,"INTERVALO_DUMP") );
+     alarm(config_get_int_value(cfg,"INTERVALO_DUMP"));
+}
+
 
 int main(int argc, char* argv[]){
-
-
-
 
     /* Creo la instancia del Archivo de Configuracion y del Log */
     cfg = config_create("config/config.cfg");
@@ -59,16 +66,14 @@ int main(int argc, char* argv[]){
 	//creo lista tabla de entradas
 	tablaEntradas = list_create(); 
 	
-	//	TEST CON SIGNAL NO FUNCIONA, SIGUE BLOQUEANTE SI SE SACA EL WHILE NO EJECUTA ALARM NI SIGNAL.
-	   signal(SIGALRM, mostrarHola);
-	   alarm(config_get_int_value(cfg,"INTERVALO_DUMP"));
-	   int n = 0;
-		    while (1) {
-		    	n++;
-		    }
 
-
-
+    // Defino el Intervalo del DUMP y lo planifico
+    struct sigaction sa;
+    sa.sa_handler = &handle_alarm;
+    sa.sa_flags = SA_RESTART;
+    sigfillset(&sa.sa_mask);
+    sigaction(SIGALRM, &sa, NULL);
+    alarm(config_get_int_value(cfg,"INTERVALO_DUMP"));
 
 //**PARA TESTEAR EL RECUPERO DE INFORMACION SI LA INSTANCIA MUERE HAY QUE COMENTAR ESTE PEDAZO DE CODIGO****** //
  	
@@ -131,7 +136,7 @@ Almacenamiento almacenamiento;
 	}
     //*/
 
-
+/*
 	//TEST PARA INSTRUCCION SET TODAVIA YA FUNCIONA
 	t_entrada* nuevaEntrada = NULL;
 	nuevaEntrada=malloc(sizeof(t_entrada));
@@ -154,7 +159,7 @@ Almacenamiento almacenamiento;
 		}
 	}
 
-
+*/
 
 	//TERMINA TEST PARA INSTRUCCION SET
 
@@ -168,14 +173,10 @@ Almacenamiento almacenamiento;
 	printf("Iniciando INSTANCIA\n");
 
 
-
 	Encabezado encabezado;
 	Paquete paquete;
     struct sockaddr_in servidor_addr,my_addr,master_addr; // información de la dirección de destino
-    int numbytes,escucha_master,fd_maximo,nuevo_fd,i,size, nbytes;
-    fd_set master,temporales;
-    FD_ZERO(&master);
-    FD_ZERO(&temporales);
+    int numbytes,escucha_master,fd_maximo,nuevo_fd,size, nbytes;
 
     // Creo conexión con el Coordinador
     int coordinador_fd = conectarseAservidor(config_get_string_value(cfg,"COORDINADOR_IP"),config_get_int_value(cfg,"COORDINADOR_PUERTO"));
@@ -187,6 +188,10 @@ Almacenamiento almacenamiento;
         log_info(infoLogger, "Conexion establecida con el Coordinador");        
     }
 
+    // Defino el Algoritmo de Reemplazo a utlizar
+    char* algoritmoReemplazo = string_new();
+    string_append(&algoritmoReemplazo,config_get_string_value(cfg,"ALGORITMO_REEMPLAZO"));
+
 
     // Serializado el Proceso
     paquete = srlz_datosProceso('I', HANDSHAKE, config_get_string_value(cfg,"INSTANCIA_NOMBRE"), INSTANCIA, 0);
@@ -195,29 +200,25 @@ Almacenamiento almacenamiento;
     send(coordinador_fd,paquete.buffer,paquete.tam_buffer,0);
     free(paquete.buffer);
 
-    FD_SET(coordinador_fd, &master);
-    fd_maximo = coordinador_fd;   
-
 
 // -----------------------------------------------------------------------
 //    Prueba de funciones 2
 // -----------------------------------------------------------------------
 
+/*
+
     Instruccion* datosInstruccion;
 
 
-    // Defino el Algoritmo de Almacenamiento a utlizar
-    char* algoritmoAlmacenamiento = string_new();
-    string_append(&algoritmoAlmacenamiento,"CIRCULAR");
 
 
-    if(persistirDatos(almacenamiento,datosInstruccion, algoritmoAlmacenamiento,puntero)){
+    if(persistirDatos(almacenamiento,datosInstruccion, algoritmoReemplazo,puntero)){
         // Proceso a realizar si se persistiron correctamente los datos
     }else{
         // Proceso a realizar si fallo la persistencia
     }
 
-    free(algoritmoAlmacenamiento);
+*/
 
 
 // -----------------------------------------------------------------------
@@ -225,214 +226,188 @@ Almacenamiento almacenamiento;
     EntradasIntancias registroEntradasIntancias;
     Instruccion registroInstruccion;
 
-    while(1){
-    	temporales=master;
+    while(true){
 
-    	if(select(fd_maximo+1,&temporales,NULL,NULL,NULL)==-1){
-    		perror("select");
-    		exit (1);
-    	}
-    	for(i = 0; i <= fd_maximo; i++) {
-            if (FD_ISSET(i, &temporales)) { // ¡¡tenemos datos!!
-                if (i == escucha_master) {
-                    // gestionar nuevas conexiones
-                    size = sizeof(master_addr);
-                    if ((nuevo_fd = accept(escucha_master, (struct sockaddr *)&master_addr,
-                                                             &size)) == -1) {
-                        perror("accept");
-                    } else {
-                        FD_SET(nuevo_fd, &master); // añadir al conjunto maestro
-                        if (nuevo_fd > fd_maximo) {    // actualizar el máximo
-                            fd_maximo = nuevo_fd;
-                        }
-						log_info(infoLogger, "Conexion nueva recibida" );
-						printf("Conexion nueva recibida\n");
+		encabezado=recibir_header(&coordinador_fd);
+
+		// gestionar datos de un cliente
+		if ((nbytes = encabezado.tam_payload) <= 0) {
+			 // error o conexión cerrada por el cliente
+			 if (nbytes == 0) {
+			 // conexión cerrada
+			 	printf("Coordinador se ha caído\n");
+			 } else {
+			 	perror("recv");
+			 }
+			 close(coordinador_fd);
+             return 0;
+		} else {
+
+			switch(encabezado.cod_operacion){
+
+				case EJECUTAR_INSTRUCCION:
+
+                    paquete=recibir_payload(&coordinador_fd,&encabezado.tam_payload);
+                    registroInstruccion=dsrlz_instruccion(paquete.buffer);
+                    free(paquete.buffer);
+
+                    log_info(infoLogger,"Pedido de Ejecución de una Instruccion recibida del Coordinador: %d %s %s", registroInstruccion.operacion, registroInstruccion.key, registroInstruccion.dato);
+
+                    if(registroInstruccion.operacion == SET){
+
+                        // TODO
+                        // Persistir el Valor en el Archivo Binario
+						//Prototipado
+
+                    	if(existeEntradaEnTabla(tablaEntradas,registroInstruccion.key)){
+                    		//si ya existe la entrada en la tabla
+
+                    		bool esIgualA(t_entrada* unaEntrada){
+                    			if(strcmp(unaEntrada->clave,registroInstruccion.key) == 0){;
+                    				printf(" Existe ");
+                    				return true;
+                    			}else{
+                    				printf(" No Existe ");
+                    				return false;
+                    			}
+                    		}
+
+                    		//la busco dentro de la tabla asi saco su numero de entrada por ende su posicion en el binario
+                    		t_entrada* entradaEncontrada = list_find(tablaEntradas,(void*)esIgualA);
+
+                        	int posicion = entradaEncontrada->numeroDeEntrada; //posicion del binario
+                            liberarEntradaEnVector(almacenamiento,entradaEncontrada);
+
+                        	//escribo en el binario
+                        	persistirDatos(almacenamiento,&registroInstruccion,algoritmoReemplazo,puntero);
+
+
+
+
+
+                    	}else{
+
+                    		//si NO existe la entrada en la tabla
+                    		//hay que ver si hay entradas libres
+                    		//si hay se persiste en la siguiente entrada libre
+                    		//si no hay hay que correr algoritmo de reemplazo
+                    	}
+
+
+
+
+
+                        // Cargo la Tabla de Entradas
+                        cargarTablaEntradas(tablaEntradas,&registroInstruccion);
+
+                        // TODO
+                        // Modificar el valor de la Key
+
+                        // Realizo el Dump de la Tabla de Entradas
+                        dump(tablaEntradas);
+
                     }
-                } else {
 
-					encabezado=recibir_header(&i);
+                    if(registroInstruccion.operacion == STORE){                                
 
-					// gestionar datos de un cliente
-					if ((nbytes = encabezado.tam_payload) <= 0) {
-						 // error o conexión cerrada por el cliente
-						 if (nbytes == 0) {
-						 // conexión cerrada
-						 	printf("selectserver: socket %d se ha caído\n", i);
-						 } else {
-						 	perror("recv");
-						 }
-						 close(i); // ¡Hasta luego!
-						 FD_CLR(i, &master); // eliminar del conjunto maestro
-					} else {
+                        // TODO
+                        // Implementar
 
-						switch(encabezado.cod_operacion){
-
-							case EJECUTAR_INSTRUCCION:
-
-                                paquete=recibir_payload(&i,&encabezado.tam_payload);
-                                registroInstruccion=dsrlz_instruccion(paquete.buffer);
-                                free(paquete.buffer);
-
-                                log_info(infoLogger,"Pedido de Ejecución de una Instruccion recibida del Coordinador: %d %s %s", registroInstruccion.operacion, registroInstruccion.key, registroInstruccion.dato);
-
-                                if(registroInstruccion.operacion == SET){
-
-                                    // TODO
-                                    // Persistir el Valor en el Archivo Binario
-									//Prototipado
-
-                                	if(existeEntradaEnTabla(tablaEntradas,registroInstruccion.key)){
-                                		//si ya existe la entrada en la tabla
-
-                                		bool esIgualA(t_entrada* unaEntrada){
-                                			if(strcmp(unaEntrada->clave,registroInstruccion.key) == 0){;
-                                				printf(" Existe ");
-                                				return true;
-                                			}else{
-                                				printf(" No Existe ");
-                                				return false;
-                                			}
-                                		}
-
-                                		//la busco dentro de la tabla asi saco su numero de entrada por ende su posicion en el binario
-                                		t_entrada* entradaEncontrada = list_find(tablaEntradas,(void*)esIgualA);
-
-                                    	int posicion = entradaEncontrada->numeroDeEntrada; //posicion del binario
-                                        liberarEntradaEnVector(almacenamiento,entradaEncontrada);
-
-                                    	//escribo en el binario
-                                    	persistirDatos(almacenamiento,&registroInstruccion,algoritmoAlmacenamiento,puntero);
+                        // Realizo el Dump de la Tabla de Entradas
+                        dump(tablaEntradas);
+                    }
 
 
 
+                    // Realizo la Compactacion del Archivo Binario
+                    realizarCompactacionLocal(almacenamiento);
 
+                    log_info(infoLogger,"Se realizo la Compactacion Local en la Instancia %s", config_get_string_value(cfg,"INSTANCIA_NOMBRE"));
 
-                                	}else{
-
-                                		//si NO existe la entrada en la tabla
-                                		//hay que ver si hay entradas libres
-                                		//si hay se persiste en la siguiente entrada libre
-                                		//si no hay hay que correr algoritmo de reemplazo
-                                	}
-
-
-
-
-
-                                    // Cargo la Tabla de Entradas
-                                    cargarTablaEntradas(tablaEntradas,&registroInstruccion);
-
-                                    // TODO
-                                    // Modificar el valor de la Key
-
-                                    // Realizo el Dump de la Tabla de Entradas
-                                    dump(tablaEntradas);
-
-                                }
-
-                                if(registroInstruccion.operacion == STORE){                                
-
-                                    // TODO
-                                    // Implementar
-
-                                    // Realizo el Dump de la Tabla de Entradas
-                                    dump(tablaEntradas);
-                                }
+                    // Le aviso al Coordinador para que las demas Instancias realicen sus Compactaciones
+                    Paquete paquete= crearHeader('I',COMPACTACION_GLOBAL,1);
+                    if( send(coordinador_fd,paquete.buffer,paquete.tam_buffer,1) != -1 ){
+                        log_info(infoLogger,"Se le envio al COORDINADOR el aviso para que las demas Instancias realicen sus Compactaciones Locales");
+                    }else{
+                        log_info(infoLogger,"No se pudo enviar al COORDINADOR el aviso para que las demas Instancias realicen sus Compactaciones Locales");
+                    }
 
 
 
-                                // Realizo la Compactacion del Archivo Binario
-                                realizarCompactacionLocal(almacenamiento);
+                    // TODO
+                    // Determinar si fallo o no y corregir el mensaje de abajo. Ahora esta harcodeado a EJECUCION_EXITOSA
 
-                                log_info(infoLogger,"Se realizo la Compactacion Local en la Instancia %s", config_get_string_value(cfg,"INSTANCIA_NOMBRE"));
+                    // Armo el Paquete del Resultado de la Ejecucion de la Instruccion
+                    paquete = srlz_resultadoEjecucion('I', RESPUESTA_EJECUTAR_INSTRUCCION, registroInstruccion.nombreEsiOrigen, EJECUCION_EXITOSA, "", registroInstruccion.operacion, registroInstruccion.key);
 
-                                // Le aviso al Coordinador para que las demas Instancias realicen sus Compactaciones
-                                Paquete paquete= crearHeader('I',COMPACTACION_GLOBAL,1);
-                                if( send(coordinador_fd,paquete.buffer,paquete.tam_buffer,1) != -1 ){
-                                    log_info(infoLogger,"Se le envio al COORDINADOR el aviso para que las demas Instancias realicen sus Compactaciones Locales");
-                                }else{
-                                    log_info(infoLogger,"No se pudo enviar al COORDINADOR el aviso para que las demas Instancias realicen sus Compactaciones Locales");
-                                }
+                    // Envio el Paquete al Coordinador
+                    if(send(coordinador_fd,paquete.buffer,paquete.tam_buffer,0) != -1){
 
+                        free(paquete.buffer);
+                        log_info(infoLogger, "Se le notificó al COORDINADOR el resultado de la ejecución de la Instrucción");
 
-
-                                // TODO
-                                // Determinar si fallo o no y corregir el mensaje de abajo. Ahora esta harcodeado a EJECUCION_EXITOSA
-
-                                // Armo el Paquete del Resultado de la Ejecucion de la Instruccion
-                                paquete = srlz_resultadoEjecucion('I', RESPUESTA_EJECUTAR_INSTRUCCION, registroInstruccion.nombreEsiOrigen, EJECUCION_EXITOSA, "", registroInstruccion.operacion, registroInstruccion.key);
-
-                                // Envio el Paquete al Coordinador
-                                if(send(coordinador_fd,paquete.buffer,paquete.tam_buffer,0) != -1){
-
-                                    free(paquete.buffer);
-                                    log_info(infoLogger, "Se le notificó al COORDINADOR el resultado de la ejecución de la Instrucción");
-
-                                }else{
-                                    log_error(infoLogger, "No se pudo notificar al COORDINADOR el resultado de la ejecución de la Instrucción");
-                                }
-								break;
+                    }else{
+                        log_error(infoLogger, "No se pudo notificar al COORDINADOR el resultado de la ejecución de la Instrucción");
+                    }
+					break;
 
 
-                            case OBTENCION_CONFIG_ENTRADAS:
+                case OBTENCION_CONFIG_ENTRADAS:
 
-                                // Recibo los datos de las Entradas
-                                paquete = recibir_payload(&i,&encabezado.tam_payload);
-                                registroEntradasIntancias = dsrlz_datosEntradas(paquete.buffer);
-                                free(paquete.buffer);
+                    // Recibo los datos de las Entradas
+                    paquete = recibir_payload(&coordinador_fd,&encabezado.tam_payload);
+                    registroEntradasIntancias = dsrlz_datosEntradas(paquete.buffer);
+                    free(paquete.buffer);
 
-                                log_info(infoLogger,"Recepcipión del Coordinador de la Cantidad (%d) y Tamaño de las Entradas (%d).", registroEntradasIntancias.cantEntrada , registroEntradasIntancias.tamanioEntrada);
+                    log_info(infoLogger,"Recepcipión del Coordinador de la Cantidad (%d) y Tamaño de las Entradas (%d).", registroEntradasIntancias.cantEntrada , registroEntradasIntancias.tamanioEntrada);
 
-                                // Guardo los datos recibidos
-                                entradas=registroEntradasIntancias.cantEntrada;
-                                espacioPorEntrada=registroEntradasIntancias.tamanioEntrada;
+                    // Guardo los datos recibidos
+                    entradas=registroEntradasIntancias.cantEntrada;
+                    espacioPorEntrada=registroEntradasIntancias.tamanioEntrada;
 
-                                // Creo el Storage.bin si no existe
-                                if (!existeArchivo("storage.bin")){
-                                    FILE* binario= fopen("storage.bin","wb+");
-                                    ftruncate(fileno(binario),entradas*espacioPorEntrada);
+                    // Creo el Storage.bin si no existe
+                    if (!existeArchivo("storage.bin")){
+                        FILE* binario= fopen("storage.bin","wb+");
+                        ftruncate(fileno(binario),entradas*espacioPorEntrada);
 
-                                    // Cierro los FD
-                                    fclose(binario);
-                                }
+                        // Cierro los FD
+                        fclose(binario);
+                    }
 
-                                // Creo el Bitmap si no existe
-                                if (!existeArchivo("vectorBin.txt")){
-                                    FILE* vectorBin = fopen("vectorBin.txt","w");
+                    // Creo el Bitmap si no existe
+                    if (!existeArchivo("vectorBin.txt")){
+                        FILE* vectorBin = fopen("vectorBin.txt","w");
 
-                                    for(contador=0;contador<entradas; contador=contador+1){
-                                        fseek(vectorBin,sizeof(char)*contador,SEEK_SET);
-                                        fwrite(&cero,sizeof(char),1,vectorBin);
-                                    }
+                        for(contador=0;contador<entradas; contador=contador+1){
+                            fseek(vectorBin,sizeof(char)*contador,SEEK_SET);
+                            fwrite(&cero,sizeof(char),1,vectorBin);
+                        }
 
-                                    // Cierro los FD
-                                    fclose(vectorBin);
+                        // Cierro los FD
+                        fclose(vectorBin);
 
-                                    
-                                }
-                                //creo estructura de datos con info de almacenamiento
-                                    almacenamiento.cantidadEntradas=entradas;
-                                    almacenamiento.tamPorEntrada=espacioPorEntrada;
-                                    almacenamiento.binario=string_new();
-                                    almacenamiento.vector=string_new();
-                                    strcpy(almacenamiento.binario,"vectorBin.txt");
-                                    strcpy(almacenamiento.vector,"storage.bin");
-                                    almacenamiento.tablaEntradas=tablaEntradas;
-                                // Se precarga la Tabla de Entradas con datos del Dump
-                                preCargarTablaEntradas(config_get_string_value(cfg,"PUNTO_MONTAJE"), almacenamiento);
-                                break;
+                        
+                    }
+                    //creo estructura de datos con info de almacenamiento
+                        almacenamiento.cantidadEntradas=entradas;
+                        almacenamiento.tamPorEntrada=espacioPorEntrada;
+                        almacenamiento.binario=string_new();
+                        almacenamiento.vector=string_new();
+                        strcpy(almacenamiento.binario,"vectorBin.txt");
+                        strcpy(almacenamiento.vector,"storage.bin");
+                        almacenamiento.tablaEntradas=tablaEntradas;
+                    // Se precarga la Tabla de Entradas con datos del Dump
+                    preCargarTablaEntradas(config_get_string_value(cfg,"PUNTO_MONTAJE"), almacenamiento);
+                    break;
 
-                            case COMPACTACION_LOCAL:
-                                // Realizar la Compactacion del Archivo Binario a pedido del Coordinador
-                                realizarCompactacionLocal(almacenamiento);                            
+                case COMPACTACION_LOCAL:
+                    // Realizar la Compactacion del Archivo Binario a pedido del Coordinador
+                    realizarCompactacionLocal(almacenamiento);                            
 
-                                log_info(infoLogger,"Se realizo la Compactacion Local en la Instancia %s a pedido del COORDINADOR", config_get_string_value(cfg,"INSTANCIA_NOMBRE"));
-                                break;                                
-						}
-					}
-                }
-            }
-        }
+                    log_info(infoLogger,"Se realizo la Compactacion Local en la Instancia %s a pedido del COORDINADOR", config_get_string_value(cfg,"INSTANCIA_NOMBRE"));
+                    break;                                
+			}
+		}
     }
 
     /* ---------------------------------------- */
@@ -440,9 +415,7 @@ Almacenamiento almacenamiento;
     /* ---------------------------------------- */
     log_destroy(infoLogger);
     config_destroy(cfg);
+    free(algoritmoReemplazo);
 
     return 0;
-
 }
-
-

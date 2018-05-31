@@ -13,6 +13,7 @@
 #include <sys/wait.h>
 #include <unistd.h>
 #include <time.h>
+#include <signal.h>
 
 #include <sys/types.h>
 #include <dirent.h>
@@ -20,7 +21,7 @@
 #include "funciones.h"
 #include "registros.h"
 #include "sockets.h"
-//test3
+
 
 /* ---------------------------------------- */
 /*  Variables Globales                      */
@@ -30,10 +31,14 @@
     int espacioPorEntrada;
     t_list* tablaEntradas;
     Almacenamiento almacenamiento;
-
 /* ---------------------------------------- */
 
+
+
 int main(int argc, char* argv[]){
+
+
+
 
     /* Creo la instancia del Archivo de Configuracion y del Log */
     cfg = config_create("config/config.cfg");
@@ -54,7 +59,14 @@ int main(int argc, char* argv[]){
 	//creo lista tabla de entradas
 	tablaEntradas = list_create(); 
 	
-	
+	//	TEST CON SIGNAL NO FUNCIONA, SIGUE BLOQUEANTE SI SE SACA EL WHILE NO EJECUTA ALARM NI SIGNAL.
+	   signal(SIGALRM, mostrarHola);
+	   alarm(config_get_int_value(cfg,"INTERVALO_DUMP"));
+	   int n = 0;
+		    while (1) {
+		    	n++;
+		    }
+
 
 
 
@@ -147,7 +159,8 @@ Almacenamiento almacenamiento;
 	//TERMINA TEST PARA INSTRUCCION SET
 
 	//TEST PARA EJECUTAR DUMP CADA CIERTO TIEMPO
-	ejecutarCadaXTiempo(mostrarHola,config_get_int_value(cfg,"INTERVALO_DUMP"));
+	//ejecutarCadaXTiempo(mostrarHola,10);
+
 	//TERMINA TEST EXITOSO PROBADO CON MOSTRAR HOLA, TOMA EL VALOR "10" DE LA CONFIG (ESTIMAMOS EN SEGUNDOS SINO SE MODIFICA SIN PROBLEMA) Y LO APLICA.
 	//config_get_int_value(cfg,"INTERVALO_DUMP") TOMA EL VALOR DE LA CONFIG,
 
@@ -429,6 +442,7 @@ Almacenamiento almacenamiento;
     config_destroy(cfg);
 
     return 0;
+
 }
 
 

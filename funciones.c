@@ -2020,16 +2020,11 @@ bool existeEntradaEnTabla(t_list* tablaEntradas, char key[40]){
 		}
 }
 
-void mostrarHola(){
 
-	printf("HOLA");
-
-}
 
 void ejecutarCadaXTiempo(void funcionAEjecutar(), int tiempo ){
-
 	time_t tiempoAux, tiempoActual;
-	   int diferencia = 0;
+	   double diferencia = 0;
 	   int minutos;
 	   int segundos = 0;
 	   int temp;
@@ -2054,3 +2049,8 @@ void ejecutarCadaXTiempo(void funcionAEjecutar(), int tiempo ){
 	   }
 }
 
+void mostrarHola(int s) { //FUNCION PARA TEST DE INTERVALO DUMP
+     printf("--HOLA--\n" );
+     alarm(config_get_int_value(cfg,"INTERVALO_DUMP"));    //cada intervalo de dump
+     signal(SIGALRM, mostrarHola);
+}

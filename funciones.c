@@ -1966,6 +1966,8 @@ bool realizarCompactacionLocal(Almacenamiento almacenamiento){
 	//ya que un valor puede ocupar mas de un espacio
 	int contadorValoresAlmacenados=0;
 
+	t_entrada* vectorEntradasAux[cantEntradas];
+
 	FILE* vectorTxt = fopen(almacenamiento.vector,"r+");
 	fseek(vectorTxt,0,SEEK_SET);
 
@@ -1977,12 +1979,23 @@ bool realizarCompactacionLocal(Almacenamiento almacenamiento){
 		letraAnterior=letra;
 	}
 
+
+
+
 	if(compactar){
 		//se recorre el vector del txt. Cuando se detecta un 1, se usa esa posicion para ir leyendo los valores del binario
 		//y poniendolos en un vector
 		for(int i=0; i<cantEntradas; i++){
 			if(contenidoVectortxt[i]=='1'){
 				valoresDelBinario[contadorValoresAlmacenados] = leerBinarioEnPosicion(almacenamiento,i);
+
+				bool findEntradaPorNumeroDeEntrada(t_entrada* registroEntradaAux){
+						printf("\n%d\n",i);
+						return (i==registroEntradaAux->numeroDeEntrada);
+				}
+
+				vectorEntradasAux[contadorValoresAlmacenados] = list_find(almacenamiento.tablaEntradas, (void *)findEntradaPorNumeroDeEntrada);
+
 				//cuando se lee un valor del binario, puede que este ocupe mas de una entrada(espacio)
 				//por eso hago la cuenta que sigue, para cambiar la posicion siguiente de la cual leer en caso de que haya ocupado
 				//mas de una entrada. La cuenta devuelve 0 si ocupa una entrada, 1 si ocupa 2, etc.
@@ -1992,6 +2005,7 @@ bool realizarCompactacionLocal(Almacenamiento almacenamiento){
 				contadorValoresAlmacenados++;
 			}
 		}
+
 		//se va armando el nuevo contenido del txt, que seran todos unos seguidos de ceros
 		for(int i=0;i<contadorEspaciosOcupados;i++){
 			nuevoContenidoVectortxt[i] = '1';
@@ -2004,8 +2018,14 @@ bool realizarCompactacionLocal(Almacenamiento almacenamiento){
 
 		contadorValoresAlmacenados=0;
 		//se escribe el binario con el vector donde se almacenaron los valores
+		printf("\nasd\n");
 		for(int i=0; i<contadorEspaciosOcupados; i++){
 			escribirBinarioEnPosicion(almacenamiento,i,valoresDelBinario[contadorValoresAlmacenados]);
+
+
+			vectorEntradasAux[contadorValoresAlmacenados]->numeroDeEntrada = i;
+
+
 			//lo mismo que antes, si un valor que escribo ocupa mas de una entrada
 			//se debe cambiar la siguiente posicion de escritura
 			i += string_length(valoresDelBinario[contadorValoresAlmacenados])/tamEntrada;
@@ -2013,6 +2033,7 @@ bool realizarCompactacionLocal(Almacenamiento almacenamiento){
 			free(valoresDelBinario[contadorValoresAlmacenados]);
 			contadorValoresAlmacenados++;
 		}
+
 		//se escribe el nuevo contenido del txt
 		fseek(vectorTxt,0,SEEK_SET);
 		fwrite(nuevoContenidoVectortxt,sizeof(char),cantEntradas+1,vectorTxt);

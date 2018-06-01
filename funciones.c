@@ -1395,6 +1395,7 @@ int espacioLibre(Almacenamiento almacenamiento){
 }
 void liberarUnEspacio(Almacenamiento almacenamiento, int* puntero){
 	puts("LIBRERAR UN ESPACIO");
+	int i = 0;
 	
 	bool esAtomica(t_entrada* entradaAux){
 		return	(entradaAux->numeroDeEntrada==*puntero 
@@ -1402,9 +1403,10 @@ void liberarUnEspacio(Almacenamiento almacenamiento, int* puntero){
 	}
 
 	t_entrada* reemplazada=NULL;
-	while(reemplazada==NULL){
+	while(reemplazada==NULL && i<almacenamiento.cantidadEntradas){
 		reemplazada = list_find(almacenamiento.tablaEntradas,(void*)esAtomica);
 		incrementarPuntero(almacenamiento,puntero);
+		i++;
 	}
 	liberarEntradaEnVector(almacenamiento,reemplazada);
 	
@@ -1573,10 +1575,9 @@ void preCargarTablaEntradas(char* puntoMontaje, Almacenamiento almacenamiento){
     DIR *dir;
     // en *ent habrá información sobre el archivo que se está "sacando" a cada momento 
     struct dirent *ent;
-	puts("abro dir");
     /* Empezaremos a leer en el directorio entradas */
     dir = opendir(puntoMontaje);
-	puts("entro if");
+
     // Miramos que no haya error 
     if (dir == NULL){
         printf("No se puede abrir el directorio\n" );
@@ -1597,7 +1598,7 @@ void preCargarTablaEntradas(char* puntoMontaje, Almacenamiento almacenamiento){
 			puts("procesoArchivo");
             // Una vez tenemos el archivo, lo pasamos a una función para procesarlo. //
             procesoArchivoDump(nombreArchivoProcesar, config_get_string_value(cfg,"PUNTO_MONTAJE"), almacenamiento);  
-
+			puts("procese archivo dump");
             free(nombreArchivoProcesar);
         }
     }
@@ -1642,7 +1643,6 @@ void limpiarInstancia(char* puntoMontaje){
 //funcion para carga de entradas
 void cargarTablaEntradas(t_list *tablaEntradas,Instruccion* estructuraInstruccion, Almacenamiento almacenamiento){
 	t_entrada* nuevaEntrada = NULL;
-//asd
 	nuevaEntrada=malloc(sizeof(t_entrada));
 	nuevaEntrada->clave = malloc(strlen(estructuraInstruccion->key));
 	memcpy(nuevaEntrada->clave,estructuraInstruccion->key,strlen(estructuraInstruccion->key));
@@ -1871,17 +1871,14 @@ printf("posicion:%d\n", posicion);
 	char* buffer = malloc(100);
 	char* retorno;
 	char letra='z';
-	puts("fseek en leerBinario en posicion");
 	fseek(binario,tamEntrada*posicion,SEEK_SET);
 	int contador=0;
 	//debuggeanding
 	while( letra !='\0'){
 		fread(&letra,sizeof(char),1,binario);
-		printf("leí %d\n",letra);
 		buffer[contador]=letra;
 		contador +=1;
 	} 
-	puts("sali del while");
 	fclose(binario);
 	puts("vuelvo de leerBinarioEnPosicion");
 	retorno=malloc(strlen(buffer)+1);
@@ -1934,6 +1931,16 @@ void liberarEntradaEnVector(Almacenamiento almacenamiento, t_entrada* entrada){
 	for(i=0;i<=espaciosOcupados;i+=1){
 		liberarPosicionEnVector(almacenamiento,posicion + i);
 	}
+	int posicionEnLista= -1;
+	t_entrada* unaEntrada; 
+	bool esLaEntrada(t_list* lista){
+		posicionEnLista++;
+		unaEntrada=list_get(almacenamiento.tablaEntradas,posicionEnLista);
+		return(unaEntrada->numeroDeEntrada == posicion);
+
+	}
+	t_entrada* eliminada= list_find(almacenamiento.tablaEntradas,(void*)esLaEntrada);
+	destruirEntradaEnPosicion(almacenamiento,posicionEnLista);
 }
 
 

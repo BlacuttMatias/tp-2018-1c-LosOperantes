@@ -118,11 +118,11 @@
 
 	int persistirDatos(Almacenamiento almacenamiento,Instruccion* datosInstruccion ,char* algoritmoAlmacenamiento, int* puntero);
 	void cargarTablaEntradas(t_list *tablaEntradas,Instruccion* estructuraInstruccion);
-	void persistirEntrada(t_entrada* unaEntrada);
+	void persistirEntrada(t_entrada* unaEntrada, char* puntoMontaje, Almacenamiento almacenamiento);
 	/* Función para devolver un error */
 	void error(const char *s);
 	void procesoArchivo(char *archivo, char* punto_montaje, Almacenamiento almacenamiento);
-	void dump(t_list* tablaEntradas);
+	void dump(t_list* tablaEntradas, char* puntoMontaje, Almacenamiento almacenamiento);
 	int cantidadDirectoriosPath(char* pathDirectorio);
 	bool crearEstructuraDirectorios(char* pathArchivo);
 
@@ -147,5 +147,8 @@
 	void incrementarPuntero(Almacenamiento almacenamiento, int* puntero);
 	bool esEntradaAtomica(Almacenamiento almacenamiento,t_entrada* entrada);
 	void destruirEntradaEnPosicion(Almacenamiento almacenamiento, int posicion);
+
+	void showContenidoTablaEntradas(t_list* tablaEntradas);
+	void limpiarInstancia(char* puntoMontaje);
 /* ---------------------------------------- */
 #endif

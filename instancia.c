@@ -31,6 +31,9 @@
     int espacioPorEntrada;
     t_list* tablaEntradas;
     Almacenamiento almacenamiento;
+    char* puntoMontaje;
+    int intervaloDump;
+
 /* ---------------------------------------- */
 
 
@@ -38,10 +41,10 @@
 void handle_alarm(int sig) {
 
     // Realizo el Dump de la Tabla de Entradas
-    dump(tablaEntradas);
+    dump(tablaEntradas, puntoMontaje, almacenamiento);
 
-     printf("Dump automatizado cada %d segundos...\n", config_get_int_value(cfg,"INTERVALO_DUMP") );
-     alarm(config_get_int_value(cfg,"INTERVALO_DUMP"));
+    printf("Dump automatizado cada %d segundos...\n", intervaloDump);
+    alarm(intervaloDump);
 }
 
 
@@ -51,123 +54,53 @@ int main(int argc, char* argv[]){
     cfg = config_create("config/config.cfg");
     infoLogger = log_create("log/instancia.log", "INSTANCIA", false, LOG_LEVEL_INFO);
 
+    // Defino el Punto de Montaje
+    puntoMontaje = string_new();
+    puntoMontaje = config_get_string_value(cfg,"PUNTO_MONTAJE");
+
+    // Defino el Intervalo del Dump
+    intervaloDump = config_get_int_value(cfg,"INTERVALO_DUMP");
+
+    char* flagClean = string_new();
+
+    /*************************************************
+     *
+     * Se obtienen parametros por consola
+     *
+     ************************************************/
+
+        if(argc > 1){
+            string_append(&flagClean,argv[1]);
+
+            if(strcmp(flagClean,"--clean") == 0){
+                printf("Limpiando la Instancia...\n");
+
+                // Borro storage, bitmap y contenido de montaje
+                limpiarInstancia(puntoMontaje);
+            }
+
+        }
+
+    /* ************************************************/
+
     log_info(infoLogger, "Iniciando INSTANCIA" );
-    
+
 
     // Me aseguro que la estructura de directorios del Punto de Montaje este creada previamente
-    if(crearEstructuraDirectorios( config_get_string_value(cfg,"PUNTO_MONTAJE") ) ){
+    if(crearEstructuraDirectorios( puntoMontaje ) ){
         log_info(infoLogger, "Se creo la estructura del Punto de Montaje" );
     }
 
-    char cero='0';
-    int uno='1';
-    int contador=0;
-
-	//creo lista tabla de entradas
+	// Creo la lista de Tabla de Entradas
 	tablaEntradas = list_create(); 
 	
-
-    // Defino el Intervalo del DUMP y lo planifico
+    // Defino el Intervalo del DUMP y lo planifico con Alarm
     struct sigaction sa;
     sa.sa_handler = &handle_alarm;
     sa.sa_flags = SA_RESTART;
     sigfillset(&sa.sa_mask);
     sigaction(SIGALRM, &sa, NULL);
-    alarm(config_get_int_value(cfg,"INTERVALO_DUMP"));
-    puts("alarma");
-//**PARA TESTEAR EL RECUPERO DE INFORMACION SI LA INSTANCIA MUERE HAY QUE COMENTAR ESTE PEDAZO DE CODIGO****** //
- 	
-
-//PRUEBA ARCHIVO BINARIO					/////
-	// creo el archivo binario
-  
-
-/*
-Almacenamiento almacenamiento;
-        almacenamiento.cantidadEntradas=10;
-        almacenamiento.tamPorEntrada=4;
-         almacenamiento.binario=malloc(13);
-        almacenamiento.vector=malloc(15);
-        strcpy(almacenamiento.binario,"storage.bin");
-        strcpy(almacenamiento.vector,"vectorBin.txt");
-        almacenamiento.tablaEntradas=tablaEntradas;
-
-    //hardcodeo la posicion 0 y 4  del binario 
-    puts("abro binario");
-            printf("\n\n el vector bin se escribió asi %s  \n\n",almacenamiento.vector);
-       FILE* binario= fopen(almacenamiento.binario,"wb+");
-       puts("abri bin");
-        ftruncate(fileno(binario),almacenamiento.cantidadEntradas*almacenamiento.tamPorEntrada);
-        int longitud= string_length("NARDIELLO");
-        puts("trunque");
-        
-        char* cadena1 = string_new();
-        strcpy(cadena1,"NARDIELLO");
-        puts(cadena1);
-        fseek(binario,0,SEEK_SET);
-        puts("write bin");
-        fwrite(cadena1,strlen(cadena1),1,binario);
-        strcpy(cadena1,"MESSI");
-        escribirBinarioEnPosicion(almacenamiento,4,cadena1);
-        fclose(binario);
-        puts("cierro");
-        char* lecturaBinario = string_new();
-        strcpy(lecturaBinario,leerBinarioEnPosicion(almacenamiento,0));
-        printf("en la primer posicion del binario esta el dato %s\n",lecturaBinario);
-
-
-
-
-    preCargarTablaEntradas(config_get_string_value(cfg,"PUNTO_MONTAJE"), almacenamiento);
-    t_entrada* entrada1= list_get(tablaEntradas,0);
-    printf("\nla primer clave de la lista es     %s", entrada1->clave);
-
-   if(list_size(tablaEntradas)>1){
-        
-        char *buffer=string_new();
-
-        buffer=leerBinarioEnPosicion(almacenamiento,1);
-        printf("\n el segundo valor en el binario es:   %s  \n",buffer);
-        grabarPosicionEnVector(almacenamiento,8);
-	
-        printf("\n en el vector Bin deberían estas las posiciones 0 y 4 escritas con 1\n");
-
-        liberarEntradaEnVector(almacenamiento,entrada1);
-	}
-    //*/
-
-/*
-	//TEST PARA INSTRUCCION SET TODAVIA YA FUNCIONA
-	t_entrada* nuevaEntrada = NULL;
-	nuevaEntrada=malloc(sizeof(t_entrada));
- 	nuevaEntrada->clave = malloc(strlen("a")+1);
-	strcpy(nuevaEntrada->clave, "a");
-	nuevaEntrada->clave[strlen("a")] = '\0';
-	list_add(tablaEntradas,nuevaEntrada);
-
-	if(existeEntradaEnTabla(tablaEntradas,"a")){
-		printf(" EXISTE ");
-	}else{printf(" NO EXISTE ");}
-
-	bool esIgualA(t_entrada* unaEntrada){
-		if(strcmp(nuevaEntrada->clave,"a") == 0){;
-			printf(" Existe ");
-			return true;
-		}else{
-			printf(" No Existe ");
-			return false;
-		}
-	}
-
-*/
-
-	//TERMINA TEST PARA INSTRUCCION SET
-
-	//TEST PARA EJECUTAR DUMP CADA CIERTO TIEMPO
-	//ejecutarCadaXTiempo(mostrarHola,10);
-
-	//TERMINA TEST EXITOSO PROBADO CON MOSTRAR HOLA, TOMA EL VALOR "10" DE LA CONFIG (ESTIMAMOS EN SEGUNDOS SINO SE MODIFICA SIN PROBLEMA) Y LO APLICA.
-	//config_get_int_value(cfg,"INTERVALO_DUMP") TOMA EL VALOR DE LA CONFIG,
+    alarm(intervaloDump);
 
 
 	printf("Iniciando INSTANCIA\n");
@@ -224,6 +157,9 @@ Almacenamiento almacenamiento;
 
     EntradasIntancias registroEntradasIntancias;
     Instruccion registroInstruccion;
+    char cero='0';
+    int uno='1';
+    int contador=0;
 
     while(true){
 
@@ -262,7 +198,7 @@ Almacenamiento almacenamiento;
                     		//si ya existe la entrada en la tabla
 
                     		bool esIgualA(t_entrada* unaEntrada){
-                    			if(strcmp(unaEntrada->clave,registroInstruccion.key) == 0){;
+                    			if(strcmp(unaEntrada->clave,registroInstruccion.key) == 0){
                     				printf(" Existe ");
                     				return true;
                     			}else{
@@ -274,7 +210,7 @@ Almacenamiento almacenamiento;
                     		//la busco dentro de la tabla asi saco su numero de entrada por ende su posicion en el binario
                     		t_entrada* entradaEncontrada = list_find(tablaEntradas,(void*)esIgualA);
 
-                        	int posicion = entradaEncontrada->numeroDeEntrada; //posicion del binario
+                        	//int posicion = entradaEncontrada->numeroDeEntrada; //posicion del binario
                             liberarEntradaEnVector(almacenamiento,entradaEncontrada);
 
                         	//escribo en el binario
@@ -293,33 +229,27 @@ Almacenamiento almacenamiento;
                     	}
 
 
-
-
-
                         // Cargo la Tabla de Entradas
                         cargarTablaEntradas(tablaEntradas,&registroInstruccion);
 
-                        // TODO
-                        // Modificar el valor de la Key
-
-                        // Realizo el Dump de la Tabla de Entradas
-                        dump(tablaEntradas);
-
+                        // Muestro el contenido de la Tabla de Entradas
+                        showContenidoTablaEntradas(tablaEntradas);                        
                     }
 
                     if(registroInstruccion.operacion == STORE){                                
 
-                        // TODO
-                        // Implementar
-
                         // Realizo el Dump de la Tabla de Entradas
-                        dump(tablaEntradas);
+                        dump(tablaEntradas, puntoMontaje, almacenamiento);
                     }
 
 
 
-                    // Realizo la Compactacion del Archivo Binario
-                    realizarCompactacionLocal(almacenamiento);
+                    // Muestro el contenido de la Tabla de Entradas
+                    showContenidoTablaEntradas(tablaEntradas);
+
+
+/*
+PARA UTILIZAR PARA INICIAR LA COMPACTACION GLOBAL
 
                     log_info(infoLogger,"Se realizo la Compactacion Local en la Instancia %s", config_get_string_value(cfg,"INSTANCIA_NOMBRE"));
 
@@ -330,8 +260,7 @@ Almacenamiento almacenamiento;
                     }else{
                         log_info(infoLogger,"No se pudo enviar al COORDINADOR el aviso para que las demas Instancias realicen sus Compactaciones Locales");
                     }
-
-
+*/
 
                     // TODO
                     // Determinar si fallo o no y corregir el mensaje de abajo. Ahora esta harcodeado a EJECUCION_EXITOSA
@@ -352,7 +281,6 @@ Almacenamiento almacenamiento;
 
 
                 case OBTENCION_CONFIG_ENTRADAS:
-                    puts("obtener config");
 
                     // Recibo los datos de las Entradas
                     paquete = recibir_payload(&coordinador_fd,&encabezado.tam_payload);
@@ -364,7 +292,7 @@ Almacenamiento almacenamiento;
                     // Guardo los datos recibidos
                     entradas=registroEntradasIntancias.cantEntrada;
                     espacioPorEntrada=registroEntradasIntancias.tamanioEntrada;
-                    puts("aj");
+
                     // Creo el Storage.bin si no existe
                     if (!existeArchivo("storage.bin")){
                         FILE* binario= fopen("storage.bin","wb+");
@@ -373,7 +301,7 @@ Almacenamiento almacenamiento;
                         // Cierro los FD
                         fclose(binario);
                     }
-                    puts("if2");
+
                     // Creo el Bitmap si no existe
                     if (!existeArchivo("vectorBin.txt")){
                         puts("abro vectorBin");
@@ -385,29 +313,21 @@ Almacenamiento almacenamiento;
                         }
 
                         // Cierro los FD
-                        puts("vector");
                         fclose(vectorBin);
-                        puts("era el vect");
-
-                        
                     }
-                    puts("almacenamiento abro");
+
                     //creo estructura de datos con info de almacenamiento
                     almacenamiento.cantidadEntradas=entradas;
                     almacenamiento.tamPorEntrada=espacioPorEntrada;
                     almacenamiento.binario=string_new();
                     almacenamiento.vector=string_new();
-                    almacenamiento.binario=malloc(strlen("storage.bin")+1);
                     strcpy(almacenamiento.binario,"storage.bin");
-                    almacenamiento.binario[strlen("storage.bin")] = '\0';
-                    almacenamiento.vector=malloc(strlen("vectorBin.txt")+1);
-                    strcpy(almacenamiento.vector,"vectorBin.txt");
-                    almacenamiento.vector[strlen("vectorBin.txt")] = '\0';                    
+                    strcpy(almacenamiento.vector,"vectorBin.txt");                  
                     almacenamiento.tablaEntradas=tablaEntradas;
 
                     // Se precarga la Tabla de Entradas con datos del Dump
                     puts("precargo");
-                    preCargarTablaEntradas(config_get_string_value(cfg,"PUNTO_MONTAJE"), almacenamiento);
+                    preCargarTablaEntradas(puntoMontaje, almacenamiento);
                     puts("precargué");
                     break;
 
@@ -427,6 +347,7 @@ Almacenamiento almacenamiento;
     log_destroy(infoLogger);
     config_destroy(cfg);
     free(algoritmoReemplazo);
+    free(puntoMontaje);
     close(coordinador_fd);
 
     return 0;

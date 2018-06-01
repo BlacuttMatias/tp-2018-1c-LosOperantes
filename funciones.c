@@ -859,6 +859,33 @@ Instancia* obtenerInstanciaNueva(t_list* listaInstanciasConectadas, Instruccion*
 	return instanciaElegida;
 }
 
+//**************************************************************************//
+// Mostrar el contenido de la Lista de Entradas
+//**************************************************************************//
+void showContenidoTablaEntradas(t_list* tablaEntradas){
+	int indice = 0;
+
+	if(list_size(tablaEntradas) > 0){
+
+	    void _each_elemento_(t_entrada* registroEntradaAux)
+		{
+			indice = indice + 1;
+
+			// Muestro el encabezaado
+			if(indice == 1) {
+				printf("\nTABLA DE ENTRADAS\n");
+				printf("Clave \t #Entrada \t Tamaño\n");
+				printf("-------------------------------------\n");
+			}
+
+			printf("%s \t %d \t %d\n", registroEntradaAux->clave,registroEntradaAux->numeroDeEntrada,registroEntradaAux->tamanioValorAlmacenado);
+
+		}
+	    list_iterate(tablaEntradas, (void*)_each_elemento_);
+	}else{
+		printf("\nTabla de Entradas vacia\n");
+	}
+}
 
 //**************************************************************************//
 // Mostrar el contenido de la Lista de Procesos Conectados
@@ -1349,21 +1376,21 @@ int cargarClavesInicialmenteBloqueadas(t_dictionary* diccionarioClavesBloqueadas
 
 /******************INSTANCIA********************************************/
 int espacioLibre(Almacenamiento almacenamiento){
-	puts("ESPACIO LIBRE");
+	//puts("ESPACIO LIBRE");
 	FILE* vectorBin= fopen(almacenamiento.vector,"r");
-	printf("\n QUIERO ABRIR EL VECTOR %s \n",almacenamiento.vector);
+	//printf("\n QUIERO ABRIR EL VECTOR %s \n",almacenamiento.vector);
 	fseek(vectorBin,0,SEEK_SET);
 	char valor;
 	int contador=0;
 	int i;
 	for(i=0;i<almacenamiento.cantidadEntradas;i++){
 		fread(&valor, sizeof(char),1,vectorBin);
-		puts("dentro de while");
-		printf("\n EL VALOR ES %c",valor);
+		//puts("dentro de while");
+		//printf("\n EL VALOR ES %c",valor);
 		if(valor=='0'){contador += 1 ;}
 	}
 	fclose(vectorBin);
-	puts("SALGO ESPACIOlIBRE");
+	//puts("SALGO ESPACIOlIBRE");
 	return contador;
 }
 void liberarUnEspacio(Almacenamiento almacenamiento, int* puntero){
@@ -1577,27 +1604,52 @@ void preCargarTablaEntradas(char* puntoMontaje, Almacenamiento almacenamiento){
     closedir (dir);
 }
 
+// Funcion que inicializa una Instancia
+void limpiarInstancia(char* puntoMontaje){
+
+    // Elimino el archivo
+    unlink("storage.bin");
+    unlink("vectorBin.txt");	
+
+    DIR *dir;
+    struct dirent *ent;
+    dir = opendir(puntoMontaje);
+
+    // Miramos que no haya error 
+    if (dir == NULL){
+        printf("No se puede abrir el directorio\n" );
+    	return;
+    }
+
+    // Leyendo uno a uno todos los archivos que hay para borrarlos
+    while ((ent = readdir (dir)) != NULL)
+    {
+        // Nos devolverá el directorio actual (.) y el anterior (..), como hace ls //
+        if ( (strcmp(ent->d_name, ".")!=0) && (strcmp(ent->d_name, "..")!=0) )
+        {
+            char* nombreArchivoBorrar = string_new();
+            string_append_with_format(&nombreArchivoBorrar, "%s%s", puntoMontaje, ent->d_name);
+
+            // Borro la Entrada
+			unlink(nombreArchivoBorrar);
+
+            free(nombreArchivoBorrar);
+        }
+    }
+    closedir (dir);
+}
 
 //funcion para carga de entradas
 void cargarTablaEntradas(t_list *tablaEntradas,Instruccion* estructuraInstruccion){
 	t_entrada* nuevaEntrada = NULL;
 
-	int tamanioLista = list_size(tablaEntradas);
-
 	nuevaEntrada=malloc(sizeof(t_entrada));
-
-
 	nuevaEntrada->clave = estructuraInstruccion->key;
-
 	nuevaEntrada->numeroDeEntrada = 999; //para luego verificar si se carga bien el nmEntrada. quedara 999 si se hizo mal
 	nuevaEntrada->tamanioValorAlmacenado = strlen(estructuraInstruccion->dato);
 
 	list_add(tablaEntradas,nuevaEntrada);
 }
-
-
-
-
 
 void procesoArchivo(char *archivo, char* punto_montaje, Almacenamiento almacenamiento){
 
@@ -1689,29 +1741,36 @@ void procesoArchivo(char *archivo, char* punto_montaje, Almacenamiento almacenam
 }
 
 
-void dump(t_list* tablaEntradas){
-	list_iterate(tablaEntradas,(void*)persistirEntrada);
+void dump(t_list* tablaEntradas, char* puntoMontaje, Almacenamiento almacenamiento){
+
+    void _each_elemento_(t_entrada* unaEntrada)
+	{
+		persistirEntrada(unaEntrada, puntoMontaje, almacenamiento);
+	}
+    list_iterate(tablaEntradas, (void*)_each_elemento_);
 }
 
 // persistir una entrada en disco
-void persistirEntrada(t_entrada* unaEntrada){
+void persistirEntrada(t_entrada* unaEntrada, char* puntoMontaje, Almacenamiento almacenamiento){
 
     // Defino el Nombre del Archivo con el nombre de la entrada
 	char *nombre_formato_archivo = string_new();
-    string_append_with_format(&nombre_formato_archivo, "entradas/%s.txt", unaEntrada->clave);
+    string_append_with_format(&nombre_formato_archivo, "%s%s.txt", puntoMontaje, unaEntrada->clave);
 
     FILE* archivoTexto;
 	archivoTexto = fopen(nombre_formato_archivo,"w+");
 
-	//char *valorIdentificado = unaEntrada->valor;
 
-	// TODO
 	// Aca hay que obtener el VALOR de la KEY del archivo BINARIO ya que no existe mas en la Tabla de Estados
 	char *valorIdentificado = string_new();
-	string_append_with_format(&valorIdentificado, "EJEMPLO");
+	string_append_with_format(&valorIdentificado, leerBinarioEnPosicion(almacenamiento ,unaEntrada->numeroDeEntrada));
+
+
+printf("Valor leido del Binario: %s\n", leerBinarioEnPosicion(almacenamiento ,unaEntrada->numeroDeEntrada));
 
     // Grabo el Valor de la Entrada en el Archivo
-	fputs(valorIdentificado, archivoTexto );
+	//fputs(valorIdentificado, archivoTexto );
+	fwrite(valorIdentificado, strlen(valorIdentificado), sizeof(char), archivoTexto);
 
 	fclose ( archivoTexto );
     free(nombre_formato_archivo);

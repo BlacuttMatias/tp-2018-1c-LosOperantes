@@ -40,10 +40,11 @@
 // Gestor del Intervalo del Dump
 void handle_alarm(int sig) {
 
+    printf("Dump automatizado cada %d segundos...\n", intervaloDump);
+
     // Realizo el Dump de la Tabla de Entradas
     dump(tablaEntradas, puntoMontaje, almacenamiento);
 
-    printf("Dump automatizado cada %d segundos...\n", intervaloDump);
     alarm(intervaloDump);
 }
 
@@ -226,22 +227,22 @@ int main(int argc, char* argv[]){
                     		//hay que ver si hay entradas libres
                     		//si hay se persiste en la siguiente entrada libre
                     		//si no hay hay que correr algoritmo de reemplazo
+
+
+                            //escribo en el binario
+                            persistirDatos(almacenamiento,&registroInstruccion,algoritmoReemplazo,puntero);                            
                     	}
 
 
                         // Cargo la Tabla de Entradas
-                        cargarTablaEntradas(tablaEntradas,&registroInstruccion);
-
-                        // Muestro el contenido de la Tabla de Entradas
-                        showContenidoTablaEntradas(tablaEntradas);                        
+                        cargarTablaEntradas(tablaEntradas,&registroInstruccion, almacenamiento);                      
                     }
 
                     if(registroInstruccion.operacion == STORE){                                
 
                         // Realizo el Dump de la Tabla de Entradas
-                        dump(tablaEntradas, puntoMontaje, almacenamiento);
+                        //dump(tablaEntradas, puntoMontaje, almacenamiento);
                     }
-
 
 
                     // Muestro el contenido de la Tabla de Entradas

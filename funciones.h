@@ -117,11 +117,11 @@
 /* ---------------------------------------- */
 
 	int persistirDatos(Almacenamiento almacenamiento,Instruccion* datosInstruccion ,char* algoritmoAlmacenamiento, int* puntero);
-	void cargarTablaEntradas(t_list *tablaEntradas,Instruccion* estructuraInstruccion);
+	void cargarTablaEntradas(t_list *tablaEntradas,Instruccion* estructuraInstruccion, Almacenamiento almacenamiento);
 	void persistirEntrada(t_entrada* unaEntrada, char* puntoMontaje, Almacenamiento almacenamiento);
 	/* Función para devolver un error */
 	void error(const char *s);
-	void procesoArchivo(char *archivo, char* punto_montaje, Almacenamiento almacenamiento);
+	void procesoArchivoDump(char *archivo, char* punto_montaje, Almacenamiento almacenamiento);
 	void dump(t_list* tablaEntradas, char* puntoMontaje, Almacenamiento almacenamiento);
 	int cantidadDirectoriosPath(char* pathDirectorio);
 	bool crearEstructuraDirectorios(char* pathArchivo);

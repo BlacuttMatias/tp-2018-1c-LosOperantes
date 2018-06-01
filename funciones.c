@@ -1596,7 +1596,7 @@ void preCargarTablaEntradas(char* puntoMontaje, Almacenamiento almacenamiento){
             string_append_with_format(&nombreArchivoProcesar, "%s", ent->d_name);
 			puts("procesoArchivo");
             // Una vez tenemos el archivo, lo pasamos a una función para procesarlo. //
-            procesoArchivo(nombreArchivoProcesar, config_get_string_value(cfg,"PUNTO_MONTAJE"), almacenamiento);  
+            procesoArchivoDump(nombreArchivoProcesar, config_get_string_value(cfg,"PUNTO_MONTAJE"), almacenamiento);  
 
             free(nombreArchivoProcesar);
         }
@@ -1640,18 +1640,24 @@ void limpiarInstancia(char* puntoMontaje){
 }
 
 //funcion para carga de entradas
-void cargarTablaEntradas(t_list *tablaEntradas,Instruccion* estructuraInstruccion){
+void cargarTablaEntradas(t_list *tablaEntradas,Instruccion* estructuraInstruccion, Almacenamiento almacenamiento){
 	t_entrada* nuevaEntrada = NULL;
 
 	nuevaEntrada=malloc(sizeof(t_entrada));
 	nuevaEntrada->clave = estructuraInstruccion->key;
-	nuevaEntrada->numeroDeEntrada = 999; //para luego verificar si se carga bien el nmEntrada. quedara 999 si se hizo mal
 	nuevaEntrada->tamanioValorAlmacenado = strlen(estructuraInstruccion->dato);
+
+
+printf("#entrada: %d encontrado en el binario para %s\n", buscarPosicionEnBin(almacenamiento,estructuraInstruccion->dato), estructuraInstruccion->dato);
+
+	//nuevaEntrada->numeroDeEntrada = 999; //para luego verificar si se carga bien el nmEntrada. quedara 999 si se hizo mal
+	nuevaEntrada->numeroDeEntrada = buscarPosicionEnBin(almacenamiento,estructuraInstruccion->dato);
 
 	list_add(tablaEntradas,nuevaEntrada);
 }
 
-void procesoArchivo(char *archivo, char* punto_montaje, Almacenamiento almacenamiento){
+// Proceso un archivo del Dump
+void procesoArchivoDump(char *archivo, char* punto_montaje, Almacenamiento almacenamiento){
 
 	t_list* tablaEntradas=almacenamiento.tablaEntradas;
 	char *carpeta_archivo = string_new();
@@ -1763,14 +1769,15 @@ void persistirEntrada(t_entrada* unaEntrada, char* puntoMontaje, Almacenamiento 
 
 	// Aca hay que obtener el VALOR de la KEY del archivo BINARIO ya que no existe mas en la Tabla de Estados
 	char *valorIdentificado = string_new();
-	string_append_with_format(&valorIdentificado, leerBinarioEnPosicion(almacenamiento ,unaEntrada->numeroDeEntrada));
+	string_append_with_format(&valorIdentificado,  "%s", leerBinarioEnPosicion(almacenamiento ,unaEntrada->numeroDeEntrada));
 
+//string_append_with_format(&valorIdentificado,  "EJEMPLO");
 
-printf("Valor leido del Binario: %s\n", leerBinarioEnPosicion(almacenamiento ,unaEntrada->numeroDeEntrada));
+//printf("Valor leido del Binario: %s\n", leerBinarioEnPosicion(almacenamiento ,unaEntrada->numeroDeEntrada));
 
     // Grabo el Valor de la Entrada en el Archivo
-	//fputs(valorIdentificado, archivoTexto );
-	fwrite(valorIdentificado, strlen(valorIdentificado), sizeof(char), archivoTexto);
+	fputs(valorIdentificado, archivoTexto );
+
 
 	fclose ( archivoTexto );
     free(nombre_formato_archivo);
@@ -1853,6 +1860,11 @@ int cantidadDirectoriosPath(char* pathDirectorio){
 }
 
 char* leerBinarioEnPosicion(Almacenamiento almacenamiento, int posicion){
+
+printf("posicion:%d\n", posicion);
+printf("almacenamiento.binario:%s\n", almacenamiento.binario);
+printf("almacenamiento.tamPorEntrada:%d\n", almacenamiento.tamPorEntrada);
+
 	FILE* binario= fopen(almacenamiento.binario,"rb");
 	int tamEntrada= almacenamiento.tamPorEntrada;
 	char* buffer = string_new();

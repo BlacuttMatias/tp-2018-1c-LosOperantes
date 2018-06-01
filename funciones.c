@@ -1527,8 +1527,10 @@ void preCargarTablaEntradas(char* puntoMontaje, Almacenamiento almacenamiento){
     dir = opendir(puntoMontaje);
 
     // Miramos que no haya error 
-    if (dir == NULL)
-        error("No se puede abrir el directorio");
+    if (dir == NULL){
+        printf("No se puede abrir el directorio\n" );
+    	return;
+    }
 
 
     // Una vez nos aseguramos de que no hay error... 
@@ -1573,7 +1575,7 @@ void cargarTablaEntradas(t_list *tablaEntradas,Instruccion* estructuraInstruccio
 
 
 void procesoArchivo(char *archivo, char* punto_montaje, Almacenamiento almacenamiento){
-	//printf("\n se quiere abrir archivo %s \n",archivo);
+
 	t_list* tablaEntradas=almacenamiento.tablaEntradas;
 	char *carpeta_archivo = string_new();
 	string_append_with_format(&carpeta_archivo, "%s%s", punto_montaje, archivo); // para que lea ficheros de la carpeta "entradas"
@@ -1585,10 +1587,10 @@ void procesoArchivo(char *archivo, char* punto_montaje, Almacenamiento almacenam
 	char* nombre_archivo_sin_extension = string_new();
 	nombre_archivo_sin_extension = string_substring(archivo,0,(string_length(archivo)-4)); 
 
-//	Instruccion* nuevaInstruccion = NULL;
-//	nuevaInstruccion = malloc(sizeof(Instruccion)); //prueba con instruccion FUNCIONA
+
 	t_entrada* elementoDeTabla;
 
+	// Obtengo el Tamano del Valor
 	FILE *fichero;
 	fichero = fopen(carpeta_archivo, "r");
 	fseek(fichero,0,SEEK_END);
@@ -1604,6 +1606,10 @@ void procesoArchivo(char *archivo, char* punto_montaje, Almacenamiento almacenam
        printf( "Error (NO ABIERTO)\n" );
     }
 	fgets(contenido_fichero,tamanio,fichero);
+
+	// Cierro el Archivo
+	fclose(fichero);
+
     //printf( "Contenido/clave-key con formato del fichero: %s\n\n", archivo ); //muestro key con formato ".txt"
     //printf( "Valor: %s\n", contenido_fichero ); 
     printf ("Clave/key: %s\n\n",nombre_archivo_sin_extension); //muestro key sin formato ".txt"
@@ -1630,6 +1636,8 @@ void procesoArchivo(char *archivo, char* punto_montaje, Almacenamiento almacenam
 	nuevaEntrada->clave[strlen(nombre_archivo_sin_extension)] = '\0';
 	nuevaEntrada->tamanioValorAlmacenado = strlen(contenido_fichero);
 	nuevaEntrada->numeroDeEntrada = buscarPosicionEnBin(almacenamiento,contenido_fichero);
+
+	// Si se pudo obtener el Numero de Entrada del Binario
 	if(nuevaEntrada->numeroDeEntrada>=0){
 		grabarEntradaEnVector(almacenamiento,nuevaEntrada->numeroDeEntrada,nuevaEntrada);
 	}
@@ -1640,11 +1648,19 @@ void procesoArchivo(char *archivo, char* punto_montaje, Almacenamiento almacenam
 	elementoDeTabla = list_get(tablaEntradas,list_size(tablaEntradas)-1);
 
 	printf("\nClave:%s - Numero:%d - Tamanio:%d - Posicion en tabla:%d \n",elementoDeTabla->clave,elementoDeTabla->numeroDeEntrada,elementoDeTabla->tamanioValorAlmacenado,list_size(tablaEntradas)); //prueba imprimir por pantalla el elemento obtenido
+
+	// Actualizo el Almacenamiento con la Nueva Entrada
+	almacenamiento.tablaEntradas=tablaEntradas;
 // ------------------------------------------------------------------
 
-	fclose(fichero);
     free(carpeta_archivo);
     free(nombre_archivo_sin_extension);
+
+    list_destroy(tablaEntradas);
+/*    
+    free(nuevaEntrada->clave);
+    free(nuevaEntrada);
+*/
 }
 
 

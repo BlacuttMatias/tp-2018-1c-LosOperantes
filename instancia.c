@@ -175,8 +175,7 @@ Almacenamiento almacenamiento;
 
 	Encabezado encabezado;
 	Paquete paquete;
-    struct sockaddr_in servidor_addr,my_addr,master_addr; // información de la dirección de destino
-    int numbytes,escucha_master,fd_maximo,nuevo_fd,size, nbytes;
+    int nbytes;
 
     // Creo conexión con el Coordinador
     int coordinador_fd = conectarseAservidor(config_get_string_value(cfg,"COORDINADOR_IP"),config_get_int_value(cfg,"COORDINADOR_PUERTO"));
@@ -394,14 +393,18 @@ Almacenamiento almacenamiento;
                     }
                     puts("almacenamiento abro");
                     //creo estructura de datos con info de almacenamiento
-                        almacenamiento.cantidadEntradas=entradas;
-                        almacenamiento.tamPorEntrada=espacioPorEntrada;
-                        almacenamiento.binario=string_new();
-                        almacenamiento.vector=string_new();
-                        strcpy(almacenamiento.binario,"storage.bin");
-                        strcpy(almacenamiento.vector,"vectorBin.txt");
-                        puts("strcpy");
-                        almacenamiento.tablaEntradas=tablaEntradas;
+                    almacenamiento.cantidadEntradas=entradas;
+                    almacenamiento.tamPorEntrada=espacioPorEntrada;
+                    almacenamiento.binario=string_new();
+                    almacenamiento.vector=string_new();
+                    almacenamiento.binario=malloc(strlen("vectorBin.txt")+1);
+                    strcpy(almacenamiento.binario,"vectorBin.txt");
+                    almacenamiento.binario[strlen("vectorBin.txt")] = '\0';
+                    almacenamiento.vector=malloc(strlen("storage.bin")+1);
+                    strcpy(almacenamiento.vector,"storage.bin");
+                    almacenamiento.vector[strlen("storage.bin")] = '\0';                    
+                    almacenamiento.tablaEntradas=tablaEntradas;
+
                     // Se precarga la Tabla de Entradas con datos del Dump
                     puts("precargo");
                     preCargarTablaEntradas(config_get_string_value(cfg,"PUNTO_MONTAJE"), almacenamiento);
@@ -424,6 +427,7 @@ Almacenamiento almacenamiento;
     log_destroy(infoLogger);
     config_destroy(cfg);
     free(algoritmoReemplazo);
+    close(coordinador_fd);
 
     return 0;
 }

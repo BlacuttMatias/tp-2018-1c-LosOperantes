@@ -397,12 +397,12 @@ Almacenamiento almacenamiento;
                     almacenamiento.tamPorEntrada=espacioPorEntrada;
                     almacenamiento.binario=string_new();
                     almacenamiento.vector=string_new();
-                    almacenamiento.binario=malloc(strlen("vectorBin.txt")+1);
-                    strcpy(almacenamiento.binario,"vectorBin.txt");
-                    almacenamiento.binario[strlen("vectorBin.txt")] = '\0';
-                    almacenamiento.vector=malloc(strlen("storage.bin")+1);
-                    strcpy(almacenamiento.vector,"storage.bin");
-                    almacenamiento.vector[strlen("storage.bin")] = '\0';                    
+                    almacenamiento.binario=malloc(strlen("storage.bin")+1);
+                    strcpy(almacenamiento.binario,"storage.bin");
+                    almacenamiento.binario[strlen("storage.bin")] = '\0';
+                    almacenamiento.vector=malloc(strlen("vectorBin.txt")+1);
+                    strcpy(almacenamiento.vector,"vectorBin.txt");
+                    almacenamiento.vector[strlen("vectorBin.txt")] = '\0';                    
                     almacenamiento.tablaEntradas=tablaEntradas;
 
                     // Se precarga la Tabla de Entradas con datos del Dump

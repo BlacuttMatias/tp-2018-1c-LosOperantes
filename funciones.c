@@ -1354,7 +1354,8 @@ int espacioLibre(Almacenamiento almacenamiento){
 	printf("\n QUIERO ABRIR EL VECTOR %s \n",almacenamiento.vector);
 	fseek(vectorBin,0,SEEK_SET);
 	char valor;
-	int contador,i;
+	int contador=0;
+	int i;
 	for(i=0;i<almacenamiento.cantidadEntradas;i++){
 		fread(&valor, sizeof(char),1,vectorBin);
 		puts("dentro de while");

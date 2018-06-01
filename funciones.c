@@ -1247,13 +1247,16 @@ Proceso* obtenerProximoProcesoPlanificado(t_list* listaReady, t_queue* colaReady
 
 //Funcion para determinar si un archivo local existe
 bool existeArchivo(char *filename){
-
+	puts("quiero abrir");
     FILE *archivo = fopen(filename, "rb");
-
+	puts("abrí");
     if(!archivo){
+		puts("falso");
     	return false;
     }else{
+		puts("true");
         fclose(archivo);
+		puts("cerré");
     	return true;
     }
 }
@@ -1346,17 +1349,24 @@ int cargarClavesInicialmenteBloqueadas(t_dictionary* diccionarioClavesBloqueadas
 
 /******************INSTANCIA********************************************/
 int espacioLibre(Almacenamiento almacenamiento){
+	puts("ESPACIO LIBRE");
 	FILE* vectorBin= fopen(almacenamiento.vector,"r");
+	printf("\n QUIERO ABRIR EL VECTOR %s \n",almacenamiento.vector);
 	fseek(vectorBin,0,SEEK_SET);
 	char valor;
-	int contador;
-	while(fread(&valor, sizeof(char),1,vectorBin) != EOF){
+	int contador,i;
+	for(i=0;i<almacenamiento.cantidadEntradas;i++){
+		fread(&valor, sizeof(char),1,vectorBin);
+		puts("dentro de while");
+		printf("\n EL VALOR ES %c",valor);
 		if(valor=='0'){contador += 1 ;}
 	}
 	fclose(vectorBin);
+	puts("SALGO ESPACIOlIBRE");
 	return contador;
 }
 void liberarUnEspacio(Almacenamiento almacenamiento, int* puntero){
+	puts("LIBRERAR UN ESPACIO");
 	
 	bool esAtomica(t_entrada* entradaAux){
 		return	(entradaAux->numeroDeEntrada==*puntero 
@@ -1370,7 +1380,7 @@ void liberarUnEspacio(Almacenamiento almacenamiento, int* puntero){
 	}
 	liberarEntradaEnVector(almacenamiento,reemplazada);
 	
-	
+	puts("LIBERE UN ESPACIO");
 }
 
 void incrementarPuntero(Almacenamiento almacenamiento,int* puntero) {
@@ -1394,7 +1404,7 @@ void destruirEntradaEnPosicion(Almacenamiento almacenamiento, int posicion){
 
 int persistirDatos(Almacenamiento almacenamiento,Instruccion* datosInstruccion, char* algoritmoDistribucion, int* puntero){
 	char*valor=datosInstruccion->dato;
-
+printf("\n\n ENTRO A PERSISTIR DATOS\n\n");
 	
 	int tamanio= string_length(datosInstruccion->dato);
 	int i=0;
@@ -1406,23 +1416,28 @@ int persistirDatos(Almacenamiento almacenamiento,Instruccion* datosInstruccion, 
 	t_entrada* entradaAux=NULL;
 
 	bool porTamanio(t_entrada* entrada1, t_entrada* entrada2){
+		puts("PORTAMANIO");
 		return entrada1->tamanioValorAlmacenado > entrada2->tamanioValorAlmacenado;
 	}
 
 
-
+puts("IF INBICIAL");
 	if(espaciosLibres<tamanio){//aplico algoritmo en caso de tener que sacar un valor del bin
 		if(string_starts_with(algoritmoDistribucion, "CIRCULAR")){
-				
+				puts("CIRCULAR)");
 				
 				while(espaciosLibres<tamanio){//aplico algoritmo hasta tener espacio suficiente
+				puts("QUIERO LIBERER");
 					liberarUnEspacio(almacenamiento, puntero);
+					puts("LIBERO");
 					espaciosLibres=espacioLibre(almacenamiento);
+					puts("CALCULO ESPACIO LIBRE");
 				}
 
 
 
 		}	else {if(string_starts_with(algoritmoDistribucion, "BSU")){
+			puts("BSU");
 					list_sort(almacenamiento.tablaEntradas,(void*)porTamanio);
 					while(espaciosLibres<tamanio || i< almacenamiento.cantidadEntradas){//aplico algoritmo hasta tener espacio suficiente
 						entradaAux=list_get(almacenamiento.tablaEntradas,i);
@@ -1436,6 +1451,7 @@ int persistirDatos(Almacenamiento almacenamiento,Instruccion* datosInstruccion, 
 
 
 		} else {if (string_starts_with(algoritmoDistribucion, "LRU")){
+			puts("LRU");
 				i=0;
 				while(espaciosLibres<tamanio || i<almacenamiento.cantidadEntradas){								//aplico algoritmo hasta tener espacio suficiente
 					entradaAux=list_get(almacenamiento.tablaEntradas,i); //saca valores atomicos en el orden de la lista
@@ -1451,14 +1467,19 @@ int persistirDatos(Almacenamiento almacenamiento,Instruccion* datosInstruccion, 
 
 
 		}	else {printf("\n no se pudo leer el algoritmo de reemplazo %s \n", algoritmoDistribucion);
+		puts("RETORNO -2");
 				return -2;}}}
 	}		// Dependiendo el algoritmoDistricucion, persistir los datos localmente
 			//en este caso tengo espacio suficiente sin reemplazar, analizo si compactar o simplemente guardar
 	if(espaciosLibres<tamanio){
+		puts("NO HAY ESPACIO");
 		log_info(infoLogger,"no se pueden borrar datos atomicos en la instancia para guardar nuevos datos");
+		printf("SALGO RETORNANDO %d",i);
 		return -1; }//retorno -1 si no se puede encontrar espacio suficiente para guardar el dato
 	FILE* vectorBin= fopen(almacenamiento.vector,"r+");
+	
 	for(i=0;i<almacenamiento.cantidadEntradas;i++){//busco primer 0 en vectorBin
+	puts("ENTRO AL FOR");
 		fseek(vectorBin,i,SEEK_SET);
 		fread(&letra,sizeof(char),1,vectorBin);
 		if(letra=='0'){
@@ -1475,6 +1496,7 @@ int persistirDatos(Almacenamiento almacenamiento,Instruccion* datosInstruccion, 
 				for(j=0;j<tamanio;j++){
 					grabarPosicionEnVector(almacenamiento,i+j);
 				}
+				printf("SALGO RETORNANDO %d",i);
 				return i;
 			}
 			vectorBin= fopen(almacenamiento.vector,"r+");
@@ -1495,6 +1517,7 @@ int persistirDatos(Almacenamiento almacenamiento,Instruccion* datosInstruccion, 
 	for(j=0;j<tamanio;j++){
 		grabarPosicionEnVector(almacenamiento,i+j);
 	}
+	printf("SALGO RETORNANDO %d",i);
 	return i;
 }
 
@@ -1522,10 +1545,10 @@ void preCargarTablaEntradas(char* puntoMontaje, Almacenamiento almacenamiento){
     DIR *dir;
     // en *ent habrá información sobre el archivo que se está "sacando" a cada momento 
     struct dirent *ent;
-
+	puts("abro dir");
     /* Empezaremos a leer en el directorio entradas */
     dir = opendir(puntoMontaje);
-
+	puts("entro if");
     // Miramos que no haya error 
     if (dir == NULL)
         error("No se puede abrir el directorio");
@@ -1533,6 +1556,7 @@ void preCargarTablaEntradas(char* puntoMontaje, Almacenamiento almacenamiento){
 
     // Una vez nos aseguramos de que no hay error... 
     // Leyendo uno a uno todos los archivos que hay 
+	puts("entra while");
     while ((ent = readdir (dir)) != NULL)
     {
         // Nos devolverá el directorio actual (.) y el anterior (..), como hace ls //
@@ -1540,7 +1564,7 @@ void preCargarTablaEntradas(char* puntoMontaje, Almacenamiento almacenamiento){
         {
             char* nombreArchivoProcesar = string_new();
             string_append_with_format(&nombreArchivoProcesar, "%s", ent->d_name);
-
+			puts("procesoArchivo");
             // Una vez tenemos el archivo, lo pasamos a una función para procesarlo. //
             procesoArchivo(nombreArchivoProcesar, config_get_string_value(cfg,"PUNTO_MONTAJE"), almacenamiento);  
 

@@ -74,7 +74,7 @@ int main(int argc, char* argv[]){
     sigfillset(&sa.sa_mask);
     sigaction(SIGALRM, &sa, NULL);
     alarm(config_get_int_value(cfg,"INTERVALO_DUMP"));
-
+    puts("alarma");
 //**PARA TESTEAR EL RECUPERO DE INFORMACION SI LA INSTANCIA MUERE HAY QUE COMENTAR ESTE PEDAZO DE CODIGO****** //
  	
 
@@ -353,6 +353,7 @@ Almacenamiento almacenamiento;
 
 
                 case OBTENCION_CONFIG_ENTRADAS:
+                    puts("obtener config");
 
                     // Recibo los datos de las Entradas
                     paquete = recibir_payload(&coordinador_fd,&encabezado.tam_payload);
@@ -364,7 +365,7 @@ Almacenamiento almacenamiento;
                     // Guardo los datos recibidos
                     entradas=registroEntradasIntancias.cantEntrada;
                     espacioPorEntrada=registroEntradasIntancias.tamanioEntrada;
-
+                    puts("aj");
                     // Creo el Storage.bin si no existe
                     if (!existeArchivo("storage.bin")){
                         FILE* binario= fopen("storage.bin","wb+");
@@ -373,31 +374,38 @@ Almacenamiento almacenamiento;
                         // Cierro los FD
                         fclose(binario);
                     }
-
+                    puts("if2");
                     // Creo el Bitmap si no existe
                     if (!existeArchivo("vectorBin.txt")){
+                        puts("abro vectorBin");
                         FILE* vectorBin = fopen("vectorBin.txt","w");
-
+                        puts("fort");
                         for(contador=0;contador<entradas; contador=contador+1){
                             fseek(vectorBin,sizeof(char)*contador,SEEK_SET);
                             fwrite(&cero,sizeof(char),1,vectorBin);
                         }
 
                         // Cierro los FD
+                        puts("vector");
                         fclose(vectorBin);
+                        puts("era el vect");
 
                         
                     }
+                    puts("almacenamiento abro");
                     //creo estructura de datos con info de almacenamiento
                         almacenamiento.cantidadEntradas=entradas;
                         almacenamiento.tamPorEntrada=espacioPorEntrada;
                         almacenamiento.binario=string_new();
                         almacenamiento.vector=string_new();
-                        strcpy(almacenamiento.binario,"vectorBin.txt");
-                        strcpy(almacenamiento.vector,"storage.bin");
+                        strcpy(almacenamiento.binario,"storage.bin");
+                        strcpy(almacenamiento.vector,"vectorBin.txt");
+                        puts("strcpy");
                         almacenamiento.tablaEntradas=tablaEntradas;
                     // Se precarga la Tabla de Entradas con datos del Dump
+                    puts("precargo");
                     preCargarTablaEntradas(config_get_string_value(cfg,"PUNTO_MONTAJE"), almacenamiento);
+                    puts("precargué");
                     break;
 
                 case COMPACTACION_LOCAL:

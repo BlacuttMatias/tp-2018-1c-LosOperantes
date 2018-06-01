@@ -150,5 +150,7 @@
 
 	void showContenidoTablaEntradas(t_list* tablaEntradas);
 	void limpiarInstancia(char* puntoMontaje);
+
+	t_entrada* ultimaEntrada(Almacenamiento almacenamiento);
 /* ---------------------------------------- */
 #endif

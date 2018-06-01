@@ -182,6 +182,7 @@ int main(int argc, char* argv[]){
 			switch(encabezado.cod_operacion){
 
 				case EJECUTAR_INSTRUCCION:
+                printf("\n entro case EJECUTAR_INSTRUCCION \n");
 
                     paquete=recibir_payload(&coordinador_fd,&encabezado.tam_payload);
                     registroInstruccion=dsrlz_instruccion(paquete.buffer);
@@ -194,6 +195,8 @@ int main(int argc, char* argv[]){
                         // TODO
                         // Persistir el Valor en el Archivo Binario
 						//Prototipado
+                        int nuevaPosicion;
+                        t_entrada* entradaNueva;
 
                     	if(existeEntradaEnTabla(tablaEntradas,registroInstruccion.key)){
                     		//si ya existe la entrada en la tabla
@@ -215,7 +218,7 @@ int main(int argc, char* argv[]){
                             liberarEntradaEnVector(almacenamiento,entradaEncontrada);
 
                         	//escribo en el binario
-                        	persistirDatos(almacenamiento,&registroInstruccion,algoritmoReemplazo,puntero);
+                        	nuevaPosicion=persistirDatos(almacenamiento,&registroInstruccion,algoritmoReemplazo,puntero);
 
 
 
@@ -230,12 +233,18 @@ int main(int argc, char* argv[]){
 
 
                             //escribo en el binario
-                            persistirDatos(almacenamiento,&registroInstruccion,algoritmoReemplazo,puntero);                            
-                    	}
+                            puts("persisto algo nuevo");
+                            nuevaPosicion=persistirDatos(almacenamiento,&registroInstruccion,algoritmoReemplazo,puntero);                            
+                    	    puts("Salí de persistir algo nuevo");
+                        }
 
 
                         // Cargo la Tabla de Entradas
-                        cargarTablaEntradas(tablaEntradas,&registroInstruccion, almacenamiento);                      
+                        puts("cargo tabla entradas");
+                        cargarTablaEntradas(tablaEntradas,&registroInstruccion, almacenamiento);
+                        puts("cargue tabla entradas");
+                        entradaNueva= ultimaEntrada(almacenamiento); 
+                        puts("ultima entrada");
                     }
 
                     if(registroInstruccion.operacion == STORE){                                
@@ -246,7 +255,9 @@ int main(int argc, char* argv[]){
 
 
                     // Muestro el contenido de la Tabla de Entradas
+                    puts("muestro tabla entradas");
                     showContenidoTablaEntradas(tablaEntradas);
+                    puts("mostré tabla entradas");
 
 
 /*
@@ -278,6 +289,7 @@ PARA UTILIZAR PARA INICIAR LA COMPACTACION GLOBAL
                     }else{
                         log_error(infoLogger, "No se pudo notificar al COORDINADOR el resultado de la ejecución de la Instrucción");
                     }
+                    printf("\nsalgo case EJECUTAR_INSTRUCCION\n");
 					break;
 
 
@@ -307,6 +319,7 @@ PARA UTILIZAR PARA INICIAR LA COMPACTACION GLOBAL
                     if (!existeArchivo("vectorBin.txt")){
                         puts("abro vectorBin");
                         FILE* vectorBin = fopen("vectorBin.txt","w");
+                        ftruncate(fileno(vectorBin),entradas);
                         puts("fort");
                         for(contador=0;contador<entradas; contador=contador+1){
                             fseek(vectorBin,sizeof(char)*contador,SEEK_SET);
@@ -320,8 +333,8 @@ PARA UTILIZAR PARA INICIAR LA COMPACTACION GLOBAL
                     //creo estructura de datos con info de almacenamiento
                     almacenamiento.cantidadEntradas=entradas;
                     almacenamiento.tamPorEntrada=espacioPorEntrada;
-                    almacenamiento.binario=string_new();
-                    almacenamiento.vector=string_new();
+                    almacenamiento.binario=malloc(strlen("storage.bin"));
+                    almacenamiento.vector=malloc(strlen("vectorBin.txt"));
                     strcpy(almacenamiento.binario,"storage.bin");
                     strcpy(almacenamiento.vector,"vectorBin.txt");                  
                     almacenamiento.tablaEntradas=tablaEntradas;

@@ -33,6 +33,8 @@
     Almacenamiento almacenamiento;
     char* puntoMontaje;
     int intervaloDump;
+    bool seCompacto = false;
+    bool seEstaCompactando = false;
 
 /* ---------------------------------------- */
 
@@ -190,6 +192,9 @@ int main(int argc, char* argv[]){
 
                     log_info(infoLogger,"Pedido de Ejecución de una Instruccion recibida del Coordinador: %d %s %s", registroInstruccion.operacion, registroInstruccion.key, registroInstruccion.dato);
 
+                    //si se esta compactando, se para la ejecucion de instrucciones
+                    while(seEstaCompactando){}
+
                     if(registroInstruccion.operacion == SET){
 
                         // TODO
@@ -218,7 +223,7 @@ int main(int argc, char* argv[]){
                             liberarEntradaEnVector(almacenamiento,entradaEncontrada);
 
                         	//escribo en el binario
-                        	nuevaPosicion=persistirDatos(almacenamiento,&registroInstruccion,algoritmoReemplazo,puntero);
+                        	nuevaPosicion=persistirDatos(almacenamiento,&registroInstruccion,algoritmoReemplazo,puntero,&seCompacto);
 
 
 
@@ -234,7 +239,7 @@ int main(int argc, char* argv[]){
 
                             //escribo en el binario
                             puts("persisto algo nuevo");
-                            nuevaPosicion=persistirDatos(almacenamiento,&registroInstruccion,algoritmoReemplazo,puntero);                            
+                            nuevaPosicion=persistirDatos(almacenamiento,&registroInstruccion,algoritmoReemplazo,puntero,&seCompacto);
                     	    puts("Salí de persistir algo nuevo");
                         }
 
@@ -259,20 +264,18 @@ int main(int argc, char* argv[]){
                     showContenidoTablaEntradas(tablaEntradas);
                     puts("mostré tabla entradas");
 
+                    //PARA UTILIZAR PARA INICIAR LA COMPACTACION GLOBAL
+                    if(seCompacto){
+                        log_info(infoLogger,"Se realizo la Compactacion Local en la Instancia %s", config_get_string_value(cfg,"INSTANCIA_NOMBRE"));
 
-/*
-PARA UTILIZAR PARA INICIAR LA COMPACTACION GLOBAL
-
-                    log_info(infoLogger,"Se realizo la Compactacion Local en la Instancia %s", config_get_string_value(cfg,"INSTANCIA_NOMBRE"));
-
-                    // Le aviso al Coordinador para que las demas Instancias realicen sus Compactaciones
-                    Paquete paquete= crearHeader('I',COMPACTACION_GLOBAL,1);
-                    if( send(coordinador_fd,paquete.buffer,paquete.tam_buffer,1) != -1 ){
-                        log_info(infoLogger,"Se le envio al COORDINADOR el aviso para que las demas Instancias realicen sus Compactaciones Locales");
-                    }else{
-                        log_info(infoLogger,"No se pudo enviar al COORDINADOR el aviso para que las demas Instancias realicen sus Compactaciones Locales");
+                        // Le aviso al Coordinador para que las demas Instancias realicen sus Compactaciones
+                        Paquete paquete= crearHeader('I',COMPACTACION_GLOBAL,1);
+                        if( send(coordinador_fd,paquete.buffer,paquete.tam_buffer,1) != -1 ){
+                            log_info(infoLogger,"Se le envio al COORDINADOR el aviso para que las demas Instancias realicen sus Compactaciones Locales");
+                        }else{
+                            log_info(infoLogger,"No se pudo enviar al COORDINADOR el aviso para que las demas Instancias realicen sus Compactaciones Locales");
+                        }
                     }
-*/
 
                     // TODO
                     // Determinar si fallo o no y corregir el mensaje de abajo. Ahora esta harcodeado a EJECUCION_EXITOSA
@@ -350,7 +353,9 @@ PARA UTILIZAR PARA INICIAR LA COMPACTACION GLOBAL
 
                 case COMPACTACION_LOCAL:
                     // Realizar la Compactacion del Archivo Binario a pedido del Coordinador
-                    realizarCompactacionLocal(almacenamiento);                            
+                	seEstaCompactando=true;
+                    realizarCompactacionLocal(almacenamiento);
+                    seEstaCompactando=false;
 
                     log_info(infoLogger,"Se realizo la Compactacion Local en la Instancia %s a pedido del COORDINADOR", config_get_string_value(cfg,"INSTANCIA_NOMBRE"));
                     break;                                

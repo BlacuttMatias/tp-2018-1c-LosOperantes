@@ -275,6 +275,7 @@ int main(int argc, char* argv[]){
                         }else{
                             log_info(infoLogger,"No se pudo enviar al COORDINADOR el aviso para que las demas Instancias realicen sus Compactaciones Locales");
                         }
+                        seCompacto=false;
                     }
 
                     // TODO

@@ -45,7 +45,7 @@ void handle_alarm(int sig) {
     // Realizo el Dump de la Tabla de Entradas
     dump(tablaEntradas, puntoMontaje, almacenamiento);
 
-    //alarm(intervaloDump);
+    alarm(intervaloDump);
 }
 
 

@@ -1644,9 +1644,12 @@ void limpiarInstancia(char* puntoMontaje){
 void cargarTablaEntradas(t_list *tablaEntradas,Instruccion* estructuraInstruccion, Almacenamiento almacenamiento){
 	t_entrada* nuevaEntrada = NULL;
 	nuevaEntrada=malloc(sizeof(t_entrada));
-	nuevaEntrada->clave = malloc(strlen(estructuraInstruccion->key));
+	nuevaEntrada->clave = malloc(strlen(estructuraInstruccion->key)+1);
 	memcpy(nuevaEntrada->clave,estructuraInstruccion->key,strlen(estructuraInstruccion->key));
+	nuevaEntrada->clave[strlen(estructuraInstruccion->key)]='\0';
+
 	nuevaEntrada->tamanioValorAlmacenado = strlen(estructuraInstruccion->dato);
+
 	int posicion=buscarPosicionEnBin(almacenamiento,estructuraInstruccion->dato);
 
 printf("#entrada: %d encontrado en el binario para %s\n", posicion, estructuraInstruccion->dato);
@@ -1862,28 +1865,19 @@ int cantidadDirectoriosPath(char* pathDirectorio){
 
 char* leerBinarioEnPosicion(Almacenamiento almacenamiento, int posicion){
 
-printf("posicion:%d\n", posicion);
-//printf("almacenamiento.binario:%s\n", almacenamiento.binario);
-//printf("almacenamiento.tamPorEntrada:%d\n", almacenamiento.tamPorEntrada);
-
 	FILE* binario= fopen(almacenamiento.binario,"rb");
 	int tamEntrada= almacenamiento.tamPorEntrada;
-	char* buffer = malloc(100);
-	char* retorno;
+	char* buffer = string_new();
 	char letra='z';
 	fseek(binario,tamEntrada*posicion,SEEK_SET);
 	int contador=0;
 	//debuggeanding
 	while( letra !='\0'){
 		fread(&letra,sizeof(char),1,binario);
-		buffer[contador]=letra;
+		string_append_with_format(&buffer, "%c",letra);
 		contador +=1;
-	} 
+	}
 	fclose(binario);
-	puts("vuelvo de leerBinarioEnPosicion");
-	retorno=malloc(strlen(buffer)+1);
-	memcpy(retorno,buffer,strlen(buffer)+1);
-	free(buffer);
 	return buffer;
 }
 

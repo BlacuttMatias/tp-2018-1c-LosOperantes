@@ -289,6 +289,9 @@ PARA UTILIZAR PARA INICIAR LA COMPACTACION GLOBAL
                     }else{
                         log_error(infoLogger, "No se pudo notificar al COORDINADOR el resultado de la ejecución de la Instrucción");
                     }
+
+                    free(registroInstruccion.nombreEsiOrigen);
+                    free(registroInstruccion.dato);
                     printf("\nsalgo case EJECUTAR_INSTRUCCION\n");
 					break;
 
@@ -323,7 +326,7 @@ PARA UTILIZAR PARA INICIAR LA COMPACTACION GLOBAL
                         puts("fort");
                         for(contador=0;contador<entradas; contador=contador+1){
                             fseek(vectorBin,sizeof(char)*contador,SEEK_SET);
-                            fwrite(&cero,sizeof(char),1,vectorBin);
+                            fwrite(&cero,1,sizeof(char),vectorBin);
                         }
 
                         // Cierro los FD

@@ -1986,12 +1986,14 @@ int buscarPosicionEnBin(Almacenamiento almacenamiento, char* valor){
 		//printf("\n se leyó %s\n",buffer); //
 		if(strcmp(buffer,valor) == 0){
 			fclose(binario);
+			free(buffer);
 			puts("retorno i");
 			return i;}	
 		i +=1;
 
 	}
 	fclose(binario);
+	free(buffer);
 	return -1;
 }
 
@@ -2075,6 +2077,10 @@ bool realizarCompactacionLocal(Almacenamiento almacenamiento){
 		//y poniendolos en un vector
 		for(int i=0; i<cantEntradas; i++){
 			if(contenidoVectortxt[i]=='1'){
+
+				//
+				// ESTO DEBIERA EXPLOTAR POR EL TIPO DE ASIGNACION
+				//
 				valoresDelBinario[contadorValoresAlmacenados] = leerBinarioEnPosicion(almacenamiento,i);
 
 				bool findEntradaPorNumeroDeEntrada(t_entrada* registroEntradaAux){

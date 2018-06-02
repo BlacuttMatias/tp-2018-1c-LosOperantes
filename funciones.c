@@ -2084,7 +2084,6 @@ bool realizarCompactacionLocal(Almacenamiento almacenamiento){
 				valoresDelBinario[contadorValoresAlmacenados] = leerBinarioEnPosicion(almacenamiento,i);
 
 				bool findEntradaPorNumeroDeEntrada(t_entrada* registroEntradaAux){
-						printf("\n%d\n",i);
 						return (i==registroEntradaAux->numeroDeEntrada);
 				}
 
@@ -2112,7 +2111,7 @@ bool realizarCompactacionLocal(Almacenamiento almacenamiento){
 
 		contadorValoresAlmacenados=0;
 		//se escribe el binario con el vector donde se almacenaron los valores
-		printf("\nasd\n");
+
 		for(int i=0; i<contadorEspaciosOcupados; i++){
 			escribirBinarioEnPosicion(almacenamiento,i,valoresDelBinario[contadorValoresAlmacenados]);
 

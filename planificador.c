@@ -299,9 +299,6 @@ void* hiloConsolaInteractiva(void * unused) {
                         // Libero un Recurso de la Lista de Claves Bloqueadas
                         dictionary_remove(diccionarioClavesBloqueadas, parametrosConsolaOriginal[1]);
 
-                        // Libero un Recurso de la Lista de Claves Bloqueadas
-                        dictionary_remove(diccionarioClavesBloqueadas, parametrosConsolaOriginal[1]);
-
                         //Se verifica si un proceso estaba bloqueado esperando esa clave
                         registroKeyBloqueada = sacarProcesoConClaveBloqueadaDeLaLista(listaClavesBloqueadasRequeridas, parametrosConsolaOriginal[1]);
 
@@ -319,6 +316,8 @@ void* hiloConsolaInteractiva(void * unused) {
 
                         }
 
+                        // Ejecutar el Planificador de Procesos
+                        planificarProcesos();
 
                     }else{
                         printf("[Error] Cantidad de parámetros incorrectos\n");

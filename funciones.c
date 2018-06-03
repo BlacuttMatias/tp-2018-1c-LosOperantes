@@ -1432,7 +1432,7 @@ void destruirEntradaEnPosicion(Almacenamiento almacenamiento, int posicion){
 	free(destruida);
 }
 
-int persistirDatos(Almacenamiento almacenamiento,Instruccion* datosInstruccion, char* algoritmoDistribucion, int* puntero){
+int persistirDatos(Almacenamiento almacenamiento,Instruccion* datosInstruccion, char* algoritmoDistribucion, int* puntero, bool* seCompacto){
 	char*valor=datosInstruccion->dato;
 printf("\n\n ENTRO A PERSISTIR DATOS\n\n");
 	
@@ -1533,7 +1533,8 @@ puts("IF INBICIAL");
 		}
 	}
 	fclose(vectorBin);
-	realizarCompactacionLocal(almacenamiento);
+	//la funcion realizarCompactacionLocal() retorna un booleano que indica si se compacto o no
+	*seCompacto = realizarCompactacionLocal(almacenamiento);
 	vectorBin= fopen(almacenamiento.vector,"r+");
 	fseek(vectorBin,0,SEEK_SET);
 	i=0;
@@ -2092,13 +2093,13 @@ bool realizarCompactacionLocal(Almacenamiento almacenamiento){
 
 				//
 				// ESTO DEBIERA EXPLOTAR POR EL TIPO DE ASIGNACION
-				//
+				//No! , esto explota. Funciona!
 				valoresDelBinario[contadorValoresAlmacenados] = leerBinarioEnPosicion(almacenamiento,i);
 
 				bool findEntradaPorNumeroDeEntrada(t_entrada* registroEntradaAux){
 						return (i==registroEntradaAux->numeroDeEntrada);
 				}
-
+				//almaceno en un vector auxiliar las entradas asociadas a esos valores para luego modificarles el numero de entrada
 				vectorEntradasAux[contadorValoresAlmacenados] = list_find(almacenamiento.tablaEntradas, (void *)findEntradaPorNumeroDeEntrada);
 
 				//cuando se lee un valor del binario, puede que este ocupe mas de una entrada(espacio)
@@ -2127,9 +2128,8 @@ bool realizarCompactacionLocal(Almacenamiento almacenamiento){
 		for(int i=0; i<contadorEspaciosOcupados; i++){
 			escribirBinarioEnPosicion(almacenamiento,i,valoresDelBinario[contadorValoresAlmacenados]);
 
-
+			//se actualizan el numero de entradas
 			vectorEntradasAux[contadorValoresAlmacenados]->numeroDeEntrada = i;
-
 
 			//lo mismo que antes, si un valor que escribo ocupa mas de una entrada
 			//se debe cambiar la siguiente posicion de escritura

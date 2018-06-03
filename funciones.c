@@ -1997,6 +1997,18 @@ int buscarPosicionEnBin(Almacenamiento almacenamiento, char* valor){
 	return -1;
 }
 
+// Obtengo un Registro de la Tabla de Entradas
+t_entrada* obtenerEntrada(t_list* tablaEntradas, char* clave){
+
+	t_entrada* entradaObtenida = NULL;
+
+	bool findEntradaPorKey(t_entrada* registroEntradaAux){
+		return (strcmp(registroEntradaAux->clave, clave) == 0);
+	}
+
+	entradaObtenida = list_find(tablaEntradas, (void *)findEntradaPorKey);
+}
+
 t_entrada* ultimaEntrada(Almacenamiento almacenamiento){
 	int tamanioLista= list_size(almacenamiento.tablaEntradas);
 	t_entrada* ultimaEntrada= list_get(almacenamiento.tablaEntradas,tamanioLista - 1);

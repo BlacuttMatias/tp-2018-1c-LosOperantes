@@ -152,5 +152,6 @@
 	void limpiarInstancia(char* puntoMontaje);
 
 	t_entrada* ultimaEntrada(Almacenamiento almacenamiento);
+	t_entrada* obtenerEntrada(t_list* tablaEntradas, char* clave);
 /* ---------------------------------------- */
 #endif

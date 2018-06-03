@@ -25,6 +25,8 @@ enum cod_operacion {
 	OBTENCION_CONFIG_ENTRADAS = 13,
 	COMPACTACION_GLOBAL = 14,
 	COMPACTACION_LOCAL = 15,
+	OBTENER_STATUS_VALOR = 16,	
+	DEVOLVER_STATUS_VALOR = 17,		
 };
 
 // Defino los Tipos de Procesos

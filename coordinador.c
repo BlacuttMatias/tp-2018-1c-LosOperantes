@@ -49,7 +49,7 @@ void* atenderConexiones(void* socketConexion){
     Instancia* proximaInstancia;
     int indice = 0;
     int socketESI = 0;
-
+    int socketInstancia = 0;
 
     while(true){
         // Recibo el Encabezado del Paquete
@@ -137,14 +137,12 @@ void* atenderConexiones(void* socketConexion){
 
                     // Envio el Paquete a ESI
                     if(send(socketESI,paquete.buffer,paquete.tam_buffer,0) != -1){
-
-                        free(paquete.buffer);
-
                         log_info(infoLogger, "Se le notifico al ESI %s que el Recurso %s estaba LIBRE", obtenerNombreProceso(listaProcesosConectados, socketESI), registroKeyBloqueada.key);
 
                     }else{
                         log_error(infoLogger, "No se pudo notificar al ESI %s que el Recurso %s estaba LIBRE", obtenerNombreProceso(listaProcesosConectados, socketESI), registroKeyBloqueada.key);
                     }
+                    free(paquete.buffer);                    
                     break;
 
                 case RECURSO_OCUPADO:
@@ -164,13 +162,11 @@ void* atenderConexiones(void* socketConexion){
 
                     // Envio el Paquetea a ESI
                     if(send(socketESI,paquete.buffer,paquete.tam_buffer,0) != -1){
-
-                        free(paquete.buffer);
-
                         log_info(infoLogger, "Se le notifico al ESI %s que el Recurso %s estaba OCUPADO por otro Proceso ESI", obtenerNombreProceso(listaProcesosConectados, socketESI), registroKeyBloqueada.key);
                     }else{
                         log_error(infoLogger, "No se pudo notificar al ESI %s que el Recurso %s estaba OCUPADO por otro Proceso ESI", obtenerNombreProceso(listaProcesosConectados, socketESI), registroKeyBloqueada.key);
                     }
+                    free(paquete.buffer);                    
                     break;
 
                 case OBTENER_STATUS_CLAVE:
@@ -182,12 +178,12 @@ void* atenderConexiones(void* socketConexion){
 
                     log_info(infoLogger,"El PLANIFICADOR solicita información sobre el Recurso %s.", registroKeyBloqueada.key);
 
-                    // TODO 
-                    // Obtener VALOR si existe
 
                     char* nombreInstanciaActual = string_new();
                     char* nombreInstanciaFutura = string_new();
                     char* valorRecurso = string_new();
+
+                    bool recursoTieneInstanciaAsignada = false;
 
                     // Si el Recurso ya fue recibido previamente por el Coordinador
                     if(dictionary_has_key(diccionarioClavesInstancias, registroKeyBloqueada.key) ){
@@ -199,47 +195,74 @@ void* atenderConexiones(void* socketConexion){
                         if(proximaInstancia->nombreProceso == NULL){
                             string_append_with_format(&nombreInstanciaActual, "Ninguno");
                         }else{
+                            recursoTieneInstanciaAsignada = true;
                             string_append_with_format(&nombreInstanciaActual, "%s", proximaInstancia->nombreProceso);
                         }
                     }else{ // Si el Recurso nunca fue atendido por una Instancia
                         string_append_with_format(&nombreInstanciaActual, "Ninguno");
                     }
 
-                    // Creo un Registro Instruccion para simular una Distribucion
-                    Instruccion* registroInstruccion = NULL;
-                    registroInstruccion = malloc(sizeof(Instruccion));
+                    // Creo un Registro Instruccion para simular una Distribucion o Enviar a la Instancia para obtener Valor
+                    Instruccion registroInstruccionAux;
 
-                    registroInstruccion->operacion= 1;
-                    strcpy(registroInstruccion->key, registroKeyBloqueada.key);
-                    registroInstruccion->key[strlen(registroKeyBloqueada.key)] = '\0';
-                    registroInstruccion->dato=NULL;
-                    registroInstruccion->nombreEsiOrigen=NULL;
+                    registroInstruccionAux.operacion= 0;
+                    strcpy(registroInstruccionAux.key, registroKeyBloqueada.key);
+                    registroInstruccionAux.key[strlen(registroKeyBloqueada.key)] = '\0';
+                    registroInstruccionAux.dato=NULL;
+                    registroInstruccionAux.nombreEsiOrigen=malloc(strlen("Nada")+1);
+                    strcpy(registroInstruccionAux.nombreEsiOrigen,"Nada");
+                    registroInstruccionAux.nombreEsiOrigen[strlen("Nada")] = '\0';
 
-                    // Obtengo la Instancia segun el Algoritmo de Distribucion
-                    proximaInstancia = obtenerInstanciaNueva(listaInstanciasConectadas,registroInstruccion,algoritmoDistribucion);
-                    string_append_with_format(&nombreInstanciaFutura, "%s", proximaInstancia->nombreProceso);
 
-                    // TODO
-                    // Obtener el valor del Recurso almacenado en la Instancia
-                    string_append_with_format(&valorRecurso, "VALOR HARCODEADO");
+                    // Le pido a la Instancia el Valor
+                    if(recursoTieneInstanciaAsignada){
 
-                    // Serializado la Respuesta (ESTE MENSAJE LLEGA DIRECTAMENTE A LA CONSOLA)
-                    paquete = srlz_datosStatusRecurso('C', OBTENER_STATUS_CLAVE, nombreInstanciaActual, nombreInstanciaFutura, valorRecurso, registroKeyBloqueada.key);
+                        // Averiguo el Socket del Proceso ESI para notificarle que no fallo la Ejecucion de la Instruccion
+                        socketInstancia = obtenerSocketProceso(listaProcesosConectados, nombreInstanciaActual);
 
-                    // Envio el Paquete al Planificador
-                    if(send(fd_planificador,paquete.buffer,paquete.tam_buffer,0) != -1){
+                        // Armo el Paquete de Pedido del Valor a la Instancia
+                        paquete = srlz_instruccion('C', OBTENER_STATUS_VALOR,registroInstruccionAux);
+
+                        // Envio el Paquete a la Instancia
+                        if(send(socketInstancia,paquete.buffer,paquete.tam_buffer,0) != -1){
+
+                            log_info(infoLogger,"Se le pide a la Instancia %s (Socket: %d) el valor del Recurso %s", proximaInstancia->nombreProceso, socketInstancia, registroKeyBloqueada.key);
+
+                        }else{
+                            log_error(infoLogger, "No se pudo enviar pedido a la Instancia %s (Socket: %d) el valor del Recurso %s", proximaInstancia->nombreProceso, socketInstancia, registroKeyBloqueada.key);
+                        }
 
                         free(paquete.buffer);
-                        log_info(infoLogger, "Se le envió información al PLANIFICADOR (Socket: %d) sobre el Recurso. Instancia Actual: %s - Instancia Distribuida: %s - Valor: %s", fd_planificador, nombreInstanciaActual, nombreInstanciaFutura, valorRecurso);
 
-                    }else{
-                        log_error(infoLogger, "No se pudo enviar información al PLANIFICADOR sobre el Recurso");
+                    }else{ // Devuelvo al Planificador los datos del Status, ya que la Instancia no tiene el Valor
+
+                        // Obtengo la Instancia segun el Algoritmo de Distribucion
+                        proximaInstancia = obtenerInstanciaNueva(listaInstanciasConectadas,&registroInstruccionAux,algoritmoDistribucion);
+                        string_append_with_format(&nombreInstanciaFutura, "%s", proximaInstancia->nombreProceso);
+
+                        // No existe valor en la Instancia. Se informa eso.
+                        string_append_with_format(&valorRecurso, "No se registra valor en la Instancia");
+
+                        // Serializado la Respuesta (ESTE MENSAJE LLEGA DIRECTAMENTE A LA CONSOLA)
+                        paquete = srlz_datosStatusRecurso('C', OBTENER_STATUS_CLAVE, nombreInstanciaActual, nombreInstanciaFutura, valorRecurso, registroKeyBloqueada.key);
+
+                        // Envio el Paquete al Planificador
+                        if(send(fd_planificador,paquete.buffer,paquete.tam_buffer,0) != -1){
+
+
+                            log_info(infoLogger, "Se le envió información al PLANIFICADOR (Socket: %d) sobre el Recurso. Instancia Actual: %s - Instancia Distribuida: %s - Valor: %s", fd_planificador, nombreInstanciaActual, nombreInstanciaFutura, valorRecurso);
+
+                        }else{
+                            log_error(infoLogger, "No se pudo enviar información al PLANIFICADOR sobre el Recurso");
+                        }
+
+                        free(paquete.buffer);
                     }
 
                     free(nombreInstanciaActual);
                     free(nombreInstanciaFutura);
-                    free(valorRecurso);                    
-                    break;   
+                    free(valorRecurso);
+                    break;
 
                 case IS_ALIVE: 
 
@@ -294,13 +317,11 @@ void* atenderConexiones(void* socketConexion){
 
                     // Envio el Paquete a la Instancia
                     if(send(i,paquete.buffer,paquete.tam_buffer,0) != -1){
-
-                        free(paquete.buffer);
-
                         log_info(infoLogger, "Se le envió a la INSTANCIA los datos de Cantidad y Tamaño de Entradas.");    
                     }else{
                         log_error(infoLogger, "No se pudo enviar a la INSTANCIA los datos de Cantidad y Tamaño de Entradas");
                     }
+                    free(paquete.buffer);                    
                     break;
 
                 case RESPUESTA_EJECUTAR_INSTRUCCION:
@@ -338,12 +359,11 @@ void* atenderConexiones(void* socketConexion){
 
                     // Envio el Paquete a ESI
                     if(send(socketESI,paquete.buffer,paquete.tam_buffer,0) != -1){
-                        free(paquete.buffer);
-
                         log_info(infoLogger, "Se le envió al ESI %s el Resultado de la Ejecución de la Instrucción",registroResultadoEjecucion.nombreEsiDestino);
                     }else{
                         log_error(infoLogger, "No se pudo enviar al ESI %s el Resultado de la Ejecución de la Instrucción", registroResultadoEjecucion.nombreEsiDestino);
                     }
+                    free(paquete.buffer);                    
                     break;
 
                 case COMPACTACION_GLOBAL:
@@ -370,7 +390,58 @@ void* atenderConexiones(void* socketConexion){
                         }
                         list_iterate(listaInstanciasConectadas, (void*)_each_elemento_);
                     }
-                    break;                                
+                    break;
+
+                case DEVOLVER_STATUS_VALOR:
+
+                    paquete=recibir_payload(&i,&encabezado.tam_payload);
+                    registroInstruccion=dsrlz_instruccion(paquete.buffer);
+                    free(paquete.buffer);
+
+                    log_info(infoLogger,"La Instancia %s nos devuelve el valor del Recurso %s. El valor es: %s", obtenerNombreProceso(listaProcesosConectados, i), registroInstruccion.key, registroInstruccion.dato);
+
+                    char* nombreInstanciaActual2 = string_new();
+                    char* nombreInstanciaFutura2 = string_new();
+
+
+                    // Obtener la Instancia ya asignado al Recurso
+                    proximaInstancia = obtenerInstanciaAsignada(diccionarioClavesInstancias,registroInstruccion.key);
+                    string_append_with_format(&nombreInstanciaActual2, "%s", proximaInstancia->nombreProceso);
+
+
+                    // Creo un Registro Instruccion para simular una Distribucion
+                    Instruccion* registroInstruccionAux2 = NULL;
+                    registroInstruccionAux2 = malloc(sizeof(Instruccion));
+
+                    registroInstruccionAux2->operacion= 1;
+                    strcpy(registroInstruccionAux2->key, registroInstruccion.key);
+                    registroInstruccionAux2->key[strlen(registroInstruccion.key)] = '\0';
+                    registroInstruccionAux2->dato=NULL;
+                    registroInstruccionAux2->nombreEsiOrigen=NULL;
+
+                    // Obtengo la Instancia segun el Algoritmo de Distribucion
+                    proximaInstancia = obtenerInstanciaNueva(listaInstanciasConectadas,registroInstruccionAux2,algoritmoDistribucion);
+                    string_append_with_format(&nombreInstanciaFutura2, "%s", proximaInstancia->nombreProceso);
+
+
+                    // Serializado la Respuesta (ESTE MENSAJE LLEGA DIRECTAMENTE A LA CONSOLA)
+                    paquete = srlz_datosStatusRecurso('C', OBTENER_STATUS_CLAVE, nombreInstanciaActual2, nombreInstanciaFutura2, registroInstruccion.dato, registroInstruccion.key);
+
+                    // Envio el Paquete al Planificador
+                    if(send(fd_planificador,paquete.buffer,paquete.tam_buffer,0) != -1){
+
+                        log_info(infoLogger, "Se le envió información al PLANIFICADOR (Socket: %d) sobre el Recurso. Instancia Actual: %s - Instancia Distribuida: %s - Valor: %s", fd_planificador, nombreInstanciaActual2, nombreInstanciaFutura2, registroInstruccion.dato);
+
+                    }else{
+                        log_error(infoLogger, "No se pudo enviar información al PLANIFICADOR sobre el Recurso");
+                    }
+
+                    free(paquete.buffer);
+                    free(nombreInstanciaActual2);
+                    free(nombreInstanciaFutura2);           
+                    //free(registroInstruccionAux2->key);
+                    //free(registroInstruccionAux2);
+                    break;   
             }
         }
 
@@ -438,12 +509,11 @@ void* atenderConexiones(void* socketConexion){
 
                         // Envio el Paquetea al Planificador
                         if(send(fd_planificador,paquete.buffer,paquete.tam_buffer,0) != -1){
-
-                            free(paquete.buffer);
                             log_info(infoLogger, "Se le notifica al PLANIFICADOR (Socket %d) que el Proceso ESI %s quiere acceder al Recurso %s.", fd_planificador, obtenerNombreProceso(listaProcesosConectados, i), registroInstruccion.key);
                         }else{
                             log_error(infoLogger, "No se pudo enviar mensaje al PLANIFICADOR sobre el uso de un Recurso por el Proceso ESI %s.", obtenerNombreProceso(listaProcesosConectados, i));
                         }
+                        free(paquete.buffer);                        
                         break;
 
                     }else{ // Si la operacion es SET o STORE
@@ -460,12 +530,11 @@ void* atenderConexiones(void* socketConexion){
 
                                 // Envio el Paquetea a ESI
                                 if(send(i,paquete.buffer,paquete.tam_buffer,0) != -1){
-
-                                    free(paquete.buffer);
                                     log_info(infoLogger, "Se cancela el ESI %s por Error de Clave %s no Identificada", obtenerNombreProceso(listaProcesosConectados, i), registroKeyBloqueada.key);
                                 }else{
                                     log_error(infoLogger, "No se pudo notificar al ESI %s por Error de Clave %s no Identificada", obtenerNombreProceso(listaProcesosConectados, i), registroKeyBloqueada.key);
                                 }
+                                free(paquete.buffer);                                
                                 break;
                             }
                         }
@@ -481,12 +550,11 @@ void* atenderConexiones(void* socketConexion){
 
                                 // Envio el Paquetea a ESI
                                 if(send(i,paquete.buffer,paquete.tam_buffer,0) != -1){
-
-                                    free(paquete.buffer);
                                     log_info(infoLogger, "Se cancela el ESI %s por Error de Clave %s no Bloqueada", obtenerNombreProceso(listaProcesosConectados, i), registroInstruccion.key);
                                 }else{
                                     log_error(infoLogger, "No se pudo notificar al ESI %s por Error de Clave %s no Bloqueada", obtenerNombreProceso(listaProcesosConectados, i), registroInstruccion.key);
                                 }
+                                free(paquete.buffer);                                
                                 break;
                             }
                         }
@@ -542,12 +610,11 @@ void* atenderConexiones(void* socketConexion){
 
                             // Envio el Paquetea a ESI
                             if(send(i,paquete.buffer,paquete.tam_buffer,0) != -1){
-
-                                free(paquete.buffer);
                                 log_info(infoLogger, "Se cancela el ESI %s por Desconexión de la Instancia %s", obtenerNombreProceso(listaProcesosConectados, i), proximaInstancia->nombreProceso);
                             }else{
                                 log_error(infoLogger, "No se pudo notificar al ESI %s por Desconexión de la Instancia %s", obtenerNombreProceso(listaProcesosConectados, i), proximaInstancia->nombreProceso);
                             }
+                            free(paquete.buffer);                            
                         }
 
                     }

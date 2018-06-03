@@ -282,18 +282,70 @@ PARA UTILIZAR PARA INICIAR LA COMPACTACION GLOBAL
 
                     // Envio el Paquete al Coordinador
                     if(send(coordinador_fd,paquete.buffer,paquete.tam_buffer,0) != -1){
-
-                        free(paquete.buffer);
                         log_info(infoLogger, "Se le notificó al COORDINADOR el resultado de la ejecución de la Instrucción");
 
                     }else{
                         log_error(infoLogger, "No se pudo notificar al COORDINADOR el resultado de la ejecución de la Instrucción");
                     }
-
-                    free(registroInstruccion.nombreEsiOrigen);
-                    free(registroInstruccion.dato);
+                    free(paquete.buffer);
+                    //free(registroInstruccion.nombreEsiOrigen);
+                    //free(registroInstruccion.dato);
                     printf("\nsalgo case EJECUTAR_INSTRUCCION\n");
 					break;
+
+                case OBTENER_STATUS_VALOR:
+
+                    paquete=recibir_payload(&coordinador_fd,&encabezado.tam_payload);
+                    registroInstruccion=dsrlz_instruccion(paquete.buffer);
+                    free(paquete.buffer);
+
+                    log_info(infoLogger,"Pedido del Coordinador sobre el Valor del Recurso %s", registroInstruccion.key);
+
+
+                    char* valorObtenido = string_new();
+                    t_entrada* registroEntrada;
+
+                    // Obtengo el registro de la Tabla de Entradas para el Recurso solicitado
+                    registroEntrada = obtenerEntrada(tablaEntradas, registroInstruccion.key);
+
+                    // Obtengo el Valor del Recurso guardado en el Binario
+                    valorObtenido = leerBinarioEnPosicion(almacenamiento, registroEntrada->numeroDeEntrada);
+
+                    // Armo el Registro de la Instruccion para el Paquete
+                    Instruccion registroInstruccionAux;
+
+                    registroInstruccionAux.operacion= 1;
+                    strcpy(registroInstruccionAux.key, registroInstruccion.key);
+                    registroInstruccionAux.key[strlen(registroInstruccion.key)] = '\0';
+                    registroInstruccionAux.dato=malloc(strlen(valorObtenido)+1);
+                    strcpy(registroInstruccionAux.dato,valorObtenido);
+                    registroInstruccionAux.dato[strlen(valorObtenido)] = '\0';
+                    registroInstruccionAux.nombreEsiOrigen=malloc(strlen("Nada")+1);
+                    strcpy(registroInstruccionAux.nombreEsiOrigen,"Nada");
+                    registroInstruccionAux.nombreEsiOrigen[strlen("Nada")] = '\0';
+
+
+                    // Armo el Paquete de Pedido del Valor
+                    paquete = srlz_instruccion('I', DEVOLVER_STATUS_VALOR,registroInstruccionAux);
+
+                    // Envio el Paquete al Coordinador
+                    if(send(coordinador_fd,paquete.buffer,paquete.tam_buffer,0) != -1){
+
+                        log_info(infoLogger,"Se le devuelve al COORDINADOR el valor del Recurso %s. El valor es %s", registroInstruccionAux.key, registroInstruccionAux.dato);
+
+                    }else{
+                        log_error(infoLogger, "No se pudo enviar al COORDINADOR el valor del Recurso %s. El valor es %s", registroInstruccionAux.key, registroInstruccionAux.dato);
+                    }
+
+                    free(paquete.buffer);
+                    free(valorObtenido);
+                    //free(registroInstruccion.nombreEsiOrigen);
+                    //free(registroInstruccionAux.dato);
+                    //free(registroInstruccionAux.nombreEsiOrigen);
+
+                    //free(registroEntrada->clave);
+                    //free(registroEntrada);
+                    break;
 
 
                 case OBTENCION_CONFIG_ENTRADAS:

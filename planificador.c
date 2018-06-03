@@ -720,6 +720,8 @@ void* atenderConexiones(void* socketConexion){
                     printf("Instancia donde se encuentra el Recurso: %s\n", registroStatusRecurso.nombreInstanciaActual);
                     printf("Instancia donde se guardaría el Recurso: %s\n", registroStatusRecurso.nombreInstanciaFutura);
                     printf("Valor del Recurso: %s\n", registroStatusRecurso.valorRecurso);
+
+                    log_info(infoLogger, "Se recibió del COORDINADOR la información sobre el Recurso %s. Instancia Actual: %s - Instancia Distribuida: %s - Valor: %s", registroStatusRecurso.key, registroStatusRecurso.nombreInstanciaActual, registroStatusRecurso.nombreInstanciaFutura, registroStatusRecurso.valorRecurso);                    
                     break;
             }
         }

@@ -441,6 +441,14 @@ void* atenderConexiones(void* socketConexion){
                     free(nombreInstanciaFutura2);           
                     //free(registroInstruccionAux2->key);
                     //free(registroInstruccionAux2);
+                    break;
+
+                case KEY_DESTRUIDA:
+                    paquete=recibir_payload(&i,&encabezado.tam_payload);
+                    KeyBloqueada keyBorrada=dsrlz_datosKeyBloqueada(paquete.buffer);
+                    free(paquete.buffer);
+                    dictionary_remove(diccionarioClavesBloqueadas,keyBorrada.key);
+                    dictionary_remove(diccionarioClavesInstancias,keyBorrada.key);
                     break;   
             }
         }

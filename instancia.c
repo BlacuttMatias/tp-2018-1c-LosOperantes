@@ -244,8 +244,20 @@ int main(int argc, char* argv[]){
                     	    puts("Salí de persistir algo nuevo");
                         }
                             //ahora tengo que avisarle a la instancia de todas las claves que fueron borradas
-
-
+                            int i=0;
+                            int cantidadEntradas= list_size(tablaEntradas);
+                            for(i=0;i<cantidadEntradas;i++){
+                                t_entrada* entradaBorrada=list_remove(entradasBorradas,0);//estoy usando la serializacion de key bloqueada para no hacer toda una nueva serializacion. lleno los strings con "nada" por si acaso para evitar errores
+                                Paquete keyBorrada=srlz_datosKeyBloqueada('I',KEY_DESTRUIDA,"nada",GET, entradaBorrada->clave,"nada");
+                                    if( send(coordinador_fd,keyBorrada.buffer,keyBorrada.tam_buffer,1) != -1 ){
+                                        log_info(infoLogger,"Se le envio al COORDINADOR el aviso para que borre una KEY eliminada");
+                                    }else{
+                                        log_info(infoLogger,"No se pudo enviar al COORDINADOR el aviso para que borre una KEY eliminada");
+                                    }
+                                free(entradaBorrada->clave);
+                                free(entradaBorrada);
+                            }
+                        list_destroy(entradasBorradas);
                     }
 
                     if(registroInstruccion.operacion == STORE){                                

@@ -1393,7 +1393,7 @@ int espacioLibre(Almacenamiento almacenamiento){
 	//puts("SALGO ESPACIOlIBRE");
 	return contador;
 }
-void liberarUnEspacio(Almacenamiento almacenamiento, int* puntero){
+t_entrada* liberarUnEspacio(Almacenamiento almacenamiento, int* puntero){
 	puts("LIBRERAR UN ESPACIO");
 	int i = 0;
 	
@@ -1411,6 +1411,18 @@ void liberarUnEspacio(Almacenamiento almacenamiento, int* puntero){
 	liberarEntradaEnVector(almacenamiento,reemplazada);
 	
 	puts("LIBERE UN ESPACIO");
+	return reemplazada;
+}
+
+int posicionEntradaEnLista(Almacenamiento almacenamiento, t_entrada* entrada){
+	int posicionEnLista=-1;
+	bool esLaEntrada(t_entrada* unaEntrada){
+		posicionEnLista++;
+		unaEntrada=list_get(almacenamiento.tablaEntradas,posicionEnLista);
+		return(unaEntrada->numeroDeEntrada == entrada->numeroDeEntrada);
+	}
+	list_find(almacenamiento.tablaEntradas,(void*)esLaEntrada);
+	return posicionEnLista;
 }
 
 void incrementarPuntero(Almacenamiento almacenamiento,int* puntero) {
@@ -1432,10 +1444,22 @@ void destruirEntradaEnPosicion(Almacenamiento almacenamiento, int posicion){
 	free(destruida);
 }
 
-int persistirDatos(Almacenamiento almacenamiento,Instruccion* datosInstruccion, char* algoritmoDistribucion, int* puntero, bool* seCompacto){
+t_list* persistirDatos(Almacenamiento almacenamiento,Instruccion* datosInstruccion, char* algoritmoDistribucion, int* puntero, bool* seCompacto){
+	//creo y agrego la nueva entrada dentro de esta funcion, asi puedo retornar la lista de entradas Borradas
+	t_entrada* nuevaEntrada = NULL;
+	nuevaEntrada=malloc(sizeof(t_entrada));
+	nuevaEntrada->clave = malloc(strlen(datosInstruccion->key)+1);
+	memcpy(nuevaEntrada->clave,datosInstruccion->key,strlen(datosInstruccion->key));
+	nuevaEntrada->clave[strlen(datosInstruccion->key)]='\0';
+	nuevaEntrada->tamanioValorAlmacenado = strlen(datosInstruccion->dato);
+	list_add(almacenamiento.tablaEntradas,nuevaEntrada);//asignaré el nuevaEntrada->numero de entrada al momento de encontrarlo
+
+
+
 	char*valor=datosInstruccion->dato;
 printf("\n\n ENTRO A PERSISTIR DATOS\n\n");
-	
+	t_list* entradasBorradas=list_create();
+	t_entrada* entradaBorrada;
 	int tamanio= string_length(datosInstruccion->dato);
 	int i=0;
 	int j=0;
@@ -1458,7 +1482,8 @@ puts("IF INBICIAL");
 				
 				while(espaciosLibres<tamanio){//aplico algoritmo hasta tener espacio suficiente
 				puts("QUIERO LIBERER");
-					liberarUnEspacio(almacenamiento, puntero);
+					entradaBorrada=liberarUnEspacio(almacenamiento, puntero);
+					list_add(entradasBorradas,entradaBorrada);
 					puts("LIBERO");
 					espaciosLibres=espacioLibre(almacenamiento);
 					puts("CALCULO ESPACIO LIBRE");
@@ -1473,8 +1498,9 @@ puts("IF INBICIAL");
 						entradaAux=list_get(almacenamiento.tablaEntradas,i);
 						if(esEntradaAtomica(almacenamiento,entradaAux)){
 							destruirEntradaEnPosicion(almacenamiento,i);
+							list_add(entradasBorradas,entradaAux);
 						}
-						else{i++;}
+						else{i++;}    			//aplico i++ unicamente en el else porque cuando destruyo una entrada en pos i, la entrada i+1 pasa a ocupar i
 						espaciosLibres=espacioLibre(almacenamiento);
 					}
 
@@ -1487,7 +1513,7 @@ puts("IF INBICIAL");
 					entradaAux=list_get(almacenamiento.tablaEntradas,i); //saca valores atomicos en el orden de la lista
 					if(esEntradaAtomica(almacenamiento, entradaAux)){					//estoy suponiendo que la lista esta ordenada de menos usado a mas recientemente usado, al igual que en el algoritmo de distribucion
 						destruirEntradaEnPosicion(almacenamiento,i);	// y tambien asumo que siempre habrá un valor atómico para sacar. Leí en el issue  1097 que no sucederá ese caso
-						
+						list_add(entradasBorradas,entradaAux);
 					}
 					else{i++;}
 					espaciosLibres=espacioLibre(almacenamiento);
@@ -1497,17 +1523,19 @@ puts("IF INBICIAL");
 
 
 		}	else {printf("\n no se pudo leer el algoritmo de reemplazo %s \n", algoritmoDistribucion);
-		puts("RETORNO -2");
-				return -2;}}}
+				log_info(infoLogger,"no se pudo leer algoritmo de reemplazo");
+				puts("ERROR NO SE PUDO LEER ALGORITMO DE REEMPLAZO");
+				return entradasBorradas;}}}
 	}		// Dependiendo el algoritmoDistricucion, persistir los datos localmente
-			//en este caso tengo espacio suficiente sin reemplazar, analizo si compactar o simplemente guardar
+			//en este caso tengo espacio suficiente sin reemplazar, o ya reemplacé cuanto necesitaba. analizo si compactar o simplemente guardar
 	if(espaciosLibres<tamanio){
 		puts("NO HAY ESPACIO");
 		log_info(infoLogger,"no se pueden borrar datos atomicos en la instancia para guardar nuevos datos");
 		printf("SALGO RETORNANDO %d",i);
-		return -1; }//retorno -1 si no se puede encontrar espacio suficiente para guardar el dato
+		return entradasBorradas; }//retorno -1 si no se puede encontrar espacio suficiente para guardar el dato
 	FILE* vectorBin= fopen(almacenamiento.vector,"r+");
 	
+	//ahora escribo en el primer espacio libre consecutivo que encuentre sin compactar
 	for(i=0;i<almacenamiento.cantidadEntradas;i++){//busco primer 0 en vectorBin
 	puts("ENTRO AL FOR");
 		fseek(vectorBin,i,SEEK_SET);
@@ -1527,7 +1555,8 @@ puts("IF INBICIAL");
 					grabarPosicionEnVector(almacenamiento,i+j);
 				}
 				printf("SALGO RETORNANDO %d",i);
-				return i;
+				nuevaEntrada->numeroDeEntrada=i;
+				return entradasBorradas;
 			}
 			vectorBin= fopen(almacenamiento.vector,"r+");
 		}
@@ -1549,7 +1578,8 @@ puts("IF INBICIAL");
 		grabarPosicionEnVector(almacenamiento,i+j);
 	}
 	printf("SALGO RETORNANDO %d",i);
-	return i;
+	nuevaEntrada->numeroDeEntrada=i;
+	return entradasBorradas;
 }
 
 bool enviarInstruccionInstancia(Instruccion registroInstruccion, int socketInstancia){
@@ -1926,15 +1956,7 @@ void liberarEntradaEnVector(Almacenamiento almacenamiento, t_entrada* entrada){
 	for(i=0;i<=espaciosOcupados;i+=1){
 		liberarPosicionEnVector(almacenamiento,posicion + i);
 	}
-	int posicionEnLista= -1;
-	t_entrada* unaEntrada; 
-	bool esLaEntrada(t_list* lista){
-		posicionEnLista++;
-		unaEntrada=list_get(almacenamiento.tablaEntradas,posicionEnLista);
-		return(unaEntrada->numeroDeEntrada == posicion);
-
-	}
-	t_entrada* eliminada= list_find(almacenamiento.tablaEntradas,(void*)esLaEntrada);
+	int posicionEnLista= posicionEntradaEnLista(almacenamiento, entrada);
 	destruirEntradaEnPosicion(almacenamiento,posicionEnLista);
 }
 

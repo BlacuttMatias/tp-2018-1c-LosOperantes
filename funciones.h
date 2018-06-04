@@ -116,7 +116,7 @@
 /*  Funciones de Instancia 					*/
 /* ---------------------------------------- */
 
-	int persistirDatos(Almacenamiento almacenamiento,Instruccion* datosInstruccion ,char* algoritmoAlmacenamiento, int* puntero, bool* seCompacto);
+	t_list* persistirDatos(Almacenamiento almacenamiento,Instruccion* datosInstruccion ,char* algoritmoAlmacenamiento, int* puntero, bool* seCompacto);
 	void cargarTablaEntradas(t_list *tablaEntradas,Instruccion* estructuraInstruccion, Almacenamiento almacenamiento);
 	void persistirEntrada(t_entrada* unaEntrada, char* puntoMontaje, Almacenamiento almacenamiento);
 	/* Función para devolver un error */
@@ -143,14 +143,15 @@
 	void grabarEntradaEnVector(Almacenamiento almacenamiento, int posicion, t_entrada* entrada);
 
 	int espacioLibre(Almacenamiento almacenamiento);
-	void liberarUnEspacio(Almacenamiento almacenamiento, int* puntero);
 	void incrementarPuntero(Almacenamiento almacenamiento, int* puntero);
 	bool esEntradaAtomica(Almacenamiento almacenamiento,t_entrada* entrada);
 	void destruirEntradaEnPosicion(Almacenamiento almacenamiento, int posicion);
+	int posicionEntradaEnLista(Almacenamiento almacenamiento, t_entrada* entrada);
 
 	void showContenidoTablaEntradas(t_list* tablaEntradas);
 	void limpiarInstancia(char* puntoMontaje);
 
+	t_entrada* liberarUnEspacio(Almacenamiento almacenamiento, int* puntero);
 	t_entrada* ultimaEntrada(Almacenamiento almacenamiento);
 	t_entrada* obtenerEntrada(t_list* tablaEntradas, char* clave);
 /* ---------------------------------------- */

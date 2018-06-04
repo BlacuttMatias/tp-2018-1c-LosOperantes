@@ -202,6 +202,7 @@ int main(int argc, char* argv[]){
 						//Prototipado
                         int nuevaPosicion;
                         t_entrada* entradaNueva;
+                        t_list* entradasBorradas;
 
                     	if(existeEntradaEnTabla(tablaEntradas,registroInstruccion.key)){
                     		//si ya existe la entrada en la tabla
@@ -223,7 +224,7 @@ int main(int argc, char* argv[]){
                             liberarEntradaEnVector(almacenamiento,entradaEncontrada);
 
                         	//escribo en el binario
-                        	nuevaPosicion=persistirDatos(almacenamiento,&registroInstruccion,algoritmoReemplazo,puntero,&seCompacto);
+                        	entradasBorradas=persistirDatos(almacenamiento,&registroInstruccion,algoritmoReemplazo,puntero,&seCompacto);
 
 
 
@@ -239,17 +240,12 @@ int main(int argc, char* argv[]){
 
                             //escribo en el binario
                             puts("persisto algo nuevo");
-                            nuevaPosicion=persistirDatos(almacenamiento,&registroInstruccion,algoritmoReemplazo,puntero,&seCompacto);
+                            entradasBorradas=persistirDatos(almacenamiento,&registroInstruccion,algoritmoReemplazo,puntero,&seCompacto);
                     	    puts("Salí de persistir algo nuevo");
                         }
+                            //ahora tengo que avisarle a la instancia de todas las claves que fueron borradas
 
 
-                        // Cargo la Tabla de Entradas
-                        puts("cargo tabla entradas");
-                        cargarTablaEntradas(tablaEntradas,&registroInstruccion, almacenamiento);
-                        puts("cargue tabla entradas");
-                        entradaNueva= ultimaEntrada(almacenamiento); 
-                        puts("ultima entrada");
                     }
 
                     if(registroInstruccion.operacion == STORE){                                

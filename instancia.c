@@ -252,6 +252,20 @@ int main(int argc, char* argv[]){
 
                         // Realizo el Dump de la Tabla de Entradas
                         //dump(tablaEntradas, puntoMontaje, almacenamiento);
+
+
+                        //saco y agrego al final a la entrada storeada, para mantener orden de entradas segun uso
+                    	if(existeEntradaEnTabla(tablaEntradas,registroInstruccion.key)){
+                    		//si ya existe la entrada en la tabla
+                            t_entrada* entradaEncontrada = obtenerEntrada(tablaEntradas,registroInstruccion.key);
+                            int posicionEntradaEncontrada=posicionEntradaEnLista(almacenamiento,entradaEncontrada);
+                            list_remove(tablaEntradas,posicionEntradaEncontrada);
+                            list_add(tablaEntradas,entradaEncontrada);
+
+                    		}
+
+                    		
+                    		
                     }
 
 

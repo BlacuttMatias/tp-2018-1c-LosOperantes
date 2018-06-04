@@ -243,20 +243,29 @@ int main(int argc, char* argv[]){
                             entradasBorradas=persistirDatos(almacenamiento,&registroInstruccion,algoritmoReemplazo,puntero,&seCompacto);
                     	    puts("Salí de persistir algo nuevo");
                         }
-                            //ahora tengo que avisarle a la instancia de todas las claves que fueron borradas
+
+                        //ahora tengo que avisarle a la instancia de todas las claves que fueron borradas
+                        if(list_size(entradasBorradas) >0 ){ 
+
                             int i=0;
-                            int cantidadEntradas= list_size(tablaEntradas);
+                            int cantidadEntradas= list_size(entradasBorradas);
+
                             for(i=0;i<cantidadEntradas;i++){
-                                t_entrada* entradaBorrada=list_remove(entradasBorradas,0);//estoy usando la serializacion de key bloqueada para no hacer toda una nueva serializacion. lleno los strings con "nada" por si acaso para evitar errores
-                                Paquete keyBorrada=srlz_datosKeyBloqueada('I',KEY_DESTRUIDA,"nada",GET, entradaBorrada->clave,"nada");
-                                    if( send(coordinador_fd,keyBorrada.buffer,keyBorrada.tam_buffer,1) != -1 ){
-                                        log_info(infoLogger,"Se le envio al COORDINADOR el aviso para que borre una KEY eliminada");
-                                    }else{
-                                        log_info(infoLogger,"No se pudo enviar al COORDINADOR el aviso para que borre una KEY eliminada");
-                                    }
+                                t_entrada* entradaBorrada=list_remove(entradasBorradas,i);
+
+                                //estoy usando la serializacion de key bloqueada para no hacer toda una nueva serializacion. lleno los strings con "nada" por si acaso para evitar errores
+                                paquete = srlz_datosKeyBloqueada('I',KEY_DESTRUIDA,"nada",GET, entradaBorrada->clave,"nada");
+
+                                if( send(coordinador_fd,paquete.buffer,paquete.tam_buffer,1) != -1 ){
+                                    log_info(infoLogger,"Se le envio al COORDINADOR el aviso para que borre el Recurso %s por ser reemplazado", entradaBorrada->clave);
+                                }else{
+                                    log_info(infoLogger,"No se pudo enviar al COORDINADOR el aviso para que borre el Recurso %s por ser reemplazado", entradaBorrada->clave);
+                                }
+                                free(paquete.buffer);
                                 free(entradaBorrada->clave);
                                 free(entradaBorrada);
                             }
+                        }
                         list_destroy(entradasBorradas);
                     }
 
@@ -291,12 +300,13 @@ int main(int argc, char* argv[]){
                         log_info(infoLogger,"Se realizo la Compactacion Local en la Instancia %s", config_get_string_value(cfg,"INSTANCIA_NOMBRE"));
 
                         // Le aviso al Coordinador para que las demas Instancias realicen sus Compactaciones
-                        Paquete paquete= crearHeader('I',COMPACTACION_GLOBAL,1);
+                        paquete= crearHeader('I',COMPACTACION_GLOBAL,1);
                         if( send(coordinador_fd,paquete.buffer,paquete.tam_buffer,1) != -1 ){
                             log_info(infoLogger,"Se le envio al COORDINADOR el aviso para que las demas Instancias realicen sus Compactaciones Locales");
                         }else{
                             log_info(infoLogger,"No se pudo enviar al COORDINADOR el aviso para que las demas Instancias realicen sus Compactaciones Locales");
                         }
+                        free(paquete.buffer);
                         seCompacto=false;
                     }
 

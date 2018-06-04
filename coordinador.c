@@ -447,8 +447,18 @@ void* atenderConexiones(void* socketConexion){
                     paquete=recibir_payload(&i,&encabezado.tam_payload);
                     KeyBloqueada keyBorrada=dsrlz_datosKeyBloqueada(paquete.buffer);
                     free(paquete.buffer);
-                    dictionary_remove(diccionarioClavesBloqueadas,keyBorrada.key);
-                    dictionary_remove(diccionarioClavesInstancias,keyBorrada.key);
+
+
+                    // Si el Recurso ya fue recibido previamente por el Coordinador, lo borro
+                    if(dictionary_has_key(diccionarioClavesInstancias, keyBorrada.key) ){
+                        dictionary_remove(diccionarioClavesInstancias,keyBorrada.key);
+                    }
+
+                    // Si el Recurso esta bloqueado por algun proceso, lo borro
+                    if(dictionary_has_key(diccionarioClavesBloqueadas, keyBorrada.key) ){
+                        dictionary_remove(diccionarioClavesBloqueadas,keyBorrada.key);
+                    }
+
                     break;   
             }
         }

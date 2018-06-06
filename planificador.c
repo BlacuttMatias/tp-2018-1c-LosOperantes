@@ -398,7 +398,7 @@ void* hiloConsolaInteractiva(void * unused) {
                         if(socketProcesoaMatar == 0){
                             printf("[Error] Proceso ESI %s no se encuentra conectado.\n", parametrosConsolaOriginal[1]);
                         }else{
-                            liberarRecursosProceso(diccionarioClavesBloqueadas, parametrosConsolaOriginal[1]);
+                            liberarRecursosProcesoPlanificador(diccionarioClavesBloqueadas, parametrosConsolaOriginal[1]);
                             cargarProcesoCola(listaESIconectados, colaFinalizados, socketProcesoaMatar);
                             dictionary_remove(diccionarioRafagas, parametrosConsolaOriginal[1]);
                             eliminarProcesoLista(listaESIconectados,socketProcesoaMatar);
@@ -417,7 +417,11 @@ void* hiloConsolaInteractiva(void * unused) {
                             }else{
                                 log_info(infoLogger,"No se pudo avisar a esi de que muera");
                                 printf("\n\n NO SE PUDO ENVIAR ORDEN A ESI %s DE QUE MUERA \n\n",parametrosConsolaOriginal[1]);
-                            }                 
+                            }
+                            if(list_size(listaReady)==1 && queue_size(colaEjecucion)==0) ejecutarAlgoritmoPlanificacion=true;
+                            if(elAlgoritmoEsConDesalojo) ejecutarAlgoritmoPlanificacion=true;
+
+                            planificarProcesos();
                         }
                     }else{
                         printf("[Error] Cantidad de parámetros incorrectos\n");
@@ -630,7 +634,7 @@ void* atenderConexiones(void* socketConexion){
                     log_info(infoLogger,"Notificacion sobre la finalizacion del Proceso ESI %s.", obtenerNombreProceso(listaESIconectados, i));
 
                     // Libero los Recursos que tenia asignado en Lista de Claves Bloqueadas
-                    liberarRecursosProceso(diccionarioClavesBloqueadas, obtenerNombreProceso(listaESIconectados, i));
+                    liberarRecursosProcesoPlanificador(diccionarioClavesBloqueadas, obtenerNombreProceso(listaESIconectados, i));
 
                     // Cargar el Proceso en la Cola de Finalizados
                     cargarProcesoCola(listaESIconectados, colaFinalizados, i);

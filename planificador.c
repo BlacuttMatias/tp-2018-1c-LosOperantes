@@ -53,6 +53,52 @@
     pthread_t hiloConexiones;
     pthread_t hiloConsola;
 
+/* ---------------------------------------------------- */
+/*  Funcion para liberar recursos en el planificador    */
+/* ---------------------------------------------------- */
+
+//este liberar recursos, libera a las claves bloqueadas por el esi y tambien los procesos bloqueados que esperaban alguna de esas claves
+void liberarRecursosProcesoPlanificador(t_dictionary * dictionario, char* nombreProceso){
+
+	if(dictionary_size(dictionario) > 0){
+
+    	void elemento_destroy(Proceso* self){
+    		//free(self); // Explota!!!
+    	}
+
+    	void _each_elemento_(char* key, Proceso* registroProcesoAux){
+    		if(registroProcesoAux->nombreProceso != NULL && strcmp(registroProcesoAux->nombreProceso, nombreProceso) == 0) {
+
+    			//funcion auxiliar para la lista
+    			bool encontrarProcesoConClaveRequerida (KeyBloqueada* registroKeyBloqueadaAux){
+    				//se busca el proceso bloqueado que necesitaba esa clave
+    				if(!strcmp(registroKeyBloqueadaAux->key, key)){
+    					int socketDelProcesoConClaveRequerida = obtenerSocketProceso(listaESIconectados, registroKeyBloqueadaAux->nombreProceso);
+    					eliminarProcesoCola(colaBloqueados, socketDelProcesoConClaveRequerida);
+    					cargarProcesoCola(listaESIconectados, colaReady, socketDelProcesoConClaveRequerida);
+    					cargarProcesoLista(listaESIconectados, listaReady, socketDelProcesoConClaveRequerida);
+    					return true;
+    				}
+    				else return false;
+    			}
+    			//se remueven los procesos que esperaban alguna de esas claves
+    			list_remove_and_destroy_by_condition(listaClavesBloqueadasRequeridas, (void*)encontrarProcesoConClaveRequerida, (void*)liberarKeyBloqueada);
+
+    			//funcion auxiliar para la lista
+    			bool eseMismoProcesoEstabaEnLaLista (KeyBloqueada* registroKeyBloqueadaAux){
+    				return (!strcmp(registroKeyBloqueadaAux->nombreProceso, nombreProceso));
+    			}
+    			//se remueve ese mismo proceso de la lista. Este romeve solo daria true cuando se mata un proceso
+    			list_remove_and_destroy_by_condition(listaClavesBloqueadasRequeridas, (void*)eseMismoProcesoEstabaEnLaLista, (void*)liberarKeyBloqueada);
+    			dictionary_remove_and_destroy(dictionario, key, (void*) elemento_destroy);
+    		}
+    	}
+    	dictionary_iterator(dictionario, (void*)_each_elemento_);
+    }
+
+}
+
+
 /* ---------------------------------------- */
 /*  Funcion de Planificacion de Procesos    */
 /* ---------------------------------------- */

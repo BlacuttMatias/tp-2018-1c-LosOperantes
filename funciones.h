@@ -150,6 +150,7 @@
 
 	void showContenidoTablaEntradas(t_list* tablaEntradas);
 	void limpiarInstancia(char* puntoMontaje);
+	void mostrarBinario(Almacenamiento almacenamiento);
 
 	t_entrada* liberarUnEspacio(Almacenamiento almacenamiento, int* puntero);
 	t_entrada* ultimaEntrada(Almacenamiento almacenamiento);

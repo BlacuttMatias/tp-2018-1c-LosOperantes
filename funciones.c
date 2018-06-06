@@ -1750,8 +1750,7 @@ void procesoArchivoDump(char *archivo, char* punto_montaje, Almacenamiento almac
 
 	t_entrada* nuevaEntrada = NULL;
 	nuevaEntrada = malloc(sizeof(t_entrada)); //prueba con entrada  FUNCIONA
-
- 	nuevaEntrada->clave = malloc(strlen(nombre_archivo_sin_extension)+1);
+ 	nuevaEntrada->clave = malloc(strlen(nombre_archivo_sin_extension));
 	strcpy(nuevaEntrada->clave, nombre_archivo_sin_extension);
 	nuevaEntrada->clave[strlen(nombre_archivo_sin_extension)] = '\0';
 	nuevaEntrada->tamanioValorAlmacenado = strlen(contenido_fichero);
@@ -1776,7 +1775,7 @@ void procesoArchivoDump(char *archivo, char* punto_montaje, Almacenamiento almac
     free(carpeta_archivo);
     free(nombre_archivo_sin_extension);
 
-    list_destroy(tablaEntradas);
+    //list_destroy(tablaEntradas);
 /*    
     free(nuevaEntrada->clave);
     free(nuevaEntrada);
@@ -1905,8 +1904,7 @@ char* leerBinarioEnPosicion(Almacenamiento almacenamiento, int posicion){
 	fseek(binario,tamEntrada*posicion,SEEK_SET);
 	int contador=0;
 	//debuggeanding
-	while( letra !='\0'){
-		fread(&letra,sizeof(char),1,binario);
+	while( letra !='\0' && fread(&letra,sizeof(char),1,binario) != EOF){
 		string_append_with_format(&buffer, "%c",letra);
 		contador +=1;
 	}
@@ -2012,7 +2010,7 @@ int buscarPosicionEnBin(Almacenamiento almacenamiento, char* valor){
 		if(strcmp(buffer,valor) == 0){
 			fclose(binario);
 			free(buffer);
-			puts("retorno i");
+			printf("retorno %d \n",i);
 			return i;}	
 		i +=1;
 
@@ -2238,4 +2236,18 @@ void ejecutarCadaXTiempo(void funcionAEjecutar(), int tiempo ){
 	    	  //printf("ejecuto");
 	      }
 	   }
+}
+
+void mostrarBinario(Almacenamiento almacenamiento){
+	puts("MOSTRANDO BINARIO");
+	int i;
+	i=0;
+	char* buffer; 
+	printf("i es %d y cantidad entradas es %d\n",i,almacenamiento.cantidadEntradas);
+	while(i<almacenamiento.cantidadEntradas){
+		buffer = leerBinarioEnPosicion(almacenamiento,i);
+		printf("\n en la posicin    %d    se encuentra el dato %s",i,buffer);
+		i= i + string_length(buffer)/almacenamiento.tamPorEntrada + 1; 
+
+	}
 }

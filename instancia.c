@@ -246,6 +246,7 @@ int main(int argc, char* argv[]){
 
                         //ahora tengo que avisarle a la instancia de todas las claves que fueron borradas
                         if(list_size(entradasBorradas) >0 ){ 
+                            puts("size entradasBorradas>0");
 
                             int i=0;
                             int cantidadEntradas= list_size(entradasBorradas);
@@ -397,6 +398,20 @@ int main(int argc, char* argv[]){
                     entradas=registroEntradasIntancias.cantEntrada;
                     espacioPorEntrada=registroEntradasIntancias.tamanioEntrada;
 
+
+                    //creo estructura de datos con info de almacenamiento
+                    almacenamiento.cantidadEntradas=entradas;
+                    almacenamiento.tamPorEntrada=espacioPorEntrada;
+                    almacenamiento.binario=malloc(strlen("storage.bin"));
+                    almacenamiento.vector=malloc(strlen("vectorBin.txt"));
+                    strcpy(almacenamiento.binario,"storage.bin");
+                    strcpy(almacenamiento.vector,"vectorBin.txt");                  
+                    almacenamiento.tablaEntradas=tablaEntradas;
+
+
+
+
+
                     // Creo el Storage.bin si no existe
                     if (!existeArchivo("storage.bin")){
                         FILE* binario= fopen("storage.bin","wb+");
@@ -405,6 +420,8 @@ int main(int argc, char* argv[]){
                         // Cierro los FD
                         fclose(binario);
                     }
+                    else {
+                        mostrarBinario(almacenamiento);}
 
                     // Creo el Bitmap si no existe
                     if (!existeArchivo("vectorBin.txt")){
@@ -421,14 +438,7 @@ int main(int argc, char* argv[]){
                         fclose(vectorBin);
                     }
 
-                    //creo estructura de datos con info de almacenamiento
-                    almacenamiento.cantidadEntradas=entradas;
-                    almacenamiento.tamPorEntrada=espacioPorEntrada;
-                    almacenamiento.binario=malloc(strlen("storage.bin"));
-                    almacenamiento.vector=malloc(strlen("vectorBin.txt"));
-                    strcpy(almacenamiento.binario,"storage.bin");
-                    strcpy(almacenamiento.vector,"vectorBin.txt");                  
-                    almacenamiento.tablaEntradas=tablaEntradas;
+
 
                     // Se precarga la Tabla de Entradas con datos del Dump
                     puts("precargo");

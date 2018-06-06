@@ -1,0 +1,21 @@
+GET clave1
+SET clave1 1ocupa7
+STORE clave1
+GET clave2
+SET clave2 2ocupa7
+STORE clave2
+GET clave3
+SET clave3 3ocupa7
+STORE clave3
+GET clave4
+SET clave4 4ocupa7
+STORE clave4
+GET clave5
+SET clave5 5ocupa7
+STORE clave5
+GET clave:a
+SET clave:a a--ocupa10
+STORE clave:a
+GET clave:b
+SET clave:b b--ocupa10
+STORE clave:b

@@ -26,7 +26,6 @@
 /* ---------------------------------------- */
 /*  Variables Globales                      */
 /* ---------------------------------------- */
-    int* puntero;
     int entradas;
     int espacioPorEntrada;
     t_list* tablaEntradas;
@@ -52,7 +51,8 @@ void handle_alarm(int sig) {
 
 
 int main(int argc, char* argv[]){
-
+    int* puntero=malloc(sizeof(int));
+    *puntero=0;
     /* Creo la instancia del Archivo de Configuracion y del Log */
     cfg = config_create("config/config.cfg");
     infoLogger = log_create("log/instancia.log", "INSTANCIA", false, LOG_LEVEL_INFO);
@@ -250,30 +250,37 @@ int main(int argc, char* argv[]){
 
                             int i=0;
                             int cantidadEntradas= list_size(entradasBorradas);
+                            showContenidoTablaEntradas(entradasBorradas);
 
                             for(i=0;i<cantidadEntradas;i++){
-                                t_entrada* entradaBorrada=list_remove(entradasBorradas,i);
+                                t_entrada* entradaBorrada=list_remove(entradasBorradas,0);//aca va posicion 0 porque a medida que saco, la posicion 0 tiene na nueva entrada
+                                printf("remuevo la key %s\n",entradaBorrada->clave);
 
                                 //estoy usando la serializacion de key bloqueada para no hacer toda una nueva serializacion. lleno los strings con "nada" por si acaso para evitar errores
                                 paquete = srlz_datosKeyBloqueada('I',KEY_DESTRUIDA,"nada",GET, entradaBorrada->clave,"nada");
+                                puts("mandé paquete");
 
                                 if( send(coordinador_fd,paquete.buffer,paquete.tam_buffer,1) != -1 ){
+                                    puts("se envio bien");
                                     log_info(infoLogger,"Se le envio al COORDINADOR el aviso para que borre el Recurso %s por ser reemplazado", entradaBorrada->clave);
                                 }else{
+                                    puts("se envio mal");
                                     log_info(infoLogger,"No se pudo enviar al COORDINADOR el aviso para que borre el Recurso %s por ser reemplazado", entradaBorrada->clave);
                                 }
+                                puts("hago free");
                                 free(paquete.buffer);
                                 free(entradaBorrada->clave);
                                 free(entradaBorrada);
                             }
                         }
+                        puts("destruyo lista");
                         list_destroy(entradasBorradas);
                     }
 
                     if(registroInstruccion.operacion == STORE){                                
 
                         // Realizo el Dump de la Tabla de Entradas
-                        //dump(tablaEntradas, puntoMontaje, almacenamiento);
+                        dump(tablaEntradas, puntoMontaje, almacenamiento);
 
 
                         //saco y agrego al final a la entrada storeada, para mantener orden de entradas segun uso
@@ -425,10 +432,8 @@ int main(int argc, char* argv[]){
 
                     // Creo el Bitmap si no existe
                     if (!existeArchivo("vectorBin.txt")){
-                        puts("abro vectorBin");
                         FILE* vectorBin = fopen("vectorBin.txt","w");
                         ftruncate(fileno(vectorBin),entradas);
-                        puts("fort");
                         for(contador=0;contador<entradas; contador=contador+1){
                             fseek(vectorBin,sizeof(char)*contador,SEEK_SET);
                             fwrite(&cero,1,sizeof(char),vectorBin);

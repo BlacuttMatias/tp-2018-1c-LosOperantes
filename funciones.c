@@ -1396,7 +1396,6 @@ int espacioLibre(Almacenamiento almacenamiento){
 	return contador;
 }
 t_entrada* liberarUnEspacio(Almacenamiento almacenamiento, int* puntero){
-	puts("LIBRERAR UN ESPACIO");
 	int i = 0;
 	
 	bool esAtomica(t_entrada* entradaAux){
@@ -1406,15 +1405,17 @@ t_entrada* liberarUnEspacio(Almacenamiento almacenamiento, int* puntero){
 
 	t_entrada* reemplazada=NULL;
 	while(reemplazada==NULL && i<almacenamiento.cantidadEntradas){
+		printf("el puntero apunta al valor %d\n\n",*puntero);
 		reemplazada = list_find(almacenamiento.tablaEntradas,(void*)esAtomica);
 		incrementarPuntero(almacenamiento,puntero);
 		i++;
 	}
 	liberarEntradaEnVector(almacenamiento,reemplazada);
+	printf("\n seleccioné para borrar a la clave %s\n\n",reemplazada->clave);
 	
-	puts("LIBERE UN ESPACIO");
 	return reemplazada;
 }
+
 
 int posicionEntradaEnLista(Almacenamiento almacenamiento, t_entrada* entrada){
 	int posicionEnLista=-1;
@@ -1427,13 +1428,18 @@ int posicionEntradaEnLista(Almacenamiento almacenamiento, t_entrada* entrada){
 	return posicionEnLista;
 }
 
+
 void incrementarPuntero(Almacenamiento almacenamiento,int* puntero) {
+	printf("puntero apunta a %d\n",*puntero);
 	if(*puntero == (almacenamiento.cantidadEntradas-1) ){
+		puts("igualo puntero a 0");
 		*puntero=0;
 	}
-	else{*puntero= *puntero+1;
+	else{*puntero = *puntero + 1;
+		printf("aumente puntero de %d  a  %d\n",(*puntero) - 1, *puntero);
 	}
 }
+
 
 bool esEntradaAtomica(Almacenamiento almacenamiento, t_entrada* entrada){
 	return entrada->tamanioValorAlmacenado <= almacenamiento.tamPorEntrada;
@@ -1442,20 +1448,20 @@ bool esEntradaAtomica(Almacenamiento almacenamiento, t_entrada* entrada){
 void destruirEntradaEnPosicion(Almacenamiento almacenamiento, int posicion){
 	t_entrada* destruida= list_remove(almacenamiento.tablaEntradas,posicion);
 	liberarPosicionEnVector(almacenamiento,destruida->numeroDeEntrada);
-	free(destruida->clave);
-	free(destruida);
 }
 
 t_list* persistirDatos(Almacenamiento almacenamiento,Instruccion* datosInstruccion, char* algoritmoDistribucion, int* puntero, bool* seCompacto){
 	//creo y agrego la nueva entrada dentro de esta funcion, asi puedo retornar la lista de entradas Borradas
 	t_entrada* nuevaEntrada = NULL;
 	nuevaEntrada=malloc(sizeof(t_entrada));
-	nuevaEntrada->clave = malloc(strlen(datosInstruccion->key)+1);
+	nuevaEntrada->clave = malloc(strlen(datosInstruccion->key));
 	memcpy(nuevaEntrada->clave,datosInstruccion->key,strlen(datosInstruccion->key));
 	nuevaEntrada->clave[strlen(datosInstruccion->key)]='\0';
 	nuevaEntrada->tamanioValorAlmacenado = strlen(datosInstruccion->dato);
 	list_add(almacenamiento.tablaEntradas,nuevaEntrada);//asignaré el nuevaEntrada->numero de entrada al momento de encontrarlo
 
+	puts("MUESTRO EL VECTORBIN");
+	mostrarVectorBin(almacenamiento);
 
 
 	char*valor=datosInstruccion->dato;
@@ -1468,6 +1474,7 @@ printf("\n\n ENTRO A PERSISTIR DATOS\n\n");
 	char letra;
 	tamanio= tamanio/almacenamiento.tamPorEntrada +1; //calculo cuantas entradas necesita el valor nuevo
 	if(tamanio % almacenamiento.tamPorEntrada==0){tamanio -= 1;}
+	printf("\n la entrada necesita  %d  espacios\n",tamanio);
 	int espaciosLibres= espacioLibre(almacenamiento);
 	t_entrada* entradaAux=NULL;
 
@@ -1483,12 +1490,10 @@ puts("IF INBICIAL");
 				puts("CIRCULAR)");
 				
 				while(espaciosLibres<tamanio){//aplico algoritmo hasta tener espacio suficiente
-				puts("QUIERO LIBERER");
+				puts("QUIERO LIBERAR");
 					entradaBorrada=liberarUnEspacio(almacenamiento, puntero);
 					list_add(entradasBorradas,entradaBorrada);
-					puts("LIBERO");
 					espaciosLibres=espacioLibre(almacenamiento);
-					puts("CALCULO ESPACIO LIBRE");
 				}
 
 
@@ -1538,26 +1543,27 @@ puts("IF INBICIAL");
 	FILE* vectorBin= fopen(almacenamiento.vector,"r+");
 	
 	//ahora escribo en el primer espacio libre consecutivo que encuentre sin compactar
+	puts("busco espacios consecutivos en el vector");
 	for(i=0;i<almacenamiento.cantidadEntradas;i++){//busco primer 0 en vectorBin
-	puts("ENTRO AL FOR");
+	mostrarVectorBin(almacenamiento);
 		fseek(vectorBin,i,SEEK_SET);
 		fread(&letra,sizeof(char),1,vectorBin);
 		if(letra=='0'){
+			printf("primer 0 en posicion   %d\n",i);
 			j=1;
-			while(letra=='0' && j<tamanio){//cuento cuantas posiciones libres consecutivas hay hasta conseguir la cantidad necesaria
-				
+			while(letra=='0' && j<tamanio && j+i < almacenamiento.cantidadEntradas){//cuento cuantas posiciones libres consecutivas hay hasta conseguir la cantidad necesaria
+				printf("buscando 0s consecutivos, leo posicion   %d\n", i+j);
 				fread(&letra,sizeof(char),1,vectorBin);
+				printf("la posicion tenía un   %c\n",letra);
 				if(letra=='0'){j++;}
 
 			}
 			fclose(vectorBin);
 			if(j==tamanio){
 				escribirBinarioEnPosicion(almacenamiento,i,valor);//retorno i que es la posicion donde se guarda el comienzo del valor
-				for(j=0;j<tamanio;j++){
-					grabarPosicionEnVector(almacenamiento,i+j);
-				}
-				printf("SALGO RETORNANDO %d",i);
+				printf("SALGO RETORNANDO %d\n",i);
 				nuevaEntrada->numeroDeEntrada=i;
+				grabarEntradaEnVector(almacenamiento,i,nuevaEntrada);
 				return entradasBorradas;
 			}
 			vectorBin= fopen(almacenamiento.vector,"r+");
@@ -1565,6 +1571,7 @@ puts("IF INBICIAL");
 	}
 	fclose(vectorBin);
 	//la funcion realizarCompactacionLocal() retorna un booleano que indica si se compacto o no
+	puts("se compacta");
 	*seCompacto = realizarCompactacionLocal(almacenamiento);
 	vectorBin= fopen(almacenamiento.vector,"r+");
 	fseek(vectorBin,0,SEEK_SET);
@@ -1950,7 +1957,7 @@ void grabarEntradaEnVector(Almacenamiento almacenamiento, int posicion, t_entrad
 void liberarEntradaEnVector(Almacenamiento almacenamiento, t_entrada* entrada){
 	int espaciosOcupados= entrada->tamanioValorAlmacenado/almacenamiento.tamPorEntrada;
 	int posicion = entrada->numeroDeEntrada; 
-	if(entrada->tamanioValorAlmacenado%almacenamiento.tamPorEntrada != 0) {
+	if(entrada->tamanioValorAlmacenado%almacenamiento.tamPorEntrada == 0) {
 		espaciosOcupados += 1;}
 	int i;
 	for(i=0;i<=espaciosOcupados;i+=1){
@@ -2250,4 +2257,17 @@ void mostrarBinario(Almacenamiento almacenamiento){
 		i= i + string_length(buffer)/almacenamiento.tamPorEntrada + 1; 
 
 	}
+}
+
+void mostrarVectorBin(Almacenamiento almacenamiento){
+	puts("MOSTRANDO VECTOR BIN");
+	int i = 0;
+	char letra='z';
+	FILE* vectorBin=fopen(almacenamiento.vector,"r");
+	for(i=0;i<almacenamiento.cantidadEntradas;i++){
+		fseek(vectorBin,i,SEEK_SET);
+		fread(&letra,sizeof(char),1,vectorBin);
+		printf("%c",letra);
+	}
+	printf("\n");
 }

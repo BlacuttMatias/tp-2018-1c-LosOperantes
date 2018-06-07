@@ -14,8 +14,8 @@ GET clave5
 SET clave5 5ocupa7
 STORE clave5
 GET clave:a
-SET clave:a a--ocupa10
+SET clave:a aaaocupa10
 STORE clave:a
 GET clave:b
-SET clave:b b--ocupa10
+SET clave:b bbbbocupa10
 STORE clave:b

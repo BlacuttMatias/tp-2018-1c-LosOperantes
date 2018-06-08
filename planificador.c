@@ -456,7 +456,147 @@ void* hiloConsolaInteractiva(void * unused) {
 
                 if(string_starts_with(comandoConsola,"DEADLOCK")){
                     comandoAceptado = true;
-                    printf("Comando no implementado...\n");
+                    t_list* listaDeadlock = list_create();
+                    //va almacenando cada conjunto de deadlocks
+                    t_list* listaDeadlockAux = list_create();
+
+					KeyBloqueada* elementoOriginal;
+					//aca se guardaria el proceso que tiene una clave que bloquea a otro proceso. Se saca del diccionario
+					KeyBloqueada* registroKeyBloqueadaPorProceso;
+					//aca se guardaria el proceso que tiene una clave que bloquea a otro proceso, y ademas esta bloqueado. Se saca de la lista de claves requeridas
+					KeyBloqueada* registroKeyBloqueadaAux;
+					bool hayDeadlock = false;
+					bool puedeHaberDeadlock = true;
+
+/*
+					bool elProcesoEstaBloqueado(KeyBloqueada* keyBloqueadaAux){
+						return (!strcmp(registroKeyBloqueadaPorProceso->nombreProceso,keyBloqueadaAux->nombreProceso));
+					}
+
+					bool findProceso (KeyBloqueada* keyBloqueadaAux){
+						return (!strcmp(registroKeyBloqueadaPorProceso->nombreProceso,keyBloqueadaAux->nombreProceso));
+					}
+
+					bool elElementoEstaEnLaListaDeDeadlock(KeyBloqueada* keyBloqueadaAux){
+						return (!strcmp(registroKeyBloqueada->nombreProceso, keyBloqueadaAux->nombreProceso));
+					}
+
+					bool elElementoEstaEnLaListaDeDeadlock2(KeyBloqueada* keyBloqueadaAux){
+						return (!strcmp(registroKeyBloqueadaAux->nombreProceso, keyBloqueadaAux->nombreProceso));
+					}*/
+
+					/*bool elElementoEstaEnListaDeKeyBloqueadas(t_list* listaDeKeyBloqueadas, KeyBloqueada* elemento){
+						bool elElementoEstaEnLaLista(KeyBloqueada* keyBloqueadaAux){
+							return (!strcmp(elemento->nombreProceso, keyBloqueadaAux->nombreProceso));
+						}
+						return list_any_satisfy(listaDeKeyBloqueadas, (void*)elElementoEstaEnLaLista);
+					}*/
+
+
+					void iterate_lista(KeyBloqueada* registroKeyBloqueada){
+
+						bool elElementoEstaEnLaListaDeDeadlock(KeyBloqueada* keyBloqueadaAux){
+							return (!strcmp(registroKeyBloqueada->nombreProceso, keyBloqueadaAux->nombreProceso));
+						}
+
+						//se guarda en una variable auxiliar el primer proceso por el cual se comenzo a buscar el deadlock (la espera circular)
+						elementoOriginal = registroKeyBloqueada;
+
+						//si el elemento no se encuentra el la lista de deadlock, se verifica si esta en deadlock con otros
+						if(!list_any_satisfy(listaDeadlock, (void*)elElementoEstaEnLaListaDeDeadlock)){
+
+							//por el momento se agrega en la lista de deadlock auxiliar
+							list_add(listaDeadlockAux,registroKeyBloqueada);
+
+							while(!hayDeadlock && puedeHaberDeadlock){
+
+								//busco si la clave que necesita este proceso para desbloquearse la tiene algun proceso bloqueado. Si no la tiene ninguno, no hay deadlock
+								if( dictionary_has_key(diccionarioClavesBloqueadas,registroKeyBloqueada->key)){
+									//guardo el proceso que tiene esa clave
+									registroKeyBloqueadaPorProceso = dictionary_get(diccionarioClavesBloqueadas,registroKeyBloqueada->key);
+
+									bool elProcesoEstaBloqueado(KeyBloqueada* keyBloqueadaAux){
+										return (!strcmp(registroKeyBloqueadaPorProceso->nombreProceso,keyBloqueadaAux->nombreProceso));
+									}
+
+									//se verifica si el proceso que tiene esa clave tambien esta bloqueado. Si no lo esta, no hay deadlock
+									if(list_any_satisfy(listaClavesBloqueadasRequeridas, (void*)elProcesoEstaBloqueado)){
+
+										bool findProceso (KeyBloqueada* keyBloqueadaAux){
+											return (!strcmp(registroKeyBloqueadaPorProceso->nombreProceso,keyBloqueadaAux->nombreProceso));
+										}
+
+										//guardo el proceso que bloquea al anterior
+										registroKeyBloqueadaAux = list_find(listaClavesBloqueadasRequeridas, (void*)findProceso);
+
+										bool elElementoEstaEnLaListaDeDeadlock2(KeyBloqueada* keyBloqueadaAux){
+											return (!strcmp(registroKeyBloqueadaAux->nombreProceso, keyBloqueadaAux->nombreProceso));
+										}
+										//si el nombre del proceso es igual al primero por el que se comenzo
+										//significa que se hayo la espera circular, y por lo tanto hay deadlock
+										if(!strcmp(registroKeyBloqueadaAux->nombreProceso, elementoOriginal->nombreProceso)){
+											hayDeadlock = true;
+										}
+										//si ese proceso que lo bloquea esta en deadlock, significa que el proceso por el que se estaba vrificando si
+										//estaba en deadlock, esta solo en inanicion, o sea, no esta en deadlock
+										else if(list_any_satisfy(listaDeadlock, (void*)elElementoEstaEnLaListaDeDeadlock2)){
+											puedeHaberDeadlock = false;
+										}
+										//sino, significa que todavia puede estar en deadlock
+										else{
+											//lo agrego a la lista auxiliar l
+											list_add(listaDeadlockAux,registroKeyBloqueadaAux);
+											//lo igualo para seguir buscando la espera circular
+											registroKeyBloqueada = registroKeyBloqueadaAux;
+										}
+									}
+									else {
+										puedeHaberDeadlock = false;
+									}
+								}
+								else {
+									puedeHaberDeadlock = false;
+								}
+
+
+							}
+							//si hubo deadlock, recien ahi agrego todos los procesos de la lista auxiliar a la de verdad
+							if(hayDeadlock){
+								list_add_all(listaDeadlock,listaDeadlockAux);
+
+							}
+							//limpio la lista para volver a buscar otro deadlock
+							list_clean(listaDeadlockAux);
+
+							//reinicio los valores
+							hayDeadlock = false;
+							puedeHaberDeadlock = true;
+
+						}
+
+
+					}
+
+					//se analiza cada elemento de la lista en busca de deadlock
+					list_iterate(listaClavesBloqueadasRequeridas, (void*)iterate_lista);
+
+					void informarNombreProcesos(KeyBloqueada* keyBloqueadaAux){
+						printf("%s\n", keyBloqueadaAux->nombreProceso);
+					}
+
+					printf("\nProcesos en Deadlock:\n\n");
+
+					if(list_size(listaDeadlock)>0){
+
+						list_iterate(listaDeadlock, (void*)informarNombreProcesos);
+						list_clean(listaDeadlock);
+
+					}
+					else printf("No hay procesos en Deadlock\n");
+					printf("\n");
+
+					list_destroy(listaDeadlock);
+					list_destroy(listaDeadlockAux);
                 }
 
             /* -------------------------------------------------------------------- */

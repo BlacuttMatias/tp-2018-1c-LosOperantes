@@ -69,20 +69,23 @@ void liberarRecursosProcesoPlanificador(t_dictionary * dictionario, char* nombre
     	void _each_elemento_(char* key, Proceso* registroProcesoAux){
     		if(registroProcesoAux->nombreProceso != NULL && strcmp(registroProcesoAux->nombreProceso, nombreProceso) == 0) {
 
-    			//funcion auxiliar para la lista
-    			bool encontrarProcesoConClaveRequerida (KeyBloqueada* registroKeyBloqueadaAux){
-    				//se busca el proceso bloqueado que necesitaba esa clave
-    				if(!strcmp(registroKeyBloqueadaAux->key, key)){
-    					int socketDelProcesoConClaveRequerida = obtenerSocketProceso(listaESIconectados, registroKeyBloqueadaAux->nombreProceso);
-    					eliminarProcesoCola(colaBloqueados, socketDelProcesoConClaveRequerida);
-    					cargarProcesoCola(listaESIconectados, colaReady, socketDelProcesoConClaveRequerida);
-    					cargarProcesoLista(listaESIconectados, listaReady, socketDelProcesoConClaveRequerida);
-    					return true;
-    				}
-    				else return false;
-    			}
-    			//se remueven los procesos que esperaban alguna de esas claves
-    			list_remove_and_destroy_by_condition(listaClavesBloqueadasRequeridas, (void*)encontrarProcesoConClaveRequerida, (void*)liberarKeyBloqueada);
+				bool seEncontroProceso = false;
+				KeyBloqueada* registroKeyBloqueadaAux;
+				int i=0;
+				//se remueven los procesos que esperaban alguna de esas claves. Para eso se recorre la lista
+				//y se saca de la cola de bloqueados al primer proceso que esperara esa clave
+				while(i<list_size(listaClavesBloqueadasRequeridas) && !seEncontroProceso){
+					registroKeyBloqueadaAux = list_get(listaClavesBloqueadasRequeridas, i);
+					if(!strcmp(registroKeyBloqueadaAux->key, key)){
+					    int socketDelProcesoConClaveRequerida = obtenerSocketProceso(listaESIconectados, registroKeyBloqueadaAux->nombreProceso);
+					    eliminarProcesoCola(colaBloqueados, socketDelProcesoConClaveRequerida);
+					    cargarProcesoCola(listaESIconectados, colaReady, socketDelProcesoConClaveRequerida);
+					    cargarProcesoLista(listaESIconectados, listaReady, socketDelProcesoConClaveRequerida);
+					    list_remove_and_destroy_element(listaClavesBloqueadasRequeridas, i,(void*)liberarKeyBloqueada);
+					    seEncontroProceso = true;
+					}
+					i++;
+				}
 
     			//funcion auxiliar para la lista
     			bool eseMismoProcesoEstabaEnLaLista (KeyBloqueada* registroKeyBloqueadaAux){

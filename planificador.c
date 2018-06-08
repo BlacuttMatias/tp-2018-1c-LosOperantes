@@ -459,6 +459,7 @@ void* hiloConsolaInteractiva(void * unused) {
                     t_list* listaDeadlock = list_create();
                     //va almacenando cada conjunto de deadlocks
                     t_list* listaDeadlockAux = list_create();
+                    t_list* listaProcesosEnInanicion = list_create();
 
 					KeyBloqueada* elementoOriginal;
 					//aca se guardaria el proceso que tiene una clave que bloquea a otro proceso. Se saca del diccionario
@@ -475,6 +476,7 @@ void* hiloConsolaInteractiva(void * unused) {
 						return list_any_satisfy(listaDeKeyBloqueadas, (void*)elElementoEstaEnLaLista);
 					}
 
+					//se analiza cada elemento de la lista en busca de deadlock y se arma la lista de procesos en deadlock
 					void iterate_lista(KeyBloqueada* registroKeyBloqueada){
 
 						//se guarda en una variable auxiliar el primer proceso por el cual se comenzo a buscar el deadlock (la espera circular)
@@ -533,6 +535,9 @@ void* hiloConsolaInteractiva(void * unused) {
 							if(hayDeadlock){
 								list_add_all(listaDeadlock,listaDeadlockAux);
 							}
+							//si no esta en deadlock, esta en inanicion
+							else list_add(listaProcesosEnInanicion, elementoOriginal);
+
 							//limpio la lista para volver a buscar otro deadlock
 							list_clean(listaDeadlockAux);
 
@@ -542,13 +547,14 @@ void* hiloConsolaInteractiva(void * unused) {
 						}
 					}
 
-					//se analiza cada elemento de la lista en busca de deadlock
+					//se analiza cada elemento de la lista en busca de deadlock y se arma la lista de procesos en deadlock
 					list_iterate(listaClavesBloqueadasRequeridas, (void*)iterate_lista);
 
 					void informarNombreProcesos(KeyBloqueada* keyBloqueadaAux){
 						printf("%s\n", keyBloqueadaAux->nombreProceso);
 					}
 
+					//muestro por pantalla los procesos en deadlock
 					if(list_size(listaDeadlock)>0){
 
 						printf("\nPROCESOS EN DEADLOCK:\n\n");
@@ -559,6 +565,16 @@ void* hiloConsolaInteractiva(void * unused) {
 					else printf("\nNO HAY PROCESOS EN DEADLOCK\n");
 					printf("\n");
 
+					//muestro por pantalla los procesos en inanicion
+					if(list_size(listaProcesosEnInanicion)>0){
+						printf("PROCESOS EN INANICION:\n\n");
+						list_iterate(listaProcesosEnInanicion, (void*)informarNombreProcesos);
+						list_clean(listaProcesosEnInanicion);
+					}
+					else printf("NO HAY PROCESOS EN INANICION\n");
+					printf("\n");
+
+					list_destroy(listaProcesosEnInanicion);
 					list_destroy(listaDeadlock);
 					list_destroy(listaDeadlockAux);
                 }

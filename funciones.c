@@ -1738,7 +1738,7 @@ void procesoArchivoDump(char *archivo, char* punto_montaje, Almacenamiento almac
 	// Si se pudo obtener el Numero de Entrada del Binario
 	if(nuevaEntrada->numeroDeEntrada>=0){
 		grabarEntradaEnVector(almacenamiento,nuevaEntrada->numeroDeEntrada,nuevaEntrada);
-	}
+	
 
 	list_add(tablaEntradas,nuevaEntrada);
 	//muestro entrada "elementoDeTabla" para testear que esté todo correcto
@@ -1746,9 +1746,12 @@ void procesoArchivoDump(char *archivo, char* punto_montaje, Almacenamiento almac
 	elementoDeTabla = list_get(tablaEntradas,list_size(tablaEntradas)-1);
 
 	printf("\nClave:%s - Numero:%d - Tamanio:%d - Posicion en tabla:%d \n",elementoDeTabla->clave,elementoDeTabla->numeroDeEntrada,elementoDeTabla->tamanioValorAlmacenado,list_size(tablaEntradas)); //prueba imprimir por pantalla el elemento obtenido
-
+	}
 	// Actualizo el Almacenamiento con la Nueva Entrada
-	almacenamiento.tablaEntradas=tablaEntradas;
+	else {
+		free(nuevaEntrada->clave);
+		free(nuevaEntrada);
+	}
 // ------------------------------------------------------------------
 
     free(carpeta_archivo);
@@ -1984,13 +1987,14 @@ int buscarPosicionEnBin(Almacenamiento almacenamiento, char* valor){
 	int i=0;
 	printf("\nse busca %s\n",valor);
 	while(i<entradas){
+		if(posicionXEnVectorLibre(almacenamiento,i)){
 		buffer= leerBinarioEnPosicion(almacenamiento ,i);
 		//printf("\n se leyó %s\n",buffer); //
 		if(strcmp(buffer,valor) == 0){
 			fclose(binario);
 			free(buffer);
 			printf("retorno %d \n",i);
-			return i;}	
+			return i;}}	
 		i +=1;
 
 	}
@@ -2240,4 +2244,13 @@ void mostrarVectorBin(Almacenamiento almacenamiento){
 		printf("%c",letra);
 	}
 	printf("\n");
+}
+
+bool posicionXEnVectorLibre(Almacenamiento almacenamiento, int posicion){
+	char letra;
+	FILE* vector=fopen(almacenamiento.vector,"r");
+	fseek(vector,posicion,SEEK_SET);
+	fread(&letra,sizeof(char),1,vector);
+	fclose(vector);
+	return letra=='0';
 }

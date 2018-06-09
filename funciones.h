@@ -148,6 +148,8 @@
 	void destruirEntradaEnPosicion(Almacenamiento almacenamiento, int posicion);
 	int posicionEntradaEnLista(Almacenamiento almacenamiento, t_entrada* entrada);
 
+	bool posicionXEnVectorLibre(Almacenamiento almacenamiento, int posicion);
+
 	void showContenidoTablaEntradas(t_list* tablaEntradas);
 	void limpiarInstancia(char* puntoMontaje);
 	void mostrarBinario(Almacenamiento almacenamiento);

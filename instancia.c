@@ -420,8 +420,7 @@ int main(int argc, char* argv[]){
                     else {
                         mostrarBinario(almacenamiento);}
 
-                    // Creo el Bitmap si no existe
-                    if (!existeArchivo("vectorBin.txt")){
+                    // Creo el Bitmap o lo reinicializo a 0
                         FILE* vectorBin = fopen("vectorBin.txt","w");
                         ftruncate(fileno(vectorBin),entradas);
                         for(contador=0;contador<entradas; contador=contador+1){
@@ -431,8 +430,8 @@ int main(int argc, char* argv[]){
 
                         // Cierro los FD
                         fclose(vectorBin);
-                    }
-
+                    
+                    
 
 
                     // Se precarga la Tabla de Entradas con datos del Dump

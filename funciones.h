@@ -110,7 +110,8 @@
 	void showContenidolistaProcesosConectados(t_list* listaProcesosConectados);
 	void showContenidolistaInstanciasConectadas(t_list* listaInstanciasConectadas);
 	bool enviarInstruccionInstancia(Instruccion registroInstruccion, int socketInstancia);
-
+	void liberarRecursosInstancia(t_dictionary * dictionario, char* nombreProceso);
+		
 	void eliminarProcesoListaPorNombre(t_list* listaProcesar, char* nombreProcesoAEliminar);
 	void actualizarDiccionarioClavesInstancias(t_dictionary* diccionarioClavesInstancias, char key[40], Instancia* proximaInstancia);
 

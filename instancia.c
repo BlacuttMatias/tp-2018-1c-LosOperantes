@@ -417,8 +417,9 @@ int main(int argc, char* argv[]){
                         // Cierro los FD
                         fclose(binario);
                     }
-                    else {
-                        mostrarBinario(almacenamiento);}
+	
+                    if (!existeArchivo("vectorBin.txt")){
+                        //mostrarBinario(almacenamiento);}
 
                     // Creo el Bitmap o lo reinicializo a 0
                         FILE* vectorBin = fopen("vectorBin.txt","w");
@@ -430,6 +431,7 @@ int main(int argc, char* argv[]){
 
                         // Cierro los FD
                         fclose(vectorBin);
+		}
                     
                     
 

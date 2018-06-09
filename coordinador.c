@@ -623,6 +623,7 @@ printf("Socket de ESI: %d\n",socketESI);
 
 			//elimino la instancia de la lista de procesos conectados por desconexion.	
 			eliminarProcesoListaPorNombre(listaProcesosConectados,proximaInstancia->nombreProceso);
+			eliminarProcesoListaPorNombre(listaInstanciasConectadas,proximaInstancia->nombreProceso);
 			//eliminamos todos los recursos asignados a la instancia previamente.
 			liberarRecursosInstancia(diccionarioClavesInstancias, proximaInstancia->nombreProceso);	
                             // ESI Aborta por desconexión de la instancia

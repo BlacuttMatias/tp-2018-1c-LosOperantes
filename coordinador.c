@@ -620,7 +620,9 @@ printf("Socket de ESI: %d\n",socketESI);
 
                         }else{
                             log_error(infoLogger, "Se detecto que la Instancia %s esta desconectada.",proximaInstancia->nombreProceso);
-
+				
+			//elimino la instancia de la lista de procesos conectados por desconexion.	
+			eliminarProcesoLista(listaProcesosConectados,i);	
                             // ESI Aborta por desconexión de la instancia
 
                             // Armo el Paquete del Resultado de la Ejecucion de la Instruccion

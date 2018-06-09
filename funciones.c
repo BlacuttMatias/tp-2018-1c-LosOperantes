@@ -453,12 +453,10 @@ bool procesarScript(char* pathScript, t_list* listaInstrucciones){
 
 	// Si se pudo posicionar dentro del archivo
 	if(fseek( archivo, 0, SEEK_SET ) == 0){
-		//puts("fseek");
 	    while ((caracter = fgetc(archivo)) != EOF) {
 
 			// Si leyo una linea completa, agrego la instruccion a la lista
 			if(caracter == '\n'){
-				//puts("leo una linea");
 				numeroLinea +=1;
  //printf("%s\n",unaInstruccion);
 
@@ -848,15 +846,12 @@ Instancia* obtenerInstanciaNueva(t_list* listaInstanciasConectadas, Instruccion*
 			break;
 
 		default:
-			puts("default");
 			log_error (infoLogger,"Algoritmo de distribución no reconocido");
 	break;
 	}
 
 
-//	puts("\n\n\n");
 //	showContenidolistaInstanciasConectadas(listaInstanciasConectadas);
-//	puts("\n\n\n");
 
 	return instanciaElegida;
 }
@@ -1276,16 +1271,11 @@ Proceso* obtenerProximoProcesoPlanificado(t_list* listaReady, t_queue* colaReady
 
 //Funcion para determinar si un archivo local existe
 bool existeArchivo(char *filename){
-	puts("quiero abrir");
     FILE *archivo = fopen(filename, "rb");
-	puts("abrí");
     if(!archivo){
-		puts("falso");
     	return false;
     }else{
-		puts("true");
         fclose(archivo);
-		puts("cerré");
     	return true;
     }
 }
@@ -1378,7 +1368,6 @@ int cargarClavesInicialmenteBloqueadas(t_dictionary* diccionarioClavesBloqueadas
 
 /******************INSTANCIA********************************************/
 int espacioLibre(Almacenamiento almacenamiento){
-	//puts("ESPACIO LIBRE");
 	FILE* vectorBin= fopen(almacenamiento.vector,"r");
 	//printf("\n QUIERO ABRIR EL VECTOR %s \n",almacenamiento.vector);
 	fseek(vectorBin,0,SEEK_SET);
@@ -1387,12 +1376,10 @@ int espacioLibre(Almacenamiento almacenamiento){
 	int i;
 	for(i=0;i<almacenamiento.cantidadEntradas;i++){
 		fread(&valor, sizeof(char),1,vectorBin);
-		//puts("dentro de while");
 		//printf("\n EL VALOR ES %c",valor);
 		if(valor=='0'){contador += 1 ;}
 	}
 	fclose(vectorBin);
-	//puts("SALGO ESPACIOlIBRE");
 	return contador;
 }
 t_entrada* liberarUnEspacio(Almacenamiento almacenamiento, int* puntero){
@@ -1432,7 +1419,6 @@ int posicionEntradaEnLista(Almacenamiento almacenamiento, t_entrada* entrada){
 void incrementarPuntero(Almacenamiento almacenamiento,int* puntero) {
 	printf("puntero apunta a %d\n",*puntero);
 	if(*puntero == (almacenamiento.cantidadEntradas-1) ){
-		puts("igualo puntero a 0");
 		*puntero=0;
 	}
 	else{*puntero = *puntero + 1;
@@ -1460,7 +1446,6 @@ t_list* persistirDatos(Almacenamiento almacenamiento,Instruccion* datosInstrucci
 	nuevaEntrada->tamanioValorAlmacenado = strlen(datosInstruccion->dato);
 	list_add(almacenamiento.tablaEntradas,nuevaEntrada);//asignaré el nuevaEntrada->numero de entrada al momento de encontrarlo
 
-	puts("MUESTRO EL VECTORBIN");
 	mostrarVectorBin(almacenamiento);
 
 
@@ -1479,18 +1464,14 @@ printf("\n\n ENTRO A PERSISTIR DATOS\n\n");
 	t_entrada* entradaAux=NULL;
 
 	bool porTamanio(t_entrada* entrada1, t_entrada* entrada2){
-		puts("PORTAMANIO");
 		return entrada1->tamanioValorAlmacenado > entrada2->tamanioValorAlmacenado;
 	}
 
 
-puts("IF INBICIAL");
 	if(espaciosLibres<tamanio){//aplico algoritmo en caso de tener que sacar un valor del bin
 		if(string_starts_with(algoritmoDistribucion, "CIRCULAR")){
-				puts("CIRCULAR)");
 				
 				while(espaciosLibres<tamanio){//aplico algoritmo hasta tener espacio suficiente
-				puts("QUIERO LIBERAR");
 					entradaBorrada=liberarUnEspacio(almacenamiento, puntero);
 					list_add(entradasBorradas,entradaBorrada);
 					espaciosLibres=espacioLibre(almacenamiento);
@@ -1499,7 +1480,6 @@ puts("IF INBICIAL");
 
 
 		}	else {if(string_starts_with(algoritmoDistribucion, "BSU")){
-			puts("BSU");
 					list_sort(almacenamiento.tablaEntradas,(void*)porTamanio);
 					while(espaciosLibres<tamanio || i< almacenamiento.cantidadEntradas){//aplico algoritmo hasta tener espacio suficiente
 						entradaAux=list_get(almacenamiento.tablaEntradas,i);
@@ -1514,7 +1494,6 @@ puts("IF INBICIAL");
 
 
 		} else {if (string_starts_with(algoritmoDistribucion, "LRU")){
-			puts("LRU");
 				i=0;
 				while(espaciosLibres<tamanio || i<almacenamiento.cantidadEntradas){								//aplico algoritmo hasta tener espacio suficiente
 					entradaAux=list_get(almacenamiento.tablaEntradas,i); //saca valores atomicos en el orden de la lista
@@ -1531,19 +1510,16 @@ puts("IF INBICIAL");
 
 		}	else {printf("\n no se pudo leer el algoritmo de reemplazo %s \n", algoritmoDistribucion);
 				log_info(infoLogger,"no se pudo leer algoritmo de reemplazo");
-				puts("ERROR NO SE PUDO LEER ALGORITMO DE REEMPLAZO");
 				return entradasBorradas;}}}
 	}		// Dependiendo el algoritmoDistricucion, persistir los datos localmente
 			//en este caso tengo espacio suficiente sin reemplazar, o ya reemplacé cuanto necesitaba. analizo si compactar o simplemente guardar
 	if(espaciosLibres<tamanio){
-		puts("NO HAY ESPACIO");
 		log_info(infoLogger,"no se pueden borrar datos atomicos en la instancia para guardar nuevos datos");
 		printf("SALGO RETORNANDO %d",i);
 		return entradasBorradas; }//retorno -1 si no se puede encontrar espacio suficiente para guardar el dato
 	FILE* vectorBin= fopen(almacenamiento.vector,"r+");
 	
 	//ahora escribo en el primer espacio libre consecutivo que encuentre sin compactar
-	puts("busco espacios consecutivos en el vector");
 	for(i=0;i<almacenamiento.cantidadEntradas;i++){//busco primer 0 en vectorBin
 	mostrarVectorBin(almacenamiento);
 		fseek(vectorBin,i,SEEK_SET);
@@ -1571,7 +1547,6 @@ puts("IF INBICIAL");
 	}
 	fclose(vectorBin);
 	//la funcion realizarCompactacionLocal() retorna un booleano que indica si se compacto o no
-	puts("se compacta");
 	*seCompacto = realizarCompactacionLocal(almacenamiento);
 	vectorBin= fopen(almacenamiento.vector,"r+");
 	fseek(vectorBin,0,SEEK_SET);
@@ -1627,7 +1602,6 @@ void preCargarTablaEntradas(char* puntoMontaje, Almacenamiento almacenamiento){
 
     // Una vez nos aseguramos de que no hay error... 
     // Leyendo uno a uno todos los archivos que hay 
-	puts("entra while");
     while ((ent = readdir (dir)) != NULL)
     {
         // Nos devolverá el directorio actual (.) y el anterior (..), como hace ls //
@@ -1635,10 +1609,8 @@ void preCargarTablaEntradas(char* puntoMontaje, Almacenamiento almacenamiento){
         {
             char* nombreArchivoProcesar = string_new();
             string_append_with_format(&nombreArchivoProcesar, "%s", ent->d_name);
-			puts("procesoArchivo");
             // Una vez tenemos el archivo, lo pasamos a una función para procesarlo. //
             procesoArchivoDump(nombreArchivoProcesar, config_get_string_value(cfg,"PUNTO_MONTAJE"), almacenamiento);  
-			puts("procese archivo dump");
             free(nombreArchivoProcesar);
         }
     }
@@ -2246,7 +2218,6 @@ void ejecutarCadaXTiempo(void funcionAEjecutar(), int tiempo ){
 }
 
 void mostrarBinario(Almacenamiento almacenamiento){
-	puts("MOSTRANDO BINARIO");
 	int i;
 	i=0;
 	char* buffer; 
@@ -2260,7 +2231,6 @@ void mostrarBinario(Almacenamiento almacenamiento){
 }
 
 void mostrarVectorBin(Almacenamiento almacenamiento){
-	puts("MOSTRANDO VECTOR BIN");
 	int i = 0;
 	char letra='z';
 	FILE* vectorBin=fopen(almacenamiento.vector,"r");

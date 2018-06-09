@@ -239,14 +239,11 @@ int main(int argc, char* argv[]){
 
 
                             //escribo en el binario
-                            puts("persisto algo nuevo");
                             entradasBorradas=persistirDatos(almacenamiento,&registroInstruccion,algoritmoReemplazo,puntero,&seCompacto);
-                    	    puts("Salí de persistir algo nuevo");
                         }
 
                         //ahora tengo que avisarle a la instancia de todas las claves que fueron borradas
                         if(list_size(entradasBorradas) >0 ){ 
-                            puts("size entradasBorradas>0");
 
                             int i=0;
                             int cantidadEntradas= list_size(entradasBorradas);
@@ -258,22 +255,17 @@ int main(int argc, char* argv[]){
 
                                 //estoy usando la serializacion de key bloqueada para no hacer toda una nueva serializacion. lleno los strings con "nada" por si acaso para evitar errores
                                 paquete = srlz_datosKeyBloqueada('I',KEY_DESTRUIDA,"nada",GET, entradaBorrada->clave,"nada");
-                                puts("mandé paquete");
 
                                 if( send(coordinador_fd,paquete.buffer,paquete.tam_buffer,1) != -1 ){
-                                    puts("se envio bien");
                                     log_info(infoLogger,"Se le envio al COORDINADOR el aviso para que borre el Recurso %s por ser reemplazado", entradaBorrada->clave);
                                 }else{
-                                    puts("se envio mal");
                                     log_info(infoLogger,"No se pudo enviar al COORDINADOR el aviso para que borre el Recurso %s por ser reemplazado", entradaBorrada->clave);
                                 }
-                                puts("hago free");
                                 free(paquete.buffer);
                                 free(entradaBorrada->clave);
                                 free(entradaBorrada);
                             }
                         }
-                        puts("destruyo lista");
                         list_destroy(entradasBorradas);
                     }
 
@@ -299,9 +291,7 @@ int main(int argc, char* argv[]){
 
 
                     // Muestro el contenido de la Tabla de Entradas
-                    puts("muestro tabla entradas");
                     showContenidoTablaEntradas(tablaEntradas);
-                    puts("mostré tabla entradas");
 
                     //PARA UTILIZAR PARA INICIAR LA COMPACTACION GLOBAL
                     if(seCompacto){
@@ -446,9 +436,7 @@ int main(int argc, char* argv[]){
 
 
                     // Se precarga la Tabla de Entradas con datos del Dump
-                    puts("precargo");
                     preCargarTablaEntradas(puntoMontaje, almacenamiento);
-                    puts("precargué");
                     break;
 
                 case COMPACTACION_LOCAL:

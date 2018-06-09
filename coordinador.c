@@ -624,7 +624,7 @@ printf("Socket de ESI: %d\n",socketESI);
 printf("Socket a eliminar: %d\n",i);
 showContenidolistaProcesosConectados(listaProcesosConectados);
 			//elimino la instancia de la lista de procesos conectados por desconexion.	
-			eliminarProcesoLista(listaProcesosConectados,i);
+			eliminarProcesoListaPorNombre(listaProcesosConectados,proximaInstancia->nombreProceso);
 showContenidolistaProcesosConectados(listaProcesosConectados);
                             // ESI Aborta por desconexión de la instancia
 

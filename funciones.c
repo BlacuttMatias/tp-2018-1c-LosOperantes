@@ -1335,6 +1335,26 @@ int countParametrosConsola(char * string){
 
 }
 
+// Libera Todos los Recursos de una determinada Instancia
+void liberarRecursosInstancia(t_dictionary * dictionario, char* nombreProceso){
+
+	if(dictionary_size(dictionario) > 0){
+
+		void elemento_destroy(Proceso* self){
+			//free(self); // Explota!!!
+		}
+
+	    void _each_elemento_(char* key, Instancia* registroProcesoAux)
+		{
+			if(registroProcesoAux->nombreProceso != NULL && strcmp(registroProcesoAux->nombreProceso, nombreProceso) == 0) {
+				dictionary_remove_and_destroy(dictionario, key, (void*) elemento_destroy);
+			}
+		}
+	    dictionary_iterator(dictionario, (void*)_each_elemento_);
+	}
+
+}
+
 // Libera Todos los Recursos de un determinado Proceso
 void liberarRecursosProceso(t_dictionary * dictionario, char* nombreProceso){
 

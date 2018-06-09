@@ -592,6 +592,21 @@ void cargarProcesoLista(t_list* listaUtilizar, t_list* listaProcesar, int socket
 	list_add(listaProcesar, registroProcesoAux2);
 }
 
+// Dado un Nombre de un Proceso, lo elimino de la Lista 
+void eliminarProcesoListaPorNombre(t_list* listaProcesar, char* nombreProcesoAEliminar){
+
+	if(list_size(listaProcesar) > 0){
+
+		bool _find_socket_(Proceso* registroProcesoAux)
+		{
+			return (strcmp(registroProcesoAux->nombreProceso, nombreProcesoAEliminar) == 0);
+		}
+
+		list_remove_by_condition(listaProcesar,(void*)_find_socket_);
+	
+	}
+	return;
+}
 
 // Dado un Socket de un Proceso, lo elimino de la Lista
 void eliminarProcesoLista(t_list* listaProcesar, int socketProcesoEliminar){

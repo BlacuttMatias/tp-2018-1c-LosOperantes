@@ -2175,7 +2175,7 @@ bool realizarCompactacionLocal(Almacenamiento almacenamiento){
 bool existeEntradaEnTabla(t_list* tablaEntradas, char key[40]){
 
 	bool esIgualAKey(t_entrada* unaEntrada){
-		if(strcmp(unaEntrada->clave,key) == 0){;
+		if(strcmp(unaEntrada->clave,key) == 0){
 			printf(" Existe ");
 			return true;
 		}else{

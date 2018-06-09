@@ -117,17 +117,17 @@ void* atenderConexiones(void* socketConexion){
 
                     // Recibo los datos del Key y Proceso
                     paquete = recibir_payload(&i,&encabezado.tam_payload);
-                    registroKeyBloqueada = dsrlz_datosKeyBloqueada(paquete.buffer);
+                    registroKeyBloqueada = dsrlz_datosKeyBloqueada(paquete.buffer); 
                     free(paquete.buffer);
 
                     log_info(infoLogger,"El PLANIFICADOR notifica que el Recurso %s esta LIBRE.", registroKeyBloqueada.key);
-
+printf("Nombre de ESI: %s\n",registroKeyBloqueada.nombreProceso);
                     // Cargo el Recurso en la Lista de Claves Bloqueadas
                     dictionary_put(diccionarioClavesBloqueadas, registroKeyBloqueada.key, &registroKeyBloqueada);
 
                     // Averiguo el Socket del Proceso ESI para notificarle que no fallo la Ejecucion de la Instruccion
                     socketESI = obtenerSocketProceso(listaProcesosConectados, registroKeyBloqueada.nombreProceso);
-
+printf("Socket de ESI: %d\n",socketESI);
                     // Genero el Log de Operaciones
                     registrarLogOperaciones(listaProcesosConectados, registroKeyBloqueada.operacion, registroKeyBloqueada.key, registroKeyBloqueada.dato, socketESI);
                     log_info(infoLogger,"Operacion guardada en el Log de Operaciones:  %s %i %s %s", obtenerNombreProceso(listaProcesosConectados, socketESI), registroKeyBloqueada.operacion, registroKeyBloqueada.key, registroKeyBloqueada.dato);

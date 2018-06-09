@@ -1440,7 +1440,7 @@ t_list* persistirDatos(Almacenamiento almacenamiento,Instruccion* datosInstrucci
 	//creo y agrego la nueva entrada dentro de esta funcion, asi puedo retornar la lista de entradas Borradas
 	t_entrada* nuevaEntrada = NULL;
 	nuevaEntrada=malloc(sizeof(t_entrada));
-	nuevaEntrada->clave = malloc(strlen(datosInstruccion->key));
+	nuevaEntrada->clave = malloc(strlen(datosInstruccion->key)+1);
 	memcpy(nuevaEntrada->clave,datosInstruccion->key,strlen(datosInstruccion->key));
 	nuevaEntrada->clave[strlen(datosInstruccion->key)]='\0';
 	nuevaEntrada->tamanioValorAlmacenado = strlen(datosInstruccion->dato);

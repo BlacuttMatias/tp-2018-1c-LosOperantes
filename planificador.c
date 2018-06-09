@@ -496,7 +496,9 @@ void* hiloConsolaInteractiva(void * unused) {
 									registroKeyBloqueadaPorProceso = dictionary_get(diccionarioClavesBloqueadas,registroKeyBloqueada->key);
 
 									//se verifica si el proceso que tiene esa clave tambien esta bloqueado. Si no lo esta, no hay deadlock
-									if(elElementoEstaEnListaDeKeyBloqueadas(listaClavesBloqueadasRequeridas, registroKeyBloqueadaPorProceso)){
+									//tambien se verifica que el nombre del proceso que tiene esa clave no sea nulo, ya que si lo es significa fue bloqueada por el sistema,
+									//y por lo tanto no hay deadlock(espera circular)
+									if(registroKeyBloqueadaPorProceso->nombreProceso!=NULL && elElementoEstaEnListaDeKeyBloqueadas(listaClavesBloqueadasRequeridas, registroKeyBloqueadaPorProceso)){
 
 										bool findProceso (KeyBloqueada* keyBloqueadaAux){
 											return (!strcmp(registroKeyBloqueadaPorProceso->nombreProceso,keyBloqueadaAux->nombreProceso));

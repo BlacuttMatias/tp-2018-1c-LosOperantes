@@ -121,13 +121,13 @@ void* atenderConexiones(void* socketConexion){
                     free(paquete.buffer);
 
                     log_info(infoLogger,"El PLANIFICADOR notifica que el Recurso %s esta LIBRE.", registroKeyBloqueada.key);
-printf("Nombre de ESI: %s\n",registroKeyBloqueada.nombreProceso);
+
                     // Cargo el Recurso en la Lista de Claves Bloqueadas
                     dictionary_put(diccionarioClavesBloqueadas, registroKeyBloqueada.key, &registroKeyBloqueada);
 
                     // Averiguo el Socket del Proceso ESI para notificarle que no fallo la Ejecucion de la Instruccion
                     socketESI = obtenerSocketProceso(listaProcesosConectados, registroKeyBloqueada.nombreProceso);
-printf("Socket de ESI: %d\n",socketESI);
+
                     // Genero el Log de Operaciones
                     registrarLogOperaciones(listaProcesosConectados, registroKeyBloqueada.operacion, registroKeyBloqueada.key, registroKeyBloqueada.dato, socketESI);
                     log_info(infoLogger,"Operacion guardada en el Log de Operaciones:  %s %i %s %s", obtenerNombreProceso(listaProcesosConectados, socketESI), registroKeyBloqueada.operacion, registroKeyBloqueada.key, registroKeyBloqueada.dato);
@@ -503,6 +503,24 @@ printf("Socket de ESI: %d\n",socketESI);
 
                     log_info(infoLogger,"Pedido de Ejecución de una Instruccion recibida del Proceso ESI %s: %d %s %s", obtenerNombreProceso(listaProcesosConectados, i), registroInstruccion.operacion, registroInstruccion.key, registroInstruccion.dato);
 
+
+                    // Valido que exista al menos una Instancia Conectada para poder Ejecutar la Instruccion
+                    if(list_size(listaInstanciasConectadas) == 0){
+
+                        // Armo el Paquete del Resultado de la Ejecucion de la Instruccion
+                        paquete = srlz_resultadoEjecucion('C', RESPUESTA_EJECUTAR_INSTRUCCION, "COORDINADOR", EJECUCION_FALLIDA_FINALIZAR_ESI, "Error por no existir Instancias Conectadas", registroInstruccion.operacion, registroInstruccion.key);
+
+                        // Envio el Paquetea a ESI
+                        if(send(i,paquete.buffer,paquete.tam_buffer,0) != -1){
+                            log_info(infoLogger, "Se cancela el ESI %s por no existir Instancias conectadas", obtenerNombreProceso(listaProcesosConectados, i));
+                        }else{
+                            log_error(infoLogger, "No se pudo notificar al ESI %s por no existir Instancias conectadas", obtenerNombreProceso(listaProcesosConectados, i));
+                        }
+                        free(paquete.buffer);                                
+                        break;
+                    }
+
+
                     // Aplico Retardo de Ejecucion segun Archivo de Configuracion
                     usleep(config_get_int_value(cfg,"RETARDO"));
 
@@ -618,16 +636,16 @@ printf("Socket de ESI: %d\n",socketESI);
                             registrarLogOperaciones(listaProcesosConectados, registroInstruccion.operacion, registroInstruccion.key, registroInstruccion.dato, i);
                             log_info(infoLogger,"Operacion guardada en el Log de Operaciones:  %s %i %s %s", obtenerNombreProceso(listaProcesosConectados, i), registroInstruccion.operacion, registroInstruccion.key, registroInstruccion.dato);
 
-                        }else{
+                        }else{ // ESI Aborta por desconexión de la instancia
                             log_error(infoLogger, "Se detecto que la Instancia %s esta desconectada.",proximaInstancia->nombreProceso);
 
-			//elimino la instancia de la lista de procesos conectados por desconexion.	
-			eliminarProcesoListaPorNombre(listaProcesosConectados,proximaInstancia->nombreProceso);
-			eliminarProcesoListaPorNombre(listaInstanciasConectadas,proximaInstancia->nombreProceso);
-			//eliminamos todos los recursos asignados a la instancia previamente.
-			liberarRecursosInstancia(diccionarioClavesInstancias, proximaInstancia->nombreProceso);	
-                            // ESI Aborta por desconexión de la instancia
+                			//elimino la instancia de la lista de procesos conectados por desconexion.	
+                			eliminarProcesoListaPorNombre(listaProcesosConectados,proximaInstancia->nombreProceso);
+                			eliminarProcesoListaPorNombre(listaInstanciasConectadas,proximaInstancia->nombreProceso);
 
+                			//eliminamos todos los recursos asignados a la instancia previamente.
+                			liberarRecursosInstancia(diccionarioClavesInstancias, proximaInstancia->nombreProceso);	
+                            
                             // Armo el Paquete del Resultado de la Ejecucion de la Instruccion
                             paquete = srlz_resultadoEjecucion('C', RESPUESTA_EJECUTAR_INSTRUCCION, "COORDINADOR", EJECUCION_FALLIDA_FINALIZAR_ESI, "Error de Clave Innaccesible", registroInstruccion.operacion, registroInstruccion.key);
 

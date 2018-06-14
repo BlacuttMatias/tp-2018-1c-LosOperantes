@@ -665,6 +665,20 @@ Proceso* obtenerRegistroProceso(t_list* listaProcesosConectados, int socketProce
 	return registroProcesoAux2;
 }
 
+Instancia* obtenerRegistroInstancia(t_list* listaInstanciaConectadas, int socketProcesoConsultar){
+
+	Instancia* registroInstanciaAux2 = NULL;
+
+	bool _find_socket_(Instancia* registroInstanciaAux)
+	{
+		return (registroInstanciaAux->socketProceso == socketProcesoConsultar);
+	}
+
+	registroInstanciaAux2 = list_find(listaInstanciaConectadas,(void*)_find_socket_);
+
+	return registroInstanciaAux2;
+}
+
 
 //**************************************************************************//
 // Obtener el Proceso segun su Socket
@@ -1308,7 +1322,7 @@ void cargarListaProcesosConectados(t_list *listaProcesosConectados, Proceso* nue
 }
 
 // Cargo la Lista de Instancias Conectadas en el Coordinador
-void cargarListaInstanciasConectadas(t_list *listaInstanciasConectadas, Proceso* nuevoProceso){
+void cargarListaInstanciasConectadas(t_list *listaInstanciasConectadas, Proceso* nuevoProceso, int cantidadEntradas){
 
 	Instancia* instancia= malloc(sizeof(Instancia));
 	instancia->nombreProceso= malloc(strlen(nuevoProceso->nombreProceso)+1);
@@ -1316,7 +1330,7 @@ void cargarListaInstanciasConectadas(t_list *listaInstanciasConectadas, Proceso*
 	instancia->nombreProceso[strlen(nuevoProceso->nombreProceso)] = '\0';
 
 	instancia->socketProceso=nuevoProceso->socketProceso;
-	instancia->entradasLibres=1;
+	instancia->entradasLibres=cantidadEntradas;
 
     list_add(listaInstanciasConectadas, instancia);
 }
@@ -1417,6 +1431,8 @@ int espacioLibre(Almacenamiento almacenamiento){
 	fclose(vectorBin);
 	return contador;
 }
+
+
 t_entrada* liberarUnEspacio(Almacenamiento almacenamiento, int* puntero){
 	int i = 0;
 	

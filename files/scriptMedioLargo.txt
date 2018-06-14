@@ -1,0 +1,36 @@
+GET clave70 
+SET clave70 valor70
+STORE clave70
+GET clave71 
+SET clave71 valor71
+STORE clave71
+GET clave72 
+SET clave72 valor72
+STORE clave72
+GET clave73
+SET clave73 valor73
+STORE clave73
+GET clave74 
+SET clave74 valor74
+STORE clave74
+GET clave75 
+SET clave75 valor75
+STORE clave75
+GET clave76 
+SET clave76 valor76
+STORE clave76
+GET clave77
+SET clave77 valor77
+STORE clave77
+GET clave78 
+SET clave78 valor78
+STORE clave78
+GET clave79 
+SET clave79 valor79
+STORE clave79
+GET clave80 
+SET clave80 valor80
+STORE clave80
+GET MATERIAS:K3003
+SET MATERIAS:K3003 Fisica3
+STORE  MATERIAS:K3003

@@ -103,10 +103,11 @@
 /* ---------------------------------------- */
 
 	void registrarLogOperaciones(t_list* listaProcesosConectados, int operacion, char key[40], char* dato, int socketProcesoConsultar);
+	Instancia* obtenerRegistroInstancia(t_list* listaInstanciaConectadas, int socketProcesoConsultar);
 	Instancia* obtenerInstanciaNueva(t_list* listaInstanciasConectadas, Instruccion* datosInstruccion, char* algoritmoDistribucion);
 	Instancia* obtenerInstanciaAsignada(t_dictionary * dictionario, char* key);
 	void cargarListaProcesosConectados(t_list *listaProcesosConectados, Proceso* nuevoProceso);
-	void cargarListaInstanciasConectadas(t_list *listaInstanciasConectadas, Proceso* nuevoProceso);
+	void cargarListaInstanciasConectadas(t_list *listaInstanciasConectadas, Proceso* nuevoProceso, int cantidadEntradas);
 	void showContenidolistaProcesosConectados(t_list* listaProcesosConectados);
 	void showContenidolistaInstanciasConectadas(t_list* listaInstanciasConectadas);
 	bool enviarInstruccionInstancia(Instruccion registroInstruccion, int socketInstancia);

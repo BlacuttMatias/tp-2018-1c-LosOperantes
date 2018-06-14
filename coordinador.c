@@ -28,6 +28,8 @@
     int fd_planificador;
     pthread_t hiloConexiones;
     char* algoritmoDistribucion;
+    int cantidadEntradas;
+    int tamanioEntradas;
 /* ---------------------------------------- */
 
 void* atenderConexiones(void* socketConexion){
@@ -47,6 +49,7 @@ void* atenderConexiones(void* socketConexion){
     Instruccion registroInstruccion;
     KeyBloqueada registroKeyBloqueada;
     Instancia* proximaInstancia;
+    Instancia* instanciaAux;
     int indice = 0;
     int socketESI = 0;
     int socketInstancia = 0;
@@ -307,13 +310,13 @@ void* atenderConexiones(void* socketConexion){
                     cargarListaProcesosConectados(listaProcesosConectados, registroProcesoAux);
 
                     // Cargo el Proceso en la Lista de Instancias conectadas al Planificador
-                    cargarListaInstanciasConectadas(listaInstanciasConectadas, registroProcesoAux);
+                    cargarListaInstanciasConectadas(listaInstanciasConectadas, registroProcesoAux, cantidadEntradas);
 
                     // Muestro por pantalla el contenido de listaProcesosConectados
                     showContenidolistaProcesosConectados(listaProcesosConectados);
 
                     // Obtengo la Cantidad y Tamano de Entradas y se lo envio a la Instancia
-                    paquete = srlz_datosEntradas('C', OBTENCION_CONFIG_ENTRADAS, config_get_int_value(cfg,"CANTIDAD_ENTRADAS"), config_get_int_value(cfg,"TAMANO_ENTRADA"));
+                    paquete = srlz_datosEntradas('C', OBTENCION_CONFIG_ENTRADAS, cantidadEntradas, tamanioEntradas);
 
                     // Envio el Paquete a la Instancia
                     if(send(i,paquete.buffer,paquete.tam_buffer,0) != -1){
@@ -460,6 +463,10 @@ void* atenderConexiones(void* socketConexion){
                     }
 
                     break;   
+                case INFORMAR_ENTRADAS_LIBRES:
+                	instanciaAux = obtenerRegistroInstancia(listaInstanciasConectadas, i);
+                	instanciaAux->entradasLibres = encabezado.tam_payload;
+                	break;
             }
         }
 
@@ -698,6 +705,9 @@ int main(int argc, char* argv[]){
 
 	log_info(infoLogger, "Iniciando COORDINADOR" );
     printf("Iniciando COORDINADOR\n");
+
+    cantidadEntradas = config_get_int_value(cfg,"CANTIDAD_ENTRADAS");
+    tamanioEntradas = config_get_int_value(cfg,"TAMANO_ENTRADA");
 
     // Creo el Servidor para escuchar conexiones
     int servidor=crearServidor(config_get_int_value(cfg,"COORDINADOR_PUERTO"));

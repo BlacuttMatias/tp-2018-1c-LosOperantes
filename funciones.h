@@ -151,6 +151,7 @@
 	bool esEntradaAtomica(Almacenamiento almacenamiento,t_entrada* entrada);
 	void destruirEntradaEnPosicion(Almacenamiento almacenamiento, int posicion);
 	int posicionEntradaEnLista(Almacenamiento almacenamiento, t_entrada* entrada);
+	void borrarTxtClave(Almacenamiento almacenamiento,char* clave, char* puntoMontaje);
 
 	bool posicionXEnVectorLibre(Almacenamiento almacenamiento, int posicion);
 

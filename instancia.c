@@ -253,6 +253,7 @@ int main(int argc, char* argv[]){
                             for(i=0;i<cantidadEntradas;i++){
                                 t_entrada* entradaBorrada=list_remove(entradasBorradas,0);//aca va posicion 0 porque a medida que saco, la posicion 0 tiene na nueva entrada
                                 printf("remuevo la key %s\n",entradaBorrada->clave);
+                                //borrarTxtClave(almacenamiento,entradaBorrada->clave,puntoMontaje);
 
                                 //estoy usando la serializacion de key bloqueada para no hacer toda una nueva serializacion. lleno los strings con "nada" por si acaso para evitar errores
                                 paquete = srlz_datosKeyBloqueada('I',KEY_DESTRUIDA,"nada",GET, entradaBorrada->clave,"nada");

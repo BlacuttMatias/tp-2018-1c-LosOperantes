@@ -2305,3 +2305,9 @@ bool posicionXEnVectorLibre(Almacenamiento almacenamiento, int posicion){
 	fclose(vector);
 	return letra=='0';
 }
+
+void borrarTxtClave(Almacenamiento almacenamiento,char* clave, char* puntoMontaje){
+	char *archivoABorrar = string_new();
+	string_append_with_format(&archivoABorrar, "%s%s%s", puntoMontaje, clave,".txt");	
+	remove(archivoABorrar);
+}

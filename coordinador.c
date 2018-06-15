@@ -464,8 +464,11 @@ void* atenderConexiones(void* socketConexion){
 
                     break;   
                 case INFORMAR_ENTRADAS_LIBRES:
+                	//actualizo las entradas libres de la instancia
                 	instanciaAux = obtenerRegistroInstancia(listaInstanciasConectadas, i);
-                	instanciaAux->entradasLibres = encabezado.tam_payload;
+                	//le resto 100, porque cuando se envio se le habia sumado 100
+                	instanciaAux->entradasLibres = encabezado.tam_payload-100;
+                	log_info(infoLogger,"Se recibio que la instancia %s tiene (%d) entradas libres", instanciaAux->nombreProceso, instanciaAux->entradasLibres);
                 	break;
             }
         }

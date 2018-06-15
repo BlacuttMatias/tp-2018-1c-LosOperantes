@@ -325,10 +325,11 @@ int main(int argc, char* argv[]){
                     }else{
                         log_error(infoLogger, "No se pudo notificar al COORDINADOR el resultado de la ejecución de la Instrucción");
                     }
-                    //se le envian al coordinador las entradas libres
-                    paquete = crearHeader('I', INFORMAR_ENTRADAS_LIBRES, entradasLibres);
+                    //se le envian al coordinador las entradas libres de la instancia. En el crearHeader se le suma 100 a las
+                    //entradas libres porque el tamanio del payload no puede ser 0, por los sockets. Luego, cuando lo reciba el coordinador, debera restarle 100
+                    paquete = crearHeader('I', INFORMAR_ENTRADAS_LIBRES, entradasLibres+100);
                     if(send(coordinador_fd,paquete.buffer,paquete.tam_buffer,0) != -1){
-                    	log_info(infoLogger, "Se le informó al COORDINADOR las entradas libres disponibles");
+                    	log_info(infoLogger, "Se le informó al COORDINADOR que hay (%d) entradas libres", entradasLibres);
                     }
                     else{
                     	log_error(infoLogger, "No se pudo informar al COORDINADOR las entradas libres disponibles");

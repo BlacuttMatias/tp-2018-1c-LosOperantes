@@ -2038,7 +2038,7 @@ int buscarPosicionEnBin(Almacenamiento almacenamiento, char* valor){
 	int i=0;
 	printf("\nse busca %s\n",valor);
 	while(i<entradas){
-		if(posicionXEnVectorLibre(almacenamiento,i)){
+		if(!posicionXEnVectorLibre(almacenamiento,i)){
 		buffer= leerBinarioEnPosicion(almacenamiento ,i);
 		//printf("\n se leyó %s\n",buffer); //
 		if(strcmp(buffer,valor) == 0){

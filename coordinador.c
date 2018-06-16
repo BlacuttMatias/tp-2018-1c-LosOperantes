@@ -30,6 +30,8 @@
     char* algoritmoDistribucion;
     int cantidadEntradas;
     int tamanioEntradas;
+    pthread_mutex_t mutex;
+    int instanciasCompactando;
 /* ---------------------------------------- */
 
 void* atenderConexiones(void* socketConexion){
@@ -329,6 +331,8 @@ void* atenderConexiones(void* socketConexion){
 
                 case RESPUESTA_EJECUTAR_INSTRUCCION:
 
+                	while(instanciasCompactando>0){}
+
                     paquete=recibir_payload(&i,&encabezado.tam_payload);
                     registroResultadoEjecucion=dsrlz_resultadoEjecucion(paquete.buffer);
                     free(paquete.buffer);
@@ -386,6 +390,10 @@ void* atenderConexiones(void* socketConexion){
                                 Paquete paquete= crearHeader('C',COMPACTACION_LOCAL,1);
                                 if( send(registroProcesoAux->socketProceso,paquete.buffer,paquete.tam_buffer,1) != -1 ){
                                     log_info(infoLogger,"Se le envio a la Instancia %s el aviso para que realice su Compactacion Local", obtenerNombreProceso(listaProcesosConectados, registroProcesoAux->socketProceso));
+
+                                    pthread_mutex_lock(&mutex);
+                                    instanciasCompactando++;
+                                    pthread_mutex_unlock(&mutex);
                                 }else{
                                     log_info(infoLogger,"No se pudo enviar a la Instancia %s (Socket %d) el aviso para que realice su Compactacion Local", obtenerNombreProceso(listaProcesosConectados, registroProcesoAux->socketProceso), registroProcesoAux->socketProceso);
                                 }
@@ -464,11 +472,24 @@ void* atenderConexiones(void* socketConexion){
 
                     break;   
                 case INFORMAR_ENTRADAS_LIBRES:
+
                 	//actualizo las entradas libres de la instancia
                 	instanciaAux = obtenerRegistroInstancia(listaInstanciasConectadas, i);
+
                 	//le resto 100, porque cuando se envio se le habia sumado 100
                 	instanciaAux->entradasLibres = encabezado.tam_payload-100;
+
                 	log_info(infoLogger,"Se recibio que la instancia %s tiene (%d) entradas libres", instanciaAux->nombreProceso, instanciaAux->entradasLibres);
+
+                	break;
+
+                case FINALIZACION_COMPACTACION:
+
+                	pthread_mutex_lock(&mutex);
+                	instanciasCompactando--;
+                	pthread_mutex_unlock(&mutex);
+                	log_info(infoLogger,"Se recibio la notificacion de que la instancia %s terminó de compactar", obtenerNombreProceso(listaProcesosConectados, i));
+
                 	break;
             }
         }

@@ -33,7 +33,6 @@
     char* puntoMontaje;
     int intervaloDump;
     bool seCompacto = false;
-    bool seEstaCompactando = false;
     int entradasLibres;
 
 /* ---------------------------------------- */
@@ -193,8 +192,6 @@ int main(int argc, char* argv[]){
 
                     log_info(infoLogger,"Pedido de Ejecución de una Instruccion recibida del Coordinador: %d %s %s", registroInstruccion.operacion, registroInstruccion.key, registroInstruccion.dato);
 
-                    //si se esta compactando, se para la ejecucion de instrucciones
-                    while(seEstaCompactando){}
 
                     if(registroInstruccion.operacion == SET){
 
@@ -456,11 +453,17 @@ int main(int argc, char* argv[]){
 
                 case COMPACTACION_LOCAL:
                     // Realizar la Compactacion del Archivo Binario a pedido del Coordinador
-                	seEstaCompactando=true;
-                    realizarCompactacionLocal(almacenamiento);
-                    seEstaCompactando=false;
 
+                    realizarCompactacionLocal(almacenamiento);
                     log_info(infoLogger,"Se realizo la Compactacion Local en la Instancia %s a pedido del COORDINADOR", config_get_string_value(cfg,"INSTANCIA_NOMBRE"));
+
+                    paquete = crearHeader('I', FINALIZACION_COMPACTACION, 1);
+                    if(send(coordinador_fd,paquete.buffer,paquete.tam_buffer,0) != -1){
+                    	log_info(infoLogger, "Se le informó al COORDINADOR que se terminó de compactar");
+                    }
+                    else{
+                    	log_error(infoLogger, "No se pudo informar al COORDINADOR que se terminó de compactar");
+                    }
                     break;                                
 			}
 		}

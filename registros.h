@@ -29,6 +29,7 @@ enum cod_operacion {
 	DEVOLVER_STATUS_VALOR = 17,
 	KEY_DESTRUIDA = 18,
 	INFORMAR_ENTRADAS_LIBRES = 19,
+	FINALIZACION_COMPACTACION = 20,
 };
 
 // Defino los Tipos de Procesos

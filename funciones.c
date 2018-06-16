@@ -665,6 +665,7 @@ Proceso* obtenerRegistroProceso(t_list* listaProcesosConectados, int socketProce
 	return registroProcesoAux2;
 }
 
+//Obtener un registro Instancia segun su socket
 Instancia* obtenerRegistroInstancia(t_list* listaInstanciaConectadas, int socketProcesoConsultar){
 
 	Instancia* registroInstanciaAux2 = NULL;
@@ -679,6 +680,35 @@ Instancia* obtenerRegistroInstancia(t_list* listaInstanciaConectadas, int socket
 	return registroInstanciaAux2;
 }
 
+//obtiene un Registro Instancia segun su nombre
+Instancia* obtenerRegistroInstanciaPorNombre(t_list* listaInstanciaConectadas, char* nombreInstancia){
+
+	Instancia* registroInstanciaAux2 = NULL;
+
+	bool _find_nombre_(Instancia* registroInstanciaAux)
+	{
+		return !strcmp(registroInstanciaAux->nombreProceso, nombreInstancia);
+	}
+
+	registroInstanciaAux2 = list_find(listaInstanciaConectadas,(void*)_find_nombre_);
+
+	return registroInstanciaAux2;
+}
+
+//obtiene un Registro Proceso segun su nombre
+Proceso* obtenerRegistroProcesoPorNombre(t_list* listaProcesosConectados, char* nombreProceso){
+
+	Proceso* registroProcesoAux2 = NULL;
+
+	bool _find_nombre_(Proceso* registroProcesoAux)
+	{
+		return !strcmp(registroProcesoAux->nombreProceso, nombreProceso);
+	}
+
+	registroProcesoAux2 = list_find(listaProcesosConectados,(void*)_find_nombre_);
+
+	return registroProcesoAux2;
+}
 
 //**************************************************************************//
 // Obtener el Proceso segun su Socket
@@ -2101,6 +2131,22 @@ void actualizarDiccionarioClavesInstancias(t_dictionary* dictionario, char key[4
 			registroInstanciaAux->nombreProceso=malloc(strlen(nuevaInstancia->nombreProceso)+1);
 			strcpy(registroInstanciaAux->nombreProceso,nuevaInstancia->nombreProceso);
 			registroInstanciaAux->nombreProceso[strlen(nuevaInstancia->nombreProceso)] = '\0';
+		}
+
+	}
+    dictionary_iterator(dictionario, (void*)_each_elemento_);
+}
+
+// Actualizo el Diccionario con la Nueva Instancia
+void actualizarSocketDeInstanciaEnDiccionarioClavesInstancias(t_dictionary* dictionario, Instancia* nuevaInstancia){
+
+    void _each_elemento_(char* keyAux, Instancia* registroInstanciaAux)
+	{
+		// Actualizo el Registro
+		if(strcmp(registroInstanciaAux->nombreProceso, nuevaInstancia->nombreProceso) == 0){
+
+			registroInstanciaAux->socketProceso = nuevaInstancia->socketProceso;
+
 		}
 
 	}

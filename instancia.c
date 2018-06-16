@@ -457,6 +457,7 @@ int main(int argc, char* argv[]){
                     realizarCompactacionLocal(almacenamiento);
                     log_info(infoLogger,"Se realizo la Compactacion Local en la Instancia %s a pedido del COORDINADOR", config_get_string_value(cfg,"INSTANCIA_NOMBRE"));
 
+                    //se le notifica al coordinador que termino de compactar
                     paquete = crearHeader('I', FINALIZACION_COMPACTACION, 1);
                     if(send(coordinador_fd,paquete.buffer,paquete.tam_buffer,0) != -1){
                     	log_info(infoLogger, "Se le informó al COORDINADOR que se terminó de compactar");

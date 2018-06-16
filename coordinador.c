@@ -298,21 +298,38 @@ void* atenderConexiones(void* socketConexion){
 
                     // Cargo el Registro del Proceso
                     Proceso* registroProcesoAux = NULL;
-                    registroProcesoAux = malloc(sizeof(Proceso));
 
-                    // Cargo el Registro del Proceso
-                    registroProcesoAux->tipoProceso = registroProceso.tipoProceso;
-                    registroProcesoAux->socketProceso = i;
-                    registroProcesoAux->nombreProceso = malloc(strlen(registroProceso.nombreProceso)+1);
-                    strcpy( registroProcesoAux->nombreProceso ,registroProceso.nombreProceso);
-                    registroProcesoAux->nombreProceso[strlen(registroProceso.nombreProceso)] = '\0';
+                    //verifico si la instancia ya estaba en la lista de procesos conectados
+                    registroProcesoAux = obtenerRegistroProcesoPorNombre(listaProcesosConectados, registroProceso.nombreProceso);
+
+                    //si estaba en la lista, solo se cambia el socket de su conexion
+                    if(registroProcesoAux!=NULL){
+                    	registroProcesoAux->socketProceso = i;
+                    	instanciaAux = obtenerRegistroInstanciaPorNombre(listaInstanciasConectadas, registroProceso.nombreProceso);
+                    	instanciaAux->socketProceso = i;
+                    	actualizarSocketDeInstanciaEnDiccionarioClavesInstancias(diccionarioClavesInstancias, instanciaAux);
+
+                    }
+                    //si no estaba, se agrega a las listas
+                    else{
+
+                        registroProcesoAux = malloc(sizeof(Proceso));
+
+                        // Cargo el Registro del Proceso
+                        registroProcesoAux->tipoProceso = registroProceso.tipoProceso;
+                        registroProcesoAux->socketProceso = i;
+                        registroProcesoAux->nombreProceso = malloc(strlen(registroProceso.nombreProceso)+1);
+                        strcpy( registroProcesoAux->nombreProceso ,registroProceso.nombreProceso);
+                        registroProcesoAux->nombreProceso[strlen(registroProceso.nombreProceso)] = '\0';
 
 
-                    // Cargo el Proceso en la Lista de Procesos conectados al Planificador
-                    cargarListaProcesosConectados(listaProcesosConectados, registroProcesoAux);
+                        // Cargo el Proceso en la Lista de Procesos conectados al Planificador
+                        cargarListaProcesosConectados(listaProcesosConectados, registroProcesoAux);
 
-                    // Cargo el Proceso en la Lista de Instancias conectadas al Planificador
-                    cargarListaInstanciasConectadas(listaInstanciasConectadas, registroProcesoAux, cantidadEntradas);
+                        // Cargo el Proceso en la Lista de Instancias conectadas al Planificador
+                        cargarListaInstanciasConectadas(listaInstanciasConectadas, registroProcesoAux, cantidadEntradas);
+
+                    }
 
                     // Muestro por pantalla el contenido de listaProcesosConectados
                     showContenidolistaProcesosConectados(listaProcesosConectados);
@@ -331,6 +348,7 @@ void* atenderConexiones(void* socketConexion){
 
                 case RESPUESTA_EJECUTAR_INSTRUCCION:
 
+                	//si hay instancias compactando, se espera a que terminen
                 	while(instanciasCompactando>0){}
 
                     paquete=recibir_payload(&i,&encabezado.tam_payload);
@@ -391,6 +409,7 @@ void* atenderConexiones(void* socketConexion){
                                 if( send(registroProcesoAux->socketProceso,paquete.buffer,paquete.tam_buffer,1) != -1 ){
                                     log_info(infoLogger,"Se le envio a la Instancia %s el aviso para que realice su Compactacion Local", obtenerNombreProceso(listaProcesosConectados, registroProcesoAux->socketProceso));
 
+                                    //cada vez que aviso, llevo la cuenta de las instancias que estan compactando
                                     pthread_mutex_lock(&mutex);
                                     instanciasCompactando++;
                                     pthread_mutex_unlock(&mutex);
@@ -485,6 +504,7 @@ void* atenderConexiones(void* socketConexion){
 
                 case FINALIZACION_COMPACTACION:
 
+                	//se decrementa el numero de instancias compactando
                 	pthread_mutex_lock(&mutex);
                 	instanciasCompactando--;
                 	pthread_mutex_unlock(&mutex);
@@ -661,7 +681,7 @@ void* atenderConexiones(void* socketConexion){
                         
                         // Envio el Paquetea a la Instancia
                         if(enviarInstruccionInstancia(registroInstruccion, proximaInstancia->socketProceso)){
-                            log_info(infoLogger, "Se le envio a la instancia %s la proxima Instruccion a ejecutar", proximaInstancia->nombreProceso);
+                            log_info(infoLogger, "Se le envio a la instancia %s (Socket %d)la proxima Instruccion a ejecutar", proximaInstancia->nombreProceso, proximaInstancia->socketProceso);
 
                             // Genero el Log de Operaciones
                             registrarLogOperaciones(listaProcesosConectados, registroInstruccion.operacion, registroInstruccion.key, registroInstruccion.dato, i);

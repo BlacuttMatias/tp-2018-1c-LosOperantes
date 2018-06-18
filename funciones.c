@@ -1521,7 +1521,7 @@ t_list* persistirDatos(Almacenamiento almacenamiento,Instruccion* datosInstrucci
 	//creo y agrego la nueva entrada dentro de esta funcion, asi puedo retornar la lista de entradas Borradas
 	t_entrada* nuevaEntrada = NULL;
 	nuevaEntrada=malloc(sizeof(t_entrada));
-	nuevaEntrada->clave = malloc(strlen(datosInstruccion->key)+1);
+	nuevaEntrada->clave = malloc(tamanioValorAlmacenado(datosInstruccion->key));
 	memcpy(nuevaEntrada->clave,datosInstruccion->key,strlen(datosInstruccion->key));
 	nuevaEntrada->clave[strlen(datosInstruccion->key)]='\0';
 	nuevaEntrada->tamanioValorAlmacenado = strlen(datosInstruccion->dato);
@@ -1534,12 +1534,10 @@ t_list* persistirDatos(Almacenamiento almacenamiento,Instruccion* datosInstrucci
 printf("\n\n ENTRO A PERSISTIR DATOS\n\n");
 	t_list* entradasBorradas=list_create();
 	t_entrada* entradaBorrada;
-	int tamanio= string_length(datosInstruccion->dato);
+	int tamanio= entradasValorAlmacenado(almacenamiento,nuevaEntrada);
 	int i=0;
 	int j=0;
 	char letra;
-	tamanio= tamanio/almacenamiento.tamPorEntrada +1; //calculo cuantas entradas necesita el valor nuevo
-	if(tamanio % almacenamiento.tamPorEntrada==0){tamanio -= 1;}
 	printf("\n la entrada necesita  %d  espacios\n",tamanio);
 	int espaciosLibres= espacioLibre(almacenamiento);
 	t_entrada* entradaAux=NULL;
@@ -1548,12 +1546,30 @@ printf("\n\n ENTRO A PERSISTIR DATOS\n\n");
 		return entrada1->tamanioValorAlmacenado > entrada2->tamanioValorAlmacenado;
 	}
 
+//agrego la nueva entrada luego de la ultima agregada,donde señala el algoritmo circular.
+int* punteroAuxiliar= malloc(sizeof(int));
+punteroAuxiliar=puntero;
+for(i=0;i++;i<almacenamiento.cantidadEntradas){
+	if(entraEnPosicionPuntero(almacenamiento,punteroAuxiliar,nuevaEntrada)){
+		grabarEntradaEnVector(almacenamiento,*punteroAuxiliar,nuevaEntrada);
+		mostrarVectorBin(almacenamiento);
+		return entradasBorradas;
+	}
+	else {incrementarPuntero(almacenamiento,punteroAuxiliar);}
+}
+
+
+
+
+
+
 
 	if(espaciosLibres<tamanio){//aplico algoritmo en caso de tener que sacar un valor del bin
 		if(string_starts_with(algoritmoDistribucion, "CIRCULAR")){
 				
 				while(espaciosLibres<tamanio){//aplico algoritmo hasta tener espacio suficiente
 					entradaBorrada=liberarUnEspacio(almacenamiento, puntero);
+					mostrarVectorBin(almacenamiento);
 					list_add(entradasBorradas,entradaBorrada);
 					espaciosLibres=espacioLibre(almacenamiento);
 				}
@@ -1562,10 +1578,12 @@ printf("\n\n ENTRO A PERSISTIR DATOS\n\n");
 
 		}	else {if(string_starts_with(algoritmoDistribucion, "BSU")){
 					list_sort(almacenamiento.tablaEntradas,(void*)porTamanio);
+					i=0;
 					while(espaciosLibres<tamanio || i< almacenamiento.cantidadEntradas){//aplico algoritmo hasta tener espacio suficiente
 						entradaAux=list_get(almacenamiento.tablaEntradas,i);
 						if(esEntradaAtomica(almacenamiento,entradaAux)){
 							destruirEntradaEnPosicion(almacenamiento,i);
+							mostrarVectorBin(almacenamiento);
 							list_add(entradasBorradas,entradaAux);
 						}
 						else{i++;}    			//aplico i++ unicamente en el else porque cuando destruyo una entrada en pos i, la entrada i+1 pasa a ocupar i
@@ -1581,6 +1599,7 @@ printf("\n\n ENTRO A PERSISTIR DATOS\n\n");
 					if(esEntradaAtomica(almacenamiento, entradaAux)){					//estoy suponiendo que la lista esta ordenada de menos usado a mas recientemente usado, al igual que en el algoritmo de distribucion
 						destruirEntradaEnPosicion(almacenamiento,i);	// y tambien asumo que siempre habrá un valor atómico para sacar. Leí en el issue  1097 que no sucederá ese caso
 						list_add(entradasBorradas,entradaAux);
+						mostrarVectorBin(almacenamiento);
 					}
 					else{i++;}
 					espaciosLibres=espacioLibre(almacenamiento);
@@ -1813,7 +1832,7 @@ void procesoArchivoDump(char *archivo, char* punto_montaje, Almacenamiento almac
  	nuevaEntrada->clave = malloc(strlen(nombre_archivo_sin_extension));
 	strcpy(nuevaEntrada->clave, nombre_archivo_sin_extension);
 	nuevaEntrada->clave[strlen(nombre_archivo_sin_extension)] = '\0';
-	nuevaEntrada->tamanioValorAlmacenado = strlen(contenido_fichero);
+	nuevaEntrada->tamanioValorAlmacenado = tamanioValorAlmacenado(contenido_fichero);
 	nuevaEntrada->numeroDeEntrada = buscarPosicionEnBin(almacenamiento,contenido_fichero);
 
 	// Si se pudo obtener el Numero de Entrada del Binario
@@ -2356,4 +2375,53 @@ void borrarTxtClave(Almacenamiento almacenamiento,char* clave, char* puntoMontaj
 	char *archivoABorrar = string_new();
 	string_append_with_format(&archivoABorrar, "%s%s%s", puntoMontaje, clave,".txt");	
 	remove(archivoABorrar);
+}
+
+int entradasValorAlmacenado(Almacenamiento almacenamiento,t_entrada* unaEntrada){
+	int cantidadEntradasOcupadas= ((unaEntrada->tamanioValorAlmacenado)/almacenamiento.tamPorEntrada)+1;
+	if(((unaEntrada->tamanioValorAlmacenado)%almacenamiento.tamPorEntrada)==0){
+		cantidadEntradasOcupadas += 1;
+	}
+	return cantidadEntradasOcupadas;
+}
+
+int tamanioValorAlmacenado(char* valor){
+	return (string_length(valor) + 1);
+	}
+
+bool entraEnPosicionActual(Almacenamiento almacenamiento, t_entrada* unaEntrada, int tamanioNuevo){
+	int lugares=entradasValorAlmacenado(almacenamiento,unaEntrada);
+	if(lugares>=tamanioNuevo){return true;}
+	FILE* vector= fopen(almacenamiento.vector,"r");
+	
+	fseek(vector,unaEntrada->numeroDeEntrada + lugares,SEEK_SET);
+	char letra;
+	fread(&letra,sizeof(char),1,vector);
+	if(letra=='1') {
+		fclose(vector);
+		return false;}
+	lugares += 1;
+	while(lugares<tamanioNuevo &&  fread(&letra,sizeof(char),1,vector)!=EOF && letra=='0'){
+		lugares++;
+	}
+	if(lugares==tamanioNuevo){
+		fclose(vector);
+		return true;}
+	else {
+		fclose(vector);
+		return false;}
+}
+
+bool entraEnPosicionPuntero(Almacenamiento almacenamiento, int* puntero, t_entrada* entrada){
+		int posicionesLibres=0;
+		int espacioNecesario= entradasValorAlmacenado(almacenamiento,entrada);
+		char letra;
+		FILE* vector= fopen(almacenamiento.vector,"r");
+		fseek(vector,*puntero,SEEK_SET);
+		while(posicionesLibres<espacioNecesario	 && 	fread(&letra,sizeof(char),1,vector)!= EOF
+												 && 	letra=='0'){
+			posicionesLibres++;
+		 }
+		 if(posicionesLibres<espacioNecesario){return false;}
+		 else{return true;}
 }

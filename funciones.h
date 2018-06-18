@@ -155,8 +155,12 @@
 	void destruirEntradaEnPosicion(Almacenamiento almacenamiento, int posicion);
 	int posicionEntradaEnLista(Almacenamiento almacenamiento, t_entrada* entrada);
 	void borrarTxtClave(Almacenamiento almacenamiento,char* clave, char* puntoMontaje);
+	int tamanioValorAlmacenado(char* valor);
+	int entradasValorAlmacenado(Almacenamiento almacenamiento, t_entrada* unaEntrada);
+	bool entraEnPosicionActual(Almacenamiento almacenamiento, t_entrada* unaEntrada, int tamanioNuevo);
 
 	bool posicionXEnVectorLibre(Almacenamiento almacenamiento, int posicion);
+	bool entraEnPosicionPuntero(Almacenamiento almacenamiento, int* puntero, t_entrada* entrada);
 
 	void showContenidoTablaEntradas(t_list* tablaEntradas);
 	void limpiarInstancia(char* puntoMontaje);

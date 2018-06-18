@@ -201,7 +201,6 @@ int main(int argc, char* argv[]){
                         int nuevaPosicion;
                         t_entrada* entradaNueva;
                         t_list* entradasBorradas;
-
                     	if(existeEntradaEnTabla(tablaEntradas,registroInstruccion.key)){
                     		//si ya existe la entrada en la tabla
 
@@ -217,13 +216,26 @@ int main(int argc, char* argv[]){
 
                     		//la busco dentro de la tabla asi saco su numero de entrada por ende su posicion en el binario
                     		t_entrada* entradaEncontrada = list_find(tablaEntradas,(void*)esIgualA);
+                        	int posicion = entradaEncontrada->numeroDeEntrada; //posicion del binario
+                            //liberarEntradaEnVector(almacenamiento,entradaEncontrada);
+                            int tamanioNuevo= (string_length(registroInstruccion.dato)+1)/almacenamiento.tamPorEntrada + 1;
+                            if((string_length(registroInstruccion.dato)+1)%almacenamiento.tamPorEntrada == 0){tamanioNuevo++;}
+                            if(entraEnPosicionActual(almacenamiento,entradaEncontrada,tamanioNuevo)){
+                                liberarEntradaEnVector(almacenamiento,entradaEncontrada);
+                                list_add(tablaEntradas,entradaEncontrada);
+                                entradaEncontrada->tamanioValorAlmacenado=tamanioValorAlmacenado(registroInstruccion.dato);
+                                escribirBinarioEnPosicion(almacenamiento,posicion,registroInstruccion.dato);
+                                grabarEntradaEnVector(almacenamiento,posicion,entradaEncontrada);
+                                entradasBorradas=list_create(); //esto para que no explote al preguntarle el size mas tarde
 
-                        	//int posicion = entradaEncontrada->numeroDeEntrada; //posicion del binario
-                            liberarEntradaEnVector(almacenamiento,entradaEncontrada);
-
+                            }
                         	//escribo en el binario
-                        	entradasBorradas=persistirDatos(almacenamiento,&registroInstruccion,algoritmoReemplazo,puntero,&seCompacto);
-
+                            else{
+                                puts("\n\n no entra en el viejo espacio \n\n");
+                                liberarEntradaEnVector(almacenamiento,entradaEncontrada);
+                                list_add(tablaEntradas,entradaEncontrada);
+                        	    entradasBorradas=persistirDatos(almacenamiento,&registroInstruccion,algoritmoReemplazo,puntero,&seCompacto);
+                            }
 
 
 

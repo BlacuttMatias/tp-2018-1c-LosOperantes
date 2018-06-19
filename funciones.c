@@ -2505,3 +2505,26 @@ bool entraEnPosicionPuntero(Almacenamiento almacenamiento, int* puntero, t_entra
 		 if(posicionesLibres<espacioNecesario){return false;}
 		 else{return true;}
 }
+
+//funcion auxiliar todavia no se usa
+bool yaExisteCarpeta(char* nombreCarpeta){
+
+    DIR *dir;
+    // en *ent habrá información sobre el archivo que se está "sacando" a cada momento
+    struct dirent *ent;
+    /* Empezaremos a leer en el directorio entradas */
+    dir = opendir(".");
+
+    if (dir == NULL){
+        printf("No se puede abrir el directorio\n" );
+    }
+
+    if(ent->d_name == nombreCarpeta){
+    	printf("ya existe");
+    	return 1;
+    }else{printf("no existe");
+    		return 0;
+    }
+
+
+}

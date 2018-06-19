@@ -1997,42 +1997,54 @@ bool crearEstructuraDirectorios(char* pathArchivo){
 
 	// Separo el pathArchivo en todos los subdirectorios posibles
 	arregloDirectorios = string_split(pathArchivo, "/");
-	cantDirectorios = cantidadDirectoriosPath(pathArchivo);
 
-	// Si el path comienza con /
-	if(strcmp(string_substring(pathArchivo, 0, 1),"/") == 0){
-		cantDirectorios = cantDirectorios - 1;
-	}
+	//si empieza con / tiene que crearlo desde donde yo le indico
+	if(string_starts_with(pathArchivo,"/")){
 
-	// Recorro cada nodo del path
-	for (indice = 0; indice  < (cantDirectorios); indice=indice+1 ) {
+		cantDirectorios = cantidadDirectoriosPath(pathArchivo) + 1;
+		mkdir(pathArchivo, 0777);
 
-		char* pathDestinoCompleto = string_new();
+	}else{// lo crea en la raiz del proyecto
+		cantDirectorios = cantidadDirectoriosPath(pathArchivo);
 
-		for (indice2 = 0; indice2  <= indice; indice2=indice2+1 ) {
-			if(indice2 != indice){
-				string_append_with_format(&pathDestinoCompleto, "%s/", arregloDirectorios[indice2]);
-			}else{
-				string_append_with_format(&pathDestinoCompleto, "%s", arregloDirectorios[indice2]);
-			}
+
+		// Si el path comienza con /
+		if(strcmp(string_substring(pathArchivo, 0, 1),"/") == 0){
+			cantDirectorios = cantDirectorios - 1;
 		}
 
-		// Si no existe el directorio, lo creo
-		if (stat(pathDestinoCompleto, &st) == -1) {
+		// Recorro cada nodo del path
+		for (indice = 0; indice  < (cantDirectorios); indice=indice+1 ) {
 
-		
-			if(mkdir(pathDestinoCompleto, 0777) == -1){ // Si hubo error		
-				return false;
+			char* pathDestinoCompleto = string_new();
+
+			for (indice2 = 0; indice2  <= indice; indice2=indice2+1 ) {
+				if(indice2 != indice){
+					string_append_with_format(&pathDestinoCompleto, "%s/", arregloDirectorios[indice2]);
+				}else{
+					string_append_with_format(&pathDestinoCompleto, "%s", arregloDirectorios[indice2]);
+				}
 			}
+
+			// Si no existe el directorio, lo creo
+			if (stat(pathDestinoCompleto, &st) == -1) {
+
+
+				if(mkdir(pathDestinoCompleto, 0777) == -1){ // Si hubo error
+					return false;
+				}
+			}
+
+			free(pathDestinoCompleto);
 		}
 
-		free(pathDestinoCompleto);
+
 	}
+
 
 	free(arregloDirectorios);
 	return true;
 }
-
 //Devuelve la cantidad de directorios que hay en un path
 int cantidadDirectoriosPath(char* pathDirectorio){
 	char** arregloDirectorio1 = string_split(pathDirectorio, "/");

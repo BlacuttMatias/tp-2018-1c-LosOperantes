@@ -44,9 +44,9 @@ void handle_alarm(int sig) {
     printf("Dump automatizado cada %d segundos...\n", intervaloDump);
 
     // Realizo el Dump de la Tabla de Entradas
-    dump(tablaEntradas, puntoMontaje, almacenamiento);
+    //dump(tablaEntradas, puntoMontaje, almacenamiento);
 
-    alarm(intervaloDump);
+    //alarm(intervaloDump);
 }
 
 
@@ -205,13 +205,7 @@ int main(int argc, char* argv[]){
                     		//si ya existe la entrada en la tabla
 
                     		bool esIgualA(t_entrada* unaEntrada){
-                    			if(strcmp(unaEntrada->clave,registroInstruccion.key) == 0){
-                    				printf(" Existe ");
-                    				return true;
-                    			}else{
-                    				printf(" No Existe ");
-                    				return false;
-                    			}
+                    			return(strcmp(unaEntrada->clave,registroInstruccion.key) == 0);
                     		}
 
                     		//la busco dentro de la tabla asi saco su numero de entrada por ende su posicion en el binario
@@ -257,12 +251,12 @@ int main(int argc, char* argv[]){
 
                             int i=0;
                             int cantidadEntradas= list_size(entradasBorradas);
-                            showContenidoTablaEntradas(entradasBorradas);
+                            //showContenidoTablaEntradas(entradasBorradas);
 
                             for(i=0;i<cantidadEntradas;i++){
                                 t_entrada* entradaBorrada=list_remove(entradasBorradas,0);//aca va posicion 0 porque a medida que saco, la posicion 0 tiene na nueva entrada
                                 printf("remuevo la key %s\n",entradaBorrada->clave);
-                                //borrarTxtClave(almacenamiento,entradaBorrada->clave,puntoMontaje);
+                                borrarTxtClave(almacenamiento,entradaBorrada->clave,puntoMontaje);
 
                                 //estoy usando la serializacion de key bloqueada para no hacer toda una nueva serializacion. lleno los strings con "nada" por si acaso para evitar errores
                                 paquete = srlz_datosKeyBloqueada('I',KEY_DESTRUIDA,"nada",GET, entradaBorrada->clave,"nada");

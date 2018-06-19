@@ -194,7 +194,7 @@ int main(int argc, char* argv[]){
 
 
                     if(registroInstruccion.operacion == SET){
-
+                        mostrarVectorBin(almacenamiento);
                         // TODO
                         // Persistir el Valor en el Archivo Binario
 						//Prototipado
@@ -278,8 +278,9 @@ int main(int argc, char* argv[]){
                             }
                         }
                         list_destroy(entradasBorradas);
+                        printf("\n  DESPUES DE SET \n");
+                        mostrarVectorBin(almacenamiento);
                     }
-
                     if(registroInstruccion.operacion == STORE){                                
 
                         // Realizo el Dump de la Tabla de Entradas

@@ -1541,6 +1541,7 @@ printf("\n\n ENTRO A PERSISTIR DATOS\n\n");
 	printf("\n la entrada necesita  %d  espacios\n",tamanio);
 	int espaciosLibres= espacioLibre(almacenamiento);
 	t_entrada* entradaAux=NULL;
+	t_entrada* otraEntradaAux=NULL;
 
 	bool porTamanio(t_entrada* entrada1, t_entrada* entrada2){
 		return entrada1->tamanioValorAlmacenado > entrada2->tamanioValorAlmacenado;
@@ -1548,17 +1549,23 @@ printf("\n\n ENTRO A PERSISTIR DATOS\n\n");
 
 //agrego la nueva entrada luego de la ultima agregada,donde señala el algoritmo circular.
 int* punteroAuxiliar= malloc(sizeof(int));
-punteroAuxiliar=puntero;
+*punteroAuxiliar=*puntero;
 for(i=0;i++;i<almacenamiento.cantidadEntradas){
 	if(entraEnPosicionPuntero(almacenamiento,punteroAuxiliar,nuevaEntrada)){
 		grabarEntradaEnVector(almacenamiento,*punteroAuxiliar,nuevaEntrada);
 		mostrarVectorBin(almacenamiento);
+		if(*punteroAuxiliar > *puntero){
+			*puntero=*punteroAuxiliar;
+		}
+		free(punteroAuxiliar);
+		incrementarPuntero(almacenamiento,puntero);
 		return entradasBorradas;
 	}
-	else {incrementarPuntero(almacenamiento,punteroAuxiliar);}
+	incrementarPuntero(almacenamiento,punteroAuxiliar);
 }
+//esto es para que el puntero crezca si se van poniendo nuevos datos al final, pero no si se agregó en algun hueco a la izquierda
 
-
+free(punteroAuxiliar);
 
 
 
@@ -1581,10 +1588,20 @@ for(i=0;i++;i<almacenamiento.cantidadEntradas){
 					i=0;
 					while(espaciosLibres<tamanio || i< almacenamiento.cantidadEntradas){//aplico algoritmo hasta tener espacio suficiente
 						entradaAux=list_get(almacenamiento.tablaEntradas,i);
+						otraEntradaAux=list_get(almacenamiento.tablaEntradas,i+1);
 						if(esEntradaAtomica(almacenamiento,entradaAux)){
-							destruirEntradaEnPosicion(almacenamiento,i);
+							//en caso de empate, usar algoritmo circular
+							if(entradaAux->tamanioValorAlmacenado == otraEntradaAux->tamanioValorAlmacenado){
+								entradaBorrada=desempatarReemplazo(almacenamiento, puntero);
+								j=posicionEntradaEnLista(almacenamiento,entradaBorrada);
+								destruirEntradaEnPosicion(almacenamiento,i);
+								list_add(entradasBorradas,entradaBorrada);
+							}
+							else{
+								destruirEntradaEnPosicion(almacenamiento,i);
+								list_add(entradasBorradas,entradaAux);
+							}
 							mostrarVectorBin(almacenamiento);
-							list_add(entradasBorradas,entradaAux);
 						}
 						else{i++;}    			//aplico i++ unicamente en el else porque cuando destruyo una entrada en pos i, la entrada i+1 pasa a ocupar i
 						espaciosLibres=espacioLibre(almacenamiento);
@@ -1665,6 +1682,48 @@ for(i=0;i++;i<almacenamiento.cantidadEntradas){
 	nuevaEntrada->numeroDeEntrada=i;
 	return entradasBorradas;
 }
+
+t_entrada* desempatarReemplazo(Almacenamiento almacenamiento, int* puntero){
+	//la lista ya viene ordenada de mayor a menor
+	int* punteroAuxiliar=malloc(sizeof(int));
+	 *punteroAuxiliar=*puntero;
+
+	bool esSenialadoPorPuntero(t_entrada* unaEntrada){
+		return unaEntrada->numeroDeEntrada == *punteroAuxiliar;
+	}
+
+	int i=0;
+	int tamanioLista= list_size(almacenamiento.tablaEntradas);
+	t_entrada* entradaAux;
+	t_entrada* otraEntradaAux;
+	t_entrada* entradaBorrada;
+	t_list* entradasDeMismoTamanio= list_create();
+	//busco la entrada mas grande que sea atomica
+	do{
+		entradaAux=list_get(almacenamiento.tablaEntradas,i);
+		i++;
+	}
+	while(!esEntradaAtomica(almacenamiento,entradaAux));
+	otraEntradaAux=list_get(almacenamiento.tablaEntradas,i);
+	list_add(entradasDeMismoTamanio,entradaAux);
+	list_add(entradasDeMismoTamanio,otraEntradaAux);
+	i++;
+	
+	//me armo una lista con todas las entradas de mismo tamanio candidatas a ser reemplazadas
+	while(entradaAux->tamanioValorAlmacenado == otraEntradaAux->tamanioValorAlmacenado && i<tamanioLista){
+		i++;
+		otraEntradaAux=list_get(almacenamiento.tablaEntradas,i);
+		list_add(entradasDeMismoTamanio,otraEntradaAux);
+	}
+	//busco una entrada que esté en la posicion del binario apuntada por el puntero
+	if(list_any_satisfy(almacenamiento.tablaEntradas, (void*)esSenialadoPorPuntero)){
+		entradaBorrada=list_find(almacenamiento.tablaEntradas,(void*)esSenialadoPorPuntero);
+		free(punteroAuxiliar);
+		return entradaBorrada;
+	}
+	else{incrementarPuntero(almacenamiento,punteroAuxiliar);}
+}
+
 
 bool enviarInstruccionInstancia(Instruccion registroInstruccion, int socketInstancia){
 

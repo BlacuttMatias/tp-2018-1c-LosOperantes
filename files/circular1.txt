@@ -1,0 +1,21 @@
+GET clave1
+SET clave1 valorChico
+STORE clave1
+GET  claveLarga
+SET   claveLarga claveDeMasDe15Caracteres
+STORE  claveLarga
+GET  clave3
+SET  clave3 valorChico
+STORE  clave3
+GET claveLarga
+SET  claveLarga valorChico
+STORE claveLarga
+GET clave4
+SET clave4 valorChico
+STORE clave4
+GET clave5
+SET  clave5 valorChico
+STORE clave5
+GET claveLarga2
+SET claveLarga2 claveDeMasDe15Caracteres
+STORE  claveLarga2

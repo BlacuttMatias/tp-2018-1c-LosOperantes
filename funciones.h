@@ -170,5 +170,6 @@
 	t_entrada* liberarUnEspacio(Almacenamiento almacenamiento, int* puntero);
 	t_entrada* ultimaEntrada(Almacenamiento almacenamiento);
 	t_entrada* obtenerEntrada(t_list* tablaEntradas, char* clave);
+	t_entrada* desempatarReemplazo(Almacenamiento almacenamiento, int* puntero);
 /* ---------------------------------------- */
 #endif

@@ -1554,6 +1554,7 @@ int* punteroAuxiliar= malloc(sizeof(int));
 for(i=0;i<almacenamiento.cantidadEntradas;i++){
 	if(entraEnPosicionPuntero(almacenamiento,punteroAuxiliar,nuevaEntrada)){
 		grabarEntradaEnVector(almacenamiento,*punteroAuxiliar,nuevaEntrada);
+		escribirBinarioEnPosicion(almacenamiento,*punteroAuxiliar,valor);
 		nuevaEntrada->numeroDeEntrada=*punteroAuxiliar;
 		mostrarVectorBin(almacenamiento);
 		if(*punteroAuxiliar > *puntero){

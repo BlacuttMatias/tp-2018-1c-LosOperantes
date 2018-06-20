@@ -43,10 +43,10 @@ void handle_alarm(int sig) {
 
     printf("Dump automatizado cada %d segundos...\n", intervaloDump);
 
-    // Realizo el Dump de la Tabla de Entradas
-    //dump(tablaEntradas, puntoMontaje, almacenamiento);
+    //Realizo el Dump de la Tabla de Entradas
+    dump(tablaEntradas, puntoMontaje, almacenamiento);
 
-    //alarm(intervaloDump);
+    alarm(intervaloDump);
 }
 
 

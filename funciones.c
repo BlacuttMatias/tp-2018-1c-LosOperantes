@@ -1600,8 +1600,6 @@ puts("uso algoritmo reemplazo");
 								if(entradaAux->tamanioValorAlmacenado == otraEntradaAux->tamanioValorAlmacenado){
 									puts("desempato");
 									entradaBorrada=desempatarReemplazo(almacenamiento, puntero);
-									j=posicionEntradaEnLista(almacenamiento,entradaBorrada);
-									destruirEntradaEnPosicion(almacenamiento,j);
 									list_add(entradasBorradas,entradaBorrada);
 								}
 								else{
@@ -1735,6 +1733,7 @@ t_entrada* desempatarReemplazo(Almacenamiento almacenamiento, int* puntero){
 		if(list_any_satisfy(entradasDeMismoTamanio, (void*)esSenialadoPorPuntero)){
 			entradaBorrada=list_find(entradasDeMismoTamanio,(void*)esSenialadoPorPuntero);
 			free(punteroAuxiliar);
+			liberarEntradaEnVector(almacenamiento,entradaBorrada);
 			return entradaBorrada;
 		}
 		else{incrementarPuntero(almacenamiento,punteroAuxiliar);}
@@ -2073,10 +2072,12 @@ char* leerBinarioEnPosicion(Almacenamiento almacenamiento, int posicion){
 	fseek(binario,tamEntrada*posicion,SEEK_SET);
 	int contador=0;
 	//debuggeanding
+	puts("entro while en leerbinario");
 	while( letra !='\0' && fread(&letra,sizeof(char),1,binario) != EOF){
 		string_append_with_format(&buffer, "%c",letra);
 		contador +=1;
 	}
+	puts("salgo while");
 	fclose(binario);
 	return buffer;
 }
@@ -2096,7 +2097,7 @@ void grabarPosicionEnVector(Almacenamiento almacenamiento, int posicion){
 	FILE* vectorBin=fopen(almacenamiento.vector,"r+");
 	fseek(vectorBin,posicion,SEEK_SET);
 	int uno ='1';
-	fwrite(&uno,1,sizeof(char),vectorBin);
+	fwrite(&uno,sizeof(char),1,vectorBin);
 	fclose(vectorBin);
 }
 
@@ -2104,7 +2105,7 @@ void liberarPosicionEnVector(Almacenamiento almacenamiento, int posicion){
 	FILE* vectorBin=fopen(almacenamiento.vector,"r+");
 	fseek(vectorBin,posicion,SEEK_SET);
 	int cero ='0';
-	fwrite(&cero,1,sizeof(char),vectorBin);
+	fwrite(&cero,sizeof(char),1,vectorBin);
 	fclose(vectorBin);
 }
 
@@ -2170,7 +2171,9 @@ int buscarPosicionEnBin(Almacenamiento almacenamiento, char* valor){
 	}
 	
 	int posicion=0;
+	puts("declaro buffer");
 	char*buffer= string_new();
+	puts("declaré buffer");
 	int i=0;
 	printf("\nse busca %s\n",valor);
 	while(i<entradas){

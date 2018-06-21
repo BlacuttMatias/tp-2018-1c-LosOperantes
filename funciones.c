@@ -1549,26 +1549,19 @@ printf("\n\n ENTRO A PERSISTIR DATOS\n\n");
 	}
 
 //agrego la nueva entrada luego de la ultima agregada,donde señala el algoritmo circular.
-int* punteroAuxiliar= malloc(sizeof(int));
-*punteroAuxiliar=*puntero;
 for(i=0;i<almacenamiento.cantidadEntradas;i++){
-	if(entraEnPosicionPuntero(almacenamiento,punteroAuxiliar,nuevaEntrada)){
-		grabarEntradaEnVector(almacenamiento,*punteroAuxiliar,nuevaEntrada);
-		escribirBinarioEnPosicion(almacenamiento,*punteroAuxiliar,valor);
-		nuevaEntrada->numeroDeEntrada=*punteroAuxiliar;
+	if(entraEnPosicionPuntero(almacenamiento,puntero,nuevaEntrada)){
+		grabarEntradaEnVector(almacenamiento,*puntero,nuevaEntrada);
+		escribirBinarioEnPosicion(almacenamiento,*puntero,valor);
+		nuevaEntrada->numeroDeEntrada=*puntero;
 		mostrarVectorBin(almacenamiento);
-		if(*punteroAuxiliar > *puntero){
-			*puntero=*punteroAuxiliar;
-		}
-		free(punteroAuxiliar);
+		
 		incrementarPuntero(almacenamiento,puntero);
 		return entradasBorradas;
 	}
-	incrementarPuntero(almacenamiento,punteroAuxiliar);
+	incrementarPuntero(almacenamiento,puntero);
 }
 //esto es para que el puntero crezca si se van poniendo nuevos datos al final, pero no si se agregó en algun hueco a la izquierda
-
-free(punteroAuxiliar);
 puts("uso algoritmo reemplazo");
 
 
@@ -1725,7 +1718,8 @@ t_entrada* desempatarReemplazo(Almacenamiento almacenamiento, int* puntero){
 	//me armo una lista con todas las entradas de mismo tamanio candidatas a ser reemplazadas
 	while(entradaAux->tamanioValorAlmacenado == otraEntradaAux->tamanioValorAlmacenado && i<tamanioLista){
 		otraEntradaAux=list_get(almacenamiento.tablaEntradas,i);
-		list_add(entradasDeMismoTamanio,otraEntradaAux);
+		if(entradaAux->tamanioValorAlmacenado == otraEntradaAux->tamanioValorAlmacenado){	
+			list_add(entradasDeMismoTamanio,otraEntradaAux);}
 		i++;
 	}
 	//busco una entrada que esté en la posicion del binario apuntada por el puntero

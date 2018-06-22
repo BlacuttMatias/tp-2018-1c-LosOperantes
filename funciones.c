@@ -440,6 +440,43 @@ Instruccion pasarAEstructura(Instruccion* puntero, char* nombreEsi) {
 	return instruccion;
 }
 
+// Cargo una instruccion enj un Registro
+Instruccion* parsearInstruccion(char* unaInstruccion, int numeroLinea){
+
+	//chequeo error de parseo
+	t_esi_operacion parsed= parse(unaInstruccion);
+	Instruccion* registroInstruccion = NULL;
+	registroInstruccion = malloc(sizeof(Instruccion));
+
+	if(!parsed.valido){
+		printf("instruccion %s invalida en posicion %d \n",unaInstruccion,numeroLinea);
+	//	log_info(infoLogger,"instruccion %s invalida en posicion %d \n",unaInstruccion,numeroLinea);
+		exit(EXIT_FAILURE);
+	}
+	else{
+		switch(parsed.keyword){
+		case GET:
+			cargarInstruccion(registroInstruccion,GET,parsed.argumentos.GET.clave,NULL);
+
+			break;
+		case SET:
+			cargarInstruccion(registroInstruccion,SET,parsed.argumentos.SET.clave,parsed.argumentos.SET.valor);
+
+			break;
+		case STORE:
+			cargarInstruccion(registroInstruccion,STORE,parsed.argumentos.STORE.clave,NULL);
+
+			break;
+		default:
+			printf("instruccion %s no es interpretable en posicion %d \n",unaInstruccion,numeroLinea);
+			//log_info("instruccion %s no es interpretable en posicion %d \n",unaInstruccion,numeroLinea);
+			exit(EXIT_FAILURE);
+		}
+	}	
+
+	return registroInstruccion;
+}
+
 //**************************************************************************//
 // Procesar script de Instrucciones
 //**************************************************************************//
@@ -450,6 +487,7 @@ bool procesarScript(char* pathScript, t_list* listaInstrucciones){
     int caracter;
 	char *unaInstruccion = string_new();
 	int numeroLinea=0;
+	Instruccion* registroInstruccion;
 
 	// Si se pudo posicionar dentro del archivo
 	if(fseek( archivo, 0, SEEK_SET ) == 0){
@@ -461,35 +499,8 @@ bool procesarScript(char* pathScript, t_list* listaInstrucciones){
  //printf("%s\n",unaInstruccion);
 
 				//chequeo error de parseo
-				t_esi_operacion parsed= parse(unaInstruccion);
-				Instruccion* registroInstruccion = NULL;
-				registroInstruccion = malloc(sizeof(Instruccion));
-
-				if(!parsed.valido){
-					printf("instruccion %s invalida en posicion %d \n",unaInstruccion,numeroLinea);
-				//	log_info(infoLogger,"instruccion %s invalida en posicion %d \n",unaInstruccion,numeroLinea);
-					exit(EXIT_FAILURE);
-				}
-				else{
-					switch(parsed.keyword){
-					case GET:
-						cargarInstruccion(registroInstruccion,GET,parsed.argumentos.GET.clave,NULL);
-
-						break;
-					case SET:
-						cargarInstruccion(registroInstruccion,SET,parsed.argumentos.SET.clave,parsed.argumentos.SET.valor);
-
-						break;
-					case STORE:
-						cargarInstruccion(registroInstruccion,STORE,parsed.argumentos.STORE.clave,NULL);
-
-						break;
-					default:
-						printf("instruccion %s no es interpretable en posicion %d \n",unaInstruccion,numeroLinea);
-						//log_info("instruccion %s no es interpretable en posicion %d \n",unaInstruccion,numeroLinea);
-						exit(EXIT_FAILURE);
-					}
-				}
+				registroInstruccion = NULL;
+				registroInstruccion = parsearInstruccion(unaInstruccion, numeroLinea);
 
         		// Agrego la instruccion a la lista
 				list_add(listaInstrucciones,registroInstruccion);
@@ -500,11 +511,21 @@ bool procesarScript(char* pathScript, t_list* listaInstrucciones){
 				string_append_with_format(&unaInstruccion, "%c", caracter);	
 			}
 	    }
+
+	    // Verifico si quedo alguna instruccion sin leer (ultima linea)
+	    if(string_length(unaInstruccion) > 0){
+
+			registroInstruccion = NULL;
+			registroInstruccion = parsearInstruccion(unaInstruccion, numeroLinea);
+
+			// Agrego la instruccion a la lista
+			list_add(listaInstrucciones,registroInstruccion);
+	    }
 	}
 
 	// Cierro el FD
 	fclose(archivo);
-
+	free(unaInstruccion);
 
 	if(list_size(listaInstrucciones) > 0){
 		return true;

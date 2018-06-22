@@ -61,6 +61,7 @@
 
 	Instruccion* sacarSiguienteInstruccion(t_list* listaInstrucciones);
 	Instruccion pasarAEstructura(Instruccion* puntero, char* nombreEsi);
+	Instruccion* parsearInstruccion(char* unaInstruccion, int numeroLinea);
 	bool procesarScript(char* pathScript, t_list* listaInstrucciones);
 
 	Instruccion* obtenerSiguienteInstruccion(t_list* listaInstrucciones);

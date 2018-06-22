@@ -111,7 +111,7 @@ Encabezado recibir_header(int* socket){
 
 	//Recibo el header
 	if ((num=recv(*socket,buf,sizeof (int)*2+sizeof(char),0))==-1){
-		perror("fallo recepcion");
+		//perror("fallo recepcion");
 	}
 
 	// Deserializo el header
@@ -137,7 +137,7 @@ Paquete recibir_payload(int* socket,int* tam){
 	bzero(buf,valor);
 	int socket_envio=*socket;
 	if ((num=recv(socket_envio,buf,valor,MSG_WAITALL))==-1){
-		perror("fallo recepcion");
+		//perror("fallo recepcion");
 
 	}
 	paquete.buffer=buf;

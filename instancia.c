@@ -41,19 +41,19 @@
 // Gestor del Intervalo del Dump
 void handle_alarm(int sig) {
 
-   // printf("Dump automatizado cada %d segundos...\n", intervaloDump);
+    printf("Dump automatizado cada %d segundos...\n", intervaloDump);
 
     //Realizo el Dump de la Tabla de Entradas
-    //dump(tablaEntradas, puntoMontaje, almacenamiento);
+    dump(tablaEntradas, puntoMontaje, almacenamiento);
 
-    //alarm(intervaloDump);
+    alarm(intervaloDump);
 }
 
 
 int main(int argc, char* argv[]){
     int* puntero=malloc(sizeof(int));
     *puntero=0;
-    printf("\n el puntero marca %d\n",*puntero);
+
     /* Creo la instancia del Archivo de Configuracion y del Log */
     cfg = config_create("config/config.cfg");
     infoLogger = log_create("log/instancia.log", "INSTANCIA", false, LOG_LEVEL_INFO);
@@ -185,7 +185,6 @@ int main(int argc, char* argv[]){
 			switch(encabezado.cod_operacion){
 
 				case EJECUTAR_INSTRUCCION:
-                printf("\n entro case EJECUTAR_INSTRUCCION \n");
 
                     paquete=recibir_payload(&coordinador_fd,&encabezado.tam_payload);
                     registroInstruccion=dsrlz_instruccion(paquete.buffer);
@@ -226,7 +225,6 @@ int main(int argc, char* argv[]){
                             }
                         	//escribo en el binario
                             else{
-                                puts("\n\n no entra en el viejo espacio \n\n");
                                 liberarEntradaEnVector(almacenamiento,entradaEncontrada);
                                 list_add(tablaEntradas,entradaEncontrada);
                         	    entradasBorradas=persistirDatos(almacenamiento,&registroInstruccion,algoritmoReemplazo,puntero,&seCompacto);
@@ -256,7 +254,6 @@ int main(int argc, char* argv[]){
 
                             for(i=0;i<cantidadEntradas;i++){
                                 t_entrada* entradaBorrada=list_remove(entradasBorradas,0);//aca va posicion 0 porque a medida que saco, la posicion 0 tiene na nueva entrada
-                                printf("remuevo la key %s\n",entradaBorrada->clave);
                                 borrarTxtClave(almacenamiento,entradaBorrada->clave,puntoMontaje);
 
                                 //estoy usando la serializacion de key bloqueada para no hacer toda una nueva serializacion. lleno los strings con "nada" por si acaso para evitar errores
@@ -273,14 +270,11 @@ int main(int argc, char* argv[]){
                             }
                         }
                         list_destroy(entradasBorradas);
-                        printf("\n  DESPUES DE SET \n");
                         mostrarVectorBin(almacenamiento);
                     }
                     if(registroInstruccion.operacion == STORE){                                
-                        puts("entro dump");
                         // Realizo el Dump de la Tabla de Entradas
                         dump(tablaEntradas, puntoMontaje, almacenamiento);
-                        puts("salgo dump");
 
                         //saco y agrego al final a la entrada storeada, para mantener orden de entradas segun uso
                     	if(existeEntradaEnTabla(tablaEntradas,registroInstruccion.key)){
@@ -343,7 +337,6 @@ int main(int argc, char* argv[]){
                     free(paquete.buffer);
                     //free(registroInstruccion.nombreEsiOrigen);
                     //free(registroInstruccion.dato);
-                    printf("\nsalgo case EJECUTAR_INSTRUCCION\n");
 					break;
 
                 case OBTENER_STATUS_VALOR:

@@ -842,7 +842,7 @@ Instancia* obtenerInstanciaAsignada(t_dictionary * dictionario, char* key){
 //**************************************************************************//
 // El Coordinador procesa la instruccion y elige la Instancia que lo va a ejecutar
 //**************************************************************************//
-Instancia* obtenerInstanciaNueva(t_list* listaInstanciasConectadas, Instruccion* datosInstruccion, char* algoritmoDistribucion){
+Instancia* obtenerInstanciaNueva(t_list* listaInstanciasConectadas, Instruccion* datosInstruccion, char* algoritmoDistribucion, bool simularDistribucion){
 	int algoritmo;
 	int cantidadElem,dividendo,resto;						//para algoritmo EK
 	char key;
@@ -871,17 +871,32 @@ Instancia* obtenerInstanciaNueva(t_list* listaInstanciasConectadas, Instruccion*
 	switch(algoritmo){
 
 		case EL:
-			//saco la primer instancia de la lista
-			instanciaElegida = list_remove(listaInstanciasConectadas, 0);
-			//ahora la pongo al final de la lista
-			list_add(listaInstanciasConectadas,instanciaElegida);			
+
+			// Si solo se esta simulando la distribucion (caso comando STATUS)
+			if(simularDistribucion){
+				instanciaElegida = list_get(listaInstanciasConectadas,0);
+			}else{
+				//saco la primer instancia de la lista
+				instanciaElegida = list_remove(listaInstanciasConectadas, 0);
+				//ahora la pongo al final de la lista
+				list_add(listaInstanciasConectadas,instanciaElegida);			
+			}
+
 			break;
 
 		case LSU:
 
 			list_sort(listaInstanciasConectadas, (void*)comparacion);
-			instanciaElegida = list_remove(listaInstanciasConectadas,0);
-			list_add(listaInstanciasConectadas,instanciaElegida);
+
+
+			// Si solo se esta simulando la distribucion (caso comando STATUS)
+			if(simularDistribucion){
+				instanciaElegida = list_get(listaInstanciasConectadas,0);
+			}else{
+				instanciaElegida = list_remove(listaInstanciasConectadas,0);
+				list_add(listaInstanciasConectadas,instanciaElegida);
+			}
+
 			// hasta aca elige por espacio de sobra. en caso de que empaten, Tiene en Cuenta el orden original de la lista
 			//Se mantiene la hipotesis que en algoritmo EL, cuando empatan se mantiene primero a la menos recientemente usada
 			//por eso se quita y vuelve a agregar el elemento a la lista, para marcar que fue usado recientemente y quede despues de otros
@@ -1549,27 +1564,23 @@ t_list* persistirDatos(Almacenamiento almacenamiento,Instruccion* datosInstrucci
 		return entrada1->tamanioValorAlmacenado > entrada2->tamanioValorAlmacenado;
 	}
 
-//agrego la nueva entrada luego de la ultima agregada,donde señala el algoritmo circular.
+	//agrego la nueva entrada luego de la ultima agregada,donde señala el algoritmo circular.
+	for(i=0;i<almacenamiento.cantidadEntradas;i++){
 
-for(i=0;i<almacenamiento.cantidadEntradas;i++){
+		if(entraEnPosicionPuntero(almacenamiento,puntero,nuevaEntrada)){
 
-	if(entraEnPosicionPuntero(almacenamiento,puntero,nuevaEntrada)){
-
-		grabarEntradaEnVector(almacenamiento,*puntero,nuevaEntrada);
-		escribirBinarioEnPosicion(almacenamiento,*puntero,valor);
-		nuevaEntrada->numeroDeEntrada=*puntero;
-		mostrarVectorBin(almacenamiento);
-		for(i=0;i<tamanio;i++){
-			incrementarPuntero(almacenamiento,puntero);
-			return entradasBorradas;
+			grabarEntradaEnVector(almacenamiento,*puntero,nuevaEntrada);
+			escribirBinarioEnPosicion(almacenamiento,*puntero,valor);
+			nuevaEntrada->numeroDeEntrada=*puntero;
+			mostrarVectorBin(almacenamiento);
+			for(i=0;i<tamanio;i++){
+				incrementarPuntero(almacenamiento,puntero);
+				return entradasBorradas;
+			}
 		}
+
+		incrementarPuntero(almacenamiento,puntero);
 	}
-
-	incrementarPuntero(almacenamiento,puntero);
-}
-puts("uso algoritmo reemplazo");
-
-
 
 
 	if(espaciosLibres<tamanio){//aplico algoritmo en caso de tener que sacar un valor del bin
@@ -1594,12 +1605,10 @@ puts("uso algoritmo reemplazo");
 							if(esEntradaAtomica(almacenamiento,entradaAux)){
 								//en caso de empate, usar algoritmo circular
 								if(entradaAux->tamanioValorAlmacenado == otraEntradaAux->tamanioValorAlmacenado){
-									puts("desempato");
 									entradaBorrada=desempatarReemplazo(almacenamiento, puntero);
 									list_add(entradasBorradas,entradaBorrada);
 								}
 								else{
-									puts("destruyo directamente");
 									destruirEntradaEnPosicion(almacenamiento,i);
 									list_add(entradasBorradas,entradaAux);
 								}
@@ -1609,7 +1618,6 @@ puts("uso algoritmo reemplazo");
 							espaciosLibres=espacioLibre(almacenamiento);
 						}
 						else{
-							puts("destruyo porque es el ultimo");
 							destruirEntradaEnPosicion(almacenamiento,i);
 							list_add(entradasBorradas,entradaAux);
 							espaciosLibres=espacioLibre(almacenamiento);
@@ -1756,7 +1764,6 @@ bool enviarInstruccionInstancia(Instruccion registroInstruccion, int socketInsta
 
 // Cuando se inicia una Instancia, se precarga la Tabla de Entradas con la info del Dump
 void preCargarTablaEntradas(char* puntoMontaje, Almacenamiento almacenamiento){
-	puts("precargo");
     // Con un puntero a DIR abro el directorio 
     DIR *dir;
     // en *ent habrá información sobre el archivo que se está "sacando" a cada momento 
@@ -1786,7 +1793,6 @@ void preCargarTablaEntradas(char* puntoMontaje, Almacenamiento almacenamiento){
         }
     }
     closedir (dir);
-	puts("precargué");
 }
 
 // Funcion que inicializa una Instancia
@@ -1864,11 +1870,8 @@ void procesoArchivoDump(char *archivo, char* punto_montaje, Almacenamiento almac
 	// Obtengo el Tamano del Valor
 	FILE *fichero;
 	fichero = fopen(carpeta_archivo, "r");
-	puts("d1");
 	fseek(fichero,0,SEEK_END);
-	puts("d3");
 	int tamanio= ftell(fichero) + 1;
-	puts("d2");
 	fseek(fichero,0,SEEK_SET);
 
 
@@ -2179,9 +2182,7 @@ int buscarPosicionEnBin(Almacenamiento almacenamiento, char* valor){
 	}
 	
 	int posicion=0;
-	puts("declaro buffer");
 	char*buffer= string_new();
-	puts("declaré buffer");
 	int i=0;
 	printf("\nse busca %s\n",valor);
 	while(i<entradas){

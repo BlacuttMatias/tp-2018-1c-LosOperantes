@@ -241,8 +241,8 @@ void* atenderConexiones(void* socketConexion){
 
                     }else{ // Devuelvo al Planificador los datos del Status, ya que la Instancia no tiene el Valor
 
-                        // Obtengo la Instancia segun el Algoritmo de Distribucion
-                        proximaInstancia = obtenerInstanciaNueva(listaInstanciasConectadas,&registroInstruccionAux,algoritmoDistribucion);
+                        // Simulo la obtencion de la Instancia segun el Algoritmo de Distribucion
+                        proximaInstancia = obtenerInstanciaNueva(listaInstanciasConectadas,&registroInstruccionAux,algoritmoDistribucion, true);
                         string_append_with_format(&nombreInstanciaFutura, "%s", proximaInstancia->nombreProceso);
 
                         // No existe valor en la Instancia. Se informa eso.
@@ -449,8 +449,8 @@ void* atenderConexiones(void* socketConexion){
                     registroInstruccionAux2->dato=NULL;
                     registroInstruccionAux2->nombreEsiOrigen=NULL;
 
-                    // Obtengo la Instancia segun el Algoritmo de Distribucion
-                    proximaInstancia = obtenerInstanciaNueva(listaInstanciasConectadas,registroInstruccionAux2,algoritmoDistribucion);
+                    // Simulo la optencion de la Instancia segun el Algoritmo de Distribucion
+                    proximaInstancia = obtenerInstanciaNueva(listaInstanciasConectadas,registroInstruccionAux2,algoritmoDistribucion, true);
                     string_append_with_format(&nombreInstanciaFutura2, "%s", proximaInstancia->nombreProceso);
 
 
@@ -657,7 +657,7 @@ void* atenderConexiones(void* socketConexion){
 
                                 // Obtengo la Instancia segun el Algoritmo de Distribucion
                                 //proximaInstancia = NULL;
-                                proximaInstancia = obtenerInstanciaNueva(listaInstanciasConectadas,&registroInstruccion,algoritmoDistribucion);
+                                proximaInstancia = obtenerInstanciaNueva(listaInstanciasConectadas,&registroInstruccion,algoritmoDistribucion, false);
 
                                 log_info(infoLogger, "Se aplico el Algoritmo de Distribución %s y se obtuvo la Instancia %s", algoritmoDistribucion, proximaInstancia->nombreProceso);
 
@@ -670,7 +670,7 @@ void* atenderConexiones(void* socketConexion){
                         }else{ // Si el Recurso nunca fue atendido por una Instancia
 
                             // Obtengo la Instancia segun el Algoritmo de Distribucion
-                            proximaInstancia = obtenerInstanciaNueva(listaInstanciasConectadas,&registroInstruccion,algoritmoDistribucion);
+                            proximaInstancia = obtenerInstanciaNueva(listaInstanciasConectadas,&registroInstruccion,algoritmoDistribucion, false);
 
 
                             log_info(infoLogger, "Se aplico el Algoritmo de Distribución %s y se obtuvo la Instancia %s", algoritmoDistribucion, proximaInstancia->nombreProceso);

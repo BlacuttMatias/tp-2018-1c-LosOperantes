@@ -2,7 +2,7 @@ GET clave1
 SET clave1 ab3
 STORE clave1
 GET clave2
-SET clave2 abcd5
+SET clave2 abcde6
 STORE clave2
 GET clave3
 SET clave3 bcde5
@@ -11,8 +11,8 @@ GET clave4Larga
 SET clave4Larga espacioDeMasDe15
 STORE clave4Larga
 GET clave5
-SET clave5 bc3
+SET clave5 bce4
 STORE clave5
 GET clave6
-SET clave6 cd3
+SET clave6 c2
 STORE clave6

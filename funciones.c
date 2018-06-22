@@ -1498,13 +1498,13 @@ int posicionEntradaEnLista(Almacenamiento almacenamiento, t_entrada* entrada){
 
 
 void incrementarPuntero(Almacenamiento almacenamiento,int* puntero) {
-	printf("puntero apunta a %d\n",*puntero);
+	//printf("puntero apunta a %d\n",*puntero);
 	if(*puntero == (almacenamiento.cantidadEntradas-1) ){
 		*puntero=0;
-		printf("setié puntero a 0 \n");
+	//	printf("setié puntero a 0 \n");
 	}
 	else{*puntero = *puntero + 1;
-		printf("aumente puntero de %d  a  %d\n",(*puntero) - 1, *puntero);
+	//	printf("aumente puntero de %d  a  %d\n",(*puntero) - 1, *puntero);
 	}
 }
 
@@ -1528,7 +1528,7 @@ t_list* persistirDatos(Almacenamiento almacenamiento,Instruccion* datosInstrucci
 	nuevaEntrada->clave[strlen(datosInstruccion->key)]='\0';
 	nuevaEntrada->tamanioValorAlmacenado = tamanioValorAlmacenado(datosInstruccion->dato);
 	list_add(almacenamiento.tablaEntradas,nuevaEntrada);//asignaré el nuevaEntrada->numero de entrada al momento de encontrarlo
-	puts("paso1");
+
 
 
 	char*valor=datosInstruccion->dato;
@@ -1550,20 +1550,21 @@ t_list* persistirDatos(Almacenamiento almacenamiento,Instruccion* datosInstrucci
 	}
 
 //agrego la nueva entrada luego de la ultima agregada,donde señala el algoritmo circular.
-puts("entro al for");
+
 for(i=0;i<almacenamiento.cantidadEntradas;i++){
-	puts("hago ciclo");
+
 	if(entraEnPosicionPuntero(almacenamiento,puntero,nuevaEntrada)){
-		puts("true");
+
 		grabarEntradaEnVector(almacenamiento,*puntero,nuevaEntrada);
 		escribirBinarioEnPosicion(almacenamiento,*puntero,valor);
 		nuevaEntrada->numeroDeEntrada=*puntero;
 		mostrarVectorBin(almacenamiento);
-		
-		incrementarPuntero(almacenamiento,puntero);
-		return entradasBorradas;
+		for(i=0;i<tamanio;i++){
+			incrementarPuntero(almacenamiento,puntero);
+			return entradasBorradas;
+		}
 	}
-	puts("false");
+
 	incrementarPuntero(almacenamiento,puntero);
 }
 puts("uso algoritmo reemplazo");
@@ -1845,18 +1846,18 @@ printf("#entrada: %d encontrado en el binario para %s\n", posicion, estructuraIn
 
 // Proceso un archivo del Dump
 void procesoArchivoDump(char *archivo, char* punto_montaje, Almacenamiento almacenamiento){
-	puts("a");
+
 	t_list* tablaEntradas=almacenamiento.tablaEntradas;
 	char *carpeta_archivo = string_new();
 	string_append_with_format(&carpeta_archivo, "%s%s", punto_montaje, archivo); // para que lea ficheros de la carpeta "entradas"
 
 	// aca se guarda el contenido de cada fichero es decir el valor almacenado en cada key
 	char* contenido_fichero = string_new(); 
-	puts("b");
+
 	//obtengo la key sacando ultimos 4 caracteres ya que es el nombre sin el formato ".txt"
 	char* nombre_archivo_sin_extension = string_new();
 	nombre_archivo_sin_extension = string_substring(archivo,0,(string_length(archivo)-4)); 
-	puts("c");
+
 
 	t_entrada* elementoDeTabla;
 
@@ -1869,7 +1870,7 @@ void procesoArchivoDump(char *archivo, char* punto_montaje, Almacenamiento almac
 	int tamanio= ftell(fichero) + 1;
 	puts("d2");
 	fseek(fichero,0,SEEK_SET);
-	puts("d");
+
 
 	//printf( "Fichero: %s -> ", archivo );
 	if( fichero ){
@@ -1888,32 +1889,48 @@ void procesoArchivoDump(char *archivo, char* punto_montaje, Almacenamiento almac
     printf ("Clave/key: %s\n\n",nombre_archivo_sin_extension); //muestro key sin formato ".txt"
 
 		
-    	//carga de valor/dato
+  /*  	//carga de valor/dato
 		Instruccion* nuevaInstruccion=malloc(sizeof(Instruccion));
     	nuevaInstruccion->dato = malloc(strlen(contenido_fichero)+1);
     	strcpy(nuevaInstruccion->dato, contenido_fichero);
     	nuevaInstruccion->dato[strlen(contenido_fichero)] = '\0';
     	//carga de clave/key
     	strcpy(nuevaInstruccion->key,nombre_archivo_sin_extension);
-    	
+   */ 	
 //------------------------------------------------------------------------orueba con entrada//
 
-	/*t_entrada* nuevaEntrada = NULL;
+	t_entrada* nuevaEntrada = NULL;
 	nuevaEntrada = malloc(sizeof(t_entrada)); //prueba con entrada  FUNCIONA
  	nuevaEntrada->clave = malloc(strlen(nombre_archivo_sin_extension)+1);
 	strcpy(nuevaEntrada->clave, nombre_archivo_sin_extension);
 	nuevaEntrada->clave[strlen(nombre_archivo_sin_extension)] = '\0';
 	nuevaEntrada->tamanioValorAlmacenado = tamanioValorAlmacenado(contenido_fichero);
-	*/
+	
+	char letra='1';
+	FILE* vector=fopen(almacenamiento.vector,"r");
+	fseek(vector,0,SEEK_SET);
+	int i=-1;
+	while(letra=='1'){
+		fread(&letra,sizeof(char),1,vector);
+		i++;
+	}
+	fclose(vector);
+
+	grabarEntradaEnVector(almacenamiento,i,nuevaEntrada);
+	escribirBinarioEnPosicion(almacenamiento,i,contenido_fichero);
+	nuevaEntrada->numeroDeEntrada=i;
+
+	list_add(almacenamiento.tablaEntradas,nuevaEntrada);
+
 
 	// Si se pudo obtener el Numero de Entrada del Binario
-	int* punteroAux=malloc(sizeof(int));
-	*punteroAux=0;
-	bool* dummy2;
+	//int* punteroAux=malloc(sizeof(int));
+	//*punteroAux=0;
+	//bool* dummy2;
 	
-	persistirDatos(almacenamiento,nuevaInstruccion,punto_montaje,punteroAux,dummy2);
+	//persistirDatos(almacenamiento,nuevaInstruccion,punto_montaje,punteroAux,dummy2);
 	//muestro entrada "elementoDeTabla" para testear que esté todo correcto
-    free(punteroAux);
+    //free(punteroAux);
 
 // ------------------------------------------------------------------
 
@@ -2053,9 +2070,9 @@ int cantidadDirectoriosPath(char* pathDirectorio){
 }
 
 char* leerBinarioEnPosicion(Almacenamiento almacenamiento, int posicion){
-	puts("entro leerBinario");
+
 	t_entrada* laEntrada= obtenerEntradaSegunPosicionVector(almacenamiento,posicion);
-	puts("obtuve entrada");
+
 	int lenght=laEntrada->tamanioValorAlmacenado;
 	FILE* binario= fopen(almacenamiento.binario,"rb");
 	int tamEntrada= almacenamiento.tamPorEntrada;
@@ -2063,12 +2080,12 @@ char* leerBinarioEnPosicion(Almacenamiento almacenamiento, int posicion){
 	char letra='z';
 	fseek(binario,tamEntrada*posicion,SEEK_SET);
 	int contador=0;
-	puts("entro while en leerbinario");
+
 	while( contador < lenght && fread(&letra,sizeof(char),1,binario) != EOF){
 		string_append_with_format(&buffer, "%c",letra);
 		contador +=1;
 	}
-	puts("salgo while");
+
 	fclose(binario);
 	return buffer;
 }
@@ -2489,15 +2506,15 @@ bool entraEnPosicionActual(Almacenamiento almacenamiento, t_entrada* unaEntrada,
 
 bool entraEnPosicionPuntero(Almacenamiento almacenamiento, int* puntero, t_entrada* entrada){
 		int posicionesLibres=0;
-		puts("asd");
+
 		int espacioNecesario= entradasValorAlmacenado(almacenamiento,entrada);
-		puts("eaa");
+
 		char letra;
-		printf("\n el puntero marca a %d \n",*puntero);
+
 		FILE* vector= fopen(almacenamiento.vector,"r");
 
 		fseek(vector,*puntero,SEEK_SET);
-		puts("while de entra");
+
 		while(posicionesLibres<espacioNecesario	 && 	fread(&letra,sizeof(char),1,vector)!= EOF
 												 && 	letra=='0'){
 			posicionesLibres++;

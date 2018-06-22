@@ -51,6 +51,7 @@ files/*.tmp
 
 entradas/*.txt
 *.bin
+entradas446/*
 vectorBin.txt
 
 # excluyo los binarios

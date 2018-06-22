@@ -167,6 +167,7 @@
 	void mostrarBinario(Almacenamiento almacenamiento);
 	void mostrarVectorBin(Almacenamiento almacenamiento);
 
+	t_entrada* obtenerEntradaSegunPosicionVector(Almacenamiento almacenamiento, int posicion);
 	t_entrada* liberarUnEspacio(Almacenamiento almacenamiento, int* puntero);
 	t_entrada* ultimaEntrada(Almacenamiento almacenamiento);
 	t_entrada* obtenerEntrada(t_list* tablaEntradas, char* clave);

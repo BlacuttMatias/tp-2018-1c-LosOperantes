@@ -41,18 +41,19 @@
 // Gestor del Intervalo del Dump
 void handle_alarm(int sig) {
 
-    printf("Dump automatizado cada %d segundos...\n", intervaloDump);
+   // printf("Dump automatizado cada %d segundos...\n", intervaloDump);
 
     //Realizo el Dump de la Tabla de Entradas
-    dump(tablaEntradas, puntoMontaje, almacenamiento);
+    //dump(tablaEntradas, puntoMontaje, almacenamiento);
 
-    alarm(intervaloDump);
+    //alarm(intervaloDump);
 }
 
 
 int main(int argc, char* argv[]){
     int* puntero=malloc(sizeof(int));
     *puntero=0;
+    printf("\n el puntero marca %d\n",*puntero);
     /* Creo la instancia del Archivo de Configuracion y del Log */
     cfg = config_create("config/config.cfg");
     infoLogger = log_create("log/instancia.log", "INSTANCIA", false, LOG_LEVEL_INFO);
@@ -276,10 +277,10 @@ int main(int argc, char* argv[]){
                         mostrarVectorBin(almacenamiento);
                     }
                     if(registroInstruccion.operacion == STORE){                                
-
+                        puts("entro dump");
                         // Realizo el Dump de la Tabla de Entradas
                         dump(tablaEntradas, puntoMontaje, almacenamiento);
-
+                        puts("salgo dump");
 
                         //saco y agrego al final a la entrada storeada, para mantener orden de entradas segun uso
                     	if(existeEntradaEnTabla(tablaEntradas,registroInstruccion.key)){
@@ -428,15 +429,18 @@ int main(int argc, char* argv[]){
 
 
                     // Creo el Storage.bin si no existe
-                    if (!existeArchivo("storage.bin")){
+                    //if (!existeArchivo("storage.bin")){
                         FILE* binario= fopen("storage.bin","wb+");
                         ftruncate(fileno(binario),entradas*espacioPorEntrada);
-
+                        fseek(binario,0,SEEK_SET);
+                        for(contador=0;contador< (entradas*espacioPorEntrada); contador=contador+1){
+                            fwrite(&cero,sizeof(char),1,binario);
+                        }
                         // Cierro los FD
                         fclose(binario);
-                    }
+                    //}
 	
-                    if (!existeArchivo("vectorBin.txt")){
+                    //if (!existeArchivo("vectorBin.txt")){
                         //mostrarBinario(almacenamiento);}
 
                     // Creo el Bitmap o lo reinicializo a 0
@@ -444,12 +448,12 @@ int main(int argc, char* argv[]){
                         ftruncate(fileno(vectorBin),entradas);
                         for(contador=0;contador<entradas; contador=contador+1){
                             fseek(vectorBin,sizeof(char)*contador,SEEK_SET);
-                            fwrite(&cero,1,sizeof(char),vectorBin);
+                            fwrite(&cero,sizeof(char),1,vectorBin);
                         }
 
                         // Cierro los FD
                         fclose(vectorBin);
-		}
+	            	//}
                     
                     
 

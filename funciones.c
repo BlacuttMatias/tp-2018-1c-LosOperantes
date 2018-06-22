@@ -1776,10 +1776,8 @@ bool enviarInstruccionInstancia(Instruccion registroInstruccion, int socketInsta
 
 	    free(paquete.buffer);
 	    return true;
-	    log_info(infoLogger, "Se le envio al COORDINADOR la proxima Instruccion a ejecutar");
 	}else{
 		return false;
-	    log_error(infoLogger, "No se pudo enviar al COORDINADOR la proxima Instruccion a ejecutar");
 	}
 }
 

@@ -51,6 +51,7 @@ void* atenderConexiones(void* socketConexion){
     Instruccion registroInstruccion;
     KeyBloqueada registroKeyBloqueada;
     Instancia* proximaInstancia;
+    Instancia* proximaInstanciaAux;
     Instancia* instanciaAux;
     int indice = 0;
     int socketESI = 0;
@@ -235,6 +236,29 @@ void* atenderConexiones(void* socketConexion){
 
                         }else{
                             log_error(infoLogger, "No se pudo enviar pedido a la Instancia %s (Socket: %d) el valor del Recurso %s", proximaInstancia->nombreProceso, socketInstancia, registroKeyBloqueada.key);
+
+                            // Le envio a la Consola del Planificador el STATUS de que la Instancia esta desconectada
+
+                            // Simulo la obtencion de la Instancia segun el Algoritmo de Distribucion
+                            proximaInstanciaAux = obtenerInstanciaNueva(listaInstanciasConectadas,&registroInstruccionAux,algoritmoDistribucion, true);
+                            string_append_with_format(&nombreInstanciaFutura, "%s", proximaInstanciaAux->nombreProceso);
+
+                            // No existe valor en la Instancia. Se informa eso.
+                            string_append_with_format(&valorRecurso, "No se registra valor en la Instancia");
+
+                            // Serializado la Respuesta (ESTE MENSAJE LLEGA DIRECTAMENTE A LA CONSOLA)
+                            paquete = srlz_datosStatusRecurso('C', OBTENER_STATUS_CLAVE, "(Instancia Desconectada)", nombreInstanciaFutura, valorRecurso, registroKeyBloqueada.key);
+
+                            // Envio el Paquete al Planificador
+                            if(send(fd_planificador,paquete.buffer,paquete.tam_buffer,0) != -1){
+
+                                log_info(infoLogger, "Se le envió información al PLANIFICADOR (Socket: %d) sobre el Recurso y se informo que la Instancia %s esta desconectada", fd_planificador, proximaInstancia->nombreProceso);
+
+                            }else{
+                                log_error(infoLogger, "No se pudo enviar información al PLANIFICADOR sobre el Recurso");
+                            }
+
+                            free(paquete.buffer);
                         }
 
                         free(paquete.buffer);

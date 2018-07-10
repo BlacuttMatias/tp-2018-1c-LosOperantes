@@ -1283,12 +1283,12 @@ Proceso* obtenerProximoProcesoPlanificado(t_list* listaReady, t_queue* colaReady
 
 		//se usa para la funcion list_sort(), para que ordene una lista de ProcesosConRafagas de menor a mayor, por su estimacion
 		bool ordenarPorRafagaMasCortaSJF(ProcesoConRafaga* registroProcesoConRafaga1, ProcesoConRafaga* registroProcesoConRafaga2){
-			if (registroProcesoConRafaga1->proximaEstimacion < registroProcesoConRafaga2->proximaEstimacion) return true;
+			if (registroProcesoConRafaga1->proximaEstimacion <= registroProcesoConRafaga2->proximaEstimacion) return true;
 			else return false;
 		}
 
 		bool ordenarPorTasaDeReapuestaMasLargaHRRN(ProcesoConRafaga* registroProcesoConRafaga1, ProcesoConRafaga* registroProcesoConRafaga2){
-			if (registroProcesoConRafaga1->proximaEstimacion > registroProcesoConRafaga2->proximaEstimacion) return true;
+			if (registroProcesoConRafaga1->proximaEstimacion >= registroProcesoConRafaga2->proximaEstimacion) return true;
 			else return false;
 		}
 
@@ -1559,13 +1559,12 @@ t_list* persistirDatos(Almacenamiento almacenamiento,Instruccion* datosInstrucci
 	printf("\n\n ENTRO A PERSISTIR DATOS\n\n");
 	t_entrada* nuevaEntrada = NULL;
 	nuevaEntrada=malloc(sizeof(t_entrada));
-	nuevaEntrada->clave = malloc(tamanioValorAlmacenado(datosInstruccion->key));
+	nuevaEntrada->clave = malloc(tamanioValorAlmacenado(datosInstruccion->key)+1);
 	memcpy(nuevaEntrada->clave,datosInstruccion->key,strlen(datosInstruccion->key));
+
 	nuevaEntrada->clave[strlen(datosInstruccion->key)]='\0';
 	nuevaEntrada->tamanioValorAlmacenado = tamanioValorAlmacenado(datosInstruccion->dato);
 	list_add(almacenamiento.tablaEntradas,nuevaEntrada);//asignaré el nuevaEntrada->numero de entrada al momento de encontrarlo
-
-
 
 	char*valor=datosInstruccion->dato;
 
@@ -1585,6 +1584,8 @@ t_list* persistirDatos(Almacenamiento almacenamiento,Instruccion* datosInstrucci
 		return entrada1->tamanioValorAlmacenado > entrada2->tamanioValorAlmacenado;
 	}
 
+
+
 	//agrego la nueva entrada luego de la ultima agregada,donde señala el algoritmo circular.
 	for(i=0;i<almacenamiento.cantidadEntradas;i++){
 
@@ -1602,6 +1603,7 @@ t_list* persistirDatos(Almacenamiento almacenamiento,Instruccion* datosInstrucci
 
 		incrementarPuntero(almacenamiento,puntero);
 	}
+
 
 
 	if(espaciosLibres<tamanio){//aplico algoritmo en caso de tener que sacar un valor del bin

@@ -36,7 +36,7 @@ Paquete srlz_resultadoEjecucion(char proceso, int codigoOperacion, char* nombreE
 	memcpy(paquete.buffer + (posicion += sizeof(int) )						,&(tamString)					,sizeof(int) );
 	memcpy(paquete.buffer + (posicion += sizeof(int) )						,key							,tamString); 
 
-	return paquete;	
+	return paquete;
 }
 
 ResultadoEjecucion dsrlz_resultadoEjecucion(void* buffer){

@@ -1878,8 +1878,6 @@ void procesoArchivoDump(char *archivo, char* punto_montaje, Almacenamiento almac
 	char *carpeta_archivo = string_new();
 	string_append_with_format(&carpeta_archivo, "%s%s", punto_montaje, archivo); // para que lea ficheros de la carpeta "entradas"
 
-	// aca se guarda el contenido de cada fichero es decir el valor almacenado en cada key
-	char* contenido_fichero = string_new(); 
 
 	//obtengo la key sacando ultimos 4 caracteres ya que es el nombre sin el formato ".txt"
 	char* nombre_archivo_sin_extension = string_new();
@@ -1892,7 +1890,11 @@ void procesoArchivoDump(char *archivo, char* punto_montaje, Almacenamiento almac
 	FILE *fichero;
 	fichero = fopen(carpeta_archivo, "r");
 	fseek(fichero,0,SEEK_END);
-	int tamanio= ftell(fichero) + 1;
+	int tamanio= ftell(fichero);
+	
+	// aca se guarda el contenido de cada fichero es decir el valor almacenado en cada key
+	char* contenido_fichero = malloc(tamanio + 1);
+
 	fseek(fichero,0,SEEK_SET);
 
 
@@ -1904,7 +1906,7 @@ void procesoArchivoDump(char *archivo, char* punto_montaje, Almacenamiento almac
        printf( "Error (NO ABIERTO)\n" );
     }
 	fgets(contenido_fichero,tamanio,fichero);
-
+	contenido_fichero[tamanio]='\0';
 	// Cierro el Archivo
 	fclose(fichero);
 

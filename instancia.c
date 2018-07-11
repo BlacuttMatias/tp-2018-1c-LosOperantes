@@ -53,7 +53,6 @@ void handle_alarm(int sig) {
 int main(int argc, char* argv[]){
     int* puntero=malloc(sizeof(int));
     *puntero=0;
-
     /* Creo la instancia del Archivo de Configuracion y del Log */
     cfg = config_create("config/config.cfg");
     infoLogger = log_create("log/instancia.log", "INSTANCIA", false, LOG_LEVEL_INFO);
@@ -164,7 +163,6 @@ int main(int argc, char* argv[]){
     char cero='0';
     int uno='1';
     int contador=0;
-
     while(true){
 
 		encabezado=recibir_header(&coordinador_fd);
@@ -395,7 +393,6 @@ int main(int argc, char* argv[]){
 
 
                 case OBTENCION_CONFIG_ENTRADAS:
-
                     // Recibo los datos de las Entradas
                     paquete = recibir_payload(&coordinador_fd,&encabezado.tam_payload);
                     registroEntradasIntancias = dsrlz_datosEntradas(paquete.buffer);
@@ -407,16 +404,14 @@ int main(int argc, char* argv[]){
                     entradas=registroEntradasIntancias.cantEntrada;
                     espacioPorEntrada=registroEntradasIntancias.tamanioEntrada;
 
-
                     //creo estructura de datos con info de almacenamiento
                     almacenamiento.cantidadEntradas=entradas;
                     almacenamiento.tamPorEntrada=espacioPorEntrada;
-                    almacenamiento.binario=malloc(strlen("storage.bin"));
-                    almacenamiento.vector=malloc(strlen("vectorBin.txt"));
-                    strcpy(almacenamiento.binario,"storage.bin");
-                    strcpy(almacenamiento.vector,"vectorBin.txt");                  
+                    almacenamiento.binario=malloc(strlen("storage.bin")+1);
+                    almacenamiento.vector=malloc(strlen("vectorBin.txt")+1);
+                    strcpy(&almacenamiento.binario[0],"storage.bin");
+                    strcpy(&almacenamiento.vector[0],"vectorBin.txt");                  
                     almacenamiento.tablaEntradas=tablaEntradas;
-
 
 
 

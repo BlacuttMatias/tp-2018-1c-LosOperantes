@@ -1564,7 +1564,6 @@ t_list* persistirDatos(Almacenamiento almacenamiento,Instruccion* datosInstrucci
 	nuevaEntrada=malloc(sizeof(t_entrada));
 	nuevaEntrada->clave = malloc(tamanioValorAlmacenado(datosInstruccion->key)+1);
 	memcpy(nuevaEntrada->clave,datosInstruccion->key,strlen(datosInstruccion->key));
-
 	nuevaEntrada->clave[strlen(datosInstruccion->key)]='\0';
 	nuevaEntrada->tamanioValorAlmacenado = tamanioValorAlmacenado(datosInstruccion->dato);
 	list_add(almacenamiento.tablaEntradas,nuevaEntrada);//asignaré el nuevaEntrada->numero de entrada al momento de encontrarlo
@@ -2147,7 +2146,7 @@ void liberarPosicionEnVector(Almacenamiento almacenamiento, int posicion){
 }
 
 void grabarEntradaEnVector(Almacenamiento almacenamiento, int posicion, t_entrada* entrada){
-	int espaciosOcupados= entrada->tamanioValorAlmacenado/almacenamiento.tamPorEntrada;
+	int espaciosOcupados= entradasValorAlmacenado(almacenamiento,entrada);
 	int i;
 	for(i=0;i<=espaciosOcupados;i+=1){
 		grabarPosicionEnVector(almacenamiento,posicion + i);
@@ -2499,7 +2498,7 @@ void borrarTxtClave(Almacenamiento almacenamiento,char* clave, char* puntoMontaj
 int entradasValorAlmacenado(Almacenamiento almacenamiento,t_entrada* unaEntrada){
 	int cantidadEntradasOcupadas= ((unaEntrada->tamanioValorAlmacenado)/almacenamiento.tamPorEntrada)+1;
 	if(((unaEntrada->tamanioValorAlmacenado)%almacenamiento.tamPorEntrada)==0){
-		cantidadEntradasOcupadas += 1;
+		cantidadEntradasOcupadas -= 1;
 	}
 	return cantidadEntradasOcupadas;
 }

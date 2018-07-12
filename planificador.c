@@ -260,6 +260,8 @@ void* hiloConsolaInteractiva(void * unused) {
 
                     printf("\n\tstatus <clave> \t- Debido a que para la correcta coordinación de las sentencias de acuerdo a los algoritmos de distribución se requiere de cierta información sobre las instancias del sistema, el Coordinador proporcionará una consola que permita consultar esta información. \n\n");
 
+                    printf("\n\tinfo \t- Informacion de colas y claves. \n\n");
+
                     printf("\n\tdeadlock\t- Permitirá analizar los deadlocks que existan en el sistema y a que ESI están asociados.\n\n");
                 }
 

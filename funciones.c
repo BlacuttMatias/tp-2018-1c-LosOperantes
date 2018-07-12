@@ -449,6 +449,7 @@ Instruccion* parsearInstruccion(char* unaInstruccion, int numeroLinea){
 	registroInstruccion = malloc(sizeof(Instruccion));
 
 	if(!parsed.valido){
+		destruir_operacion(parsed);
 		printf("instruccion %s invalida en posicion %d \n",unaInstruccion,numeroLinea);
 	//	log_info(infoLogger,"instruccion %s invalida en posicion %d \n",unaInstruccion,numeroLinea);
 		exit(EXIT_FAILURE);
@@ -468,10 +469,12 @@ Instruccion* parsearInstruccion(char* unaInstruccion, int numeroLinea){
 
 			break;
 		default:
+			destruir_operacion(parsed);
 			printf("instruccion %s no es interpretable en posicion %d \n",unaInstruccion,numeroLinea);
 			//log_info("instruccion %s no es interpretable en posicion %d \n",unaInstruccion,numeroLinea);
 			exit(EXIT_FAILURE);
 		}
+		destruir_operacion(parsed);
 	}	
 
 	return registroInstruccion;

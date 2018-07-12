@@ -210,8 +210,7 @@ int main(int argc, char* argv[]){
                     		t_entrada* entradaEncontrada = list_find(tablaEntradas,(void*)esIgualA);
                         	int posicion = entradaEncontrada->numeroDeEntrada; //posicion del binario
                             //liberarEntradaEnVector(almacenamiento,entradaEncontrada);
-                            int tamanioNuevo= (string_length(registroInstruccion.dato)+1)/almacenamiento.tamPorEntrada + 1;
-                            if((string_length(registroInstruccion.dato)+1)%almacenamiento.tamPorEntrada == 0){tamanioNuevo++;}
+                            int tamanioNuevo= entradasQueOcupaString(almacenamiento,registroInstruccion.dato);
                             if(entraEnPosicionActual(almacenamiento,entradaEncontrada,tamanioNuevo)){
                                 liberarEntradaEnVector(almacenamiento,entradaEncontrada);
                                 list_add(tablaEntradas,entradaEncontrada);

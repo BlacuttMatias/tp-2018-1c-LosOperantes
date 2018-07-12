@@ -157,6 +157,7 @@
 	int posicionEntradaEnLista(Almacenamiento almacenamiento, t_entrada* entrada);
 	void borrarTxtClave(Almacenamiento almacenamiento,char* clave, char* puntoMontaje);
 	int tamanioValorAlmacenado(char* valor);
+	int entradasQueOcupaString(Almacenamiento almacenamiento, char* palabra);
 	int entradasValorAlmacenado(Almacenamiento almacenamiento, t_entrada* unaEntrada);
 	bool entraEnPosicionActual(Almacenamiento almacenamiento, t_entrada* unaEntrada, int tamanioNuevo);
 

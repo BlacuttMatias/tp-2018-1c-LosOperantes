@@ -2155,12 +2155,10 @@ void grabarEntradaEnVector(Almacenamiento almacenamiento, int posicion, t_entrad
 }
 
 void liberarEntradaEnVector(Almacenamiento almacenamiento, t_entrada* entrada){
-	int espaciosOcupados= entrada->tamanioValorAlmacenado/almacenamiento.tamPorEntrada;
+	int espaciosOcupados=  entradasValorAlmacenado(almacenamiento,entrada);
 	int posicion = entrada->numeroDeEntrada; 
-	if(entrada->tamanioValorAlmacenado%almacenamiento.tamPorEntrada == 0) {
-		espaciosOcupados += 1;}
 	int i;
-	for(i=0;i<=espaciosOcupados;i+=1){
+	for(i=0;i<espaciosOcupados;i+=1){
 		liberarPosicionEnVector(almacenamiento,posicion + i);
 	}
 	int posicionEnLista= posicionEntradaEnLista(almacenamiento, entrada);
@@ -2502,6 +2500,14 @@ int entradasValorAlmacenado(Almacenamiento almacenamiento,t_entrada* unaEntrada)
 		cantidadEntradasOcupadas -= 1;
 	}
 	return cantidadEntradasOcupadas;
+}
+
+int entradasQueOcupaString(Almacenamiento almacenamiento, char* palabra){
+	int cantidadEntradasOcupadas= ((tamanioValorAlmacenado(palabra))/almacenamiento.tamPorEntrada)+1;
+	if(((tamanioValorAlmacenado(palabra))%almacenamiento.tamPorEntrada)==0){
+		cantidadEntradasOcupadas -= 1;
+	}
+	return cantidadEntradasOcupadas;	
 }
 
 int tamanioValorAlmacenado(char* valor){

@@ -2147,8 +2147,9 @@ void liberarPosicionEnVector(Almacenamiento almacenamiento, int posicion){
 
 void grabarEntradaEnVector(Almacenamiento almacenamiento, int posicion, t_entrada* entrada){
 	int espaciosOcupados= entradasValorAlmacenado(almacenamiento,entrada);
+	printf("\n \t espacios ocupados . . . %d  \n",espaciosOcupados);
 	int i;
-	for(i=0;i<=espaciosOcupados;i+=1){
+	for(i=0;i<espaciosOcupados;i+=1){
 		grabarPosicionEnVector(almacenamiento,posicion + i);
 	}
 }

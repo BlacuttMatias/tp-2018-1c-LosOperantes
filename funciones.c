@@ -1567,7 +1567,7 @@ t_list* persistirDatos(Almacenamiento almacenamiento,Instruccion* datosInstrucci
 	nuevaEntrada->clave[strlen(datosInstruccion->key)]='\0';
 	nuevaEntrada->tamanioValorAlmacenado = tamanioValorAlmacenado(datosInstruccion->dato);
 	list_add(almacenamiento.tablaEntradas,nuevaEntrada);//asignaré el nuevaEntrada->numero de entrada al momento de encontrarlo
-
+	nuevaEntrada->numeroDeEntrada=-1;  ///este -1 arregla un problema con el BSU, no sacar!
 	char*valor=datosInstruccion->dato;
 
 	t_list* entradasBorradas=list_create();
@@ -1625,15 +1625,13 @@ t_list* persistirDatos(Almacenamiento almacenamiento,Instruccion* datosInstrucci
 					i=0;
 					while( espaciosLibres<tamanio ){//aplico algoritmo hasta tener espacio suficient
 						entradaAux=list_get(almacenamiento.tablaEntradas,i);
+						sizeLista=list_size(almacenamiento.tablaEntradas);
 						if(i+1 < sizeLista){	
 							otraEntradaAux=list_get(almacenamiento.tablaEntradas,i+1);
 							if(esEntradaAtomica(almacenamiento,entradaAux)){
 								//en caso de empate, usar algoritmo circular
 								if(entradaAux->tamanioValorAlmacenado == otraEntradaAux->tamanioValorAlmacenado){
-									puts("entro desempate");
 									entradaBorrada=desempatarReemplazo(almacenamiento, puntero);  //aca ya tambien lo saco de la lista
-									printf("saco a la clave    %s  \n ",entradaBorrada->clave);
-									showContenidoTablaEntradas(almacenamiento.tablaEntradas);
 									list_add(entradasBorradas,entradaBorrada);
 								}
 								else{
@@ -2152,7 +2150,6 @@ void liberarPosicionEnVector(Almacenamiento almacenamiento, int posicion){
 
 void grabarEntradaEnVector(Almacenamiento almacenamiento, int posicion, t_entrada* entrada){
 	int espaciosOcupados= entradasValorAlmacenado(almacenamiento,entrada);
-	printf("\n \t espacios ocupados . . . %d  \n",espaciosOcupados);
 	int i;
 	for(i=0;i<espaciosOcupados;i+=1){
 		grabarPosicionEnVector(almacenamiento,posicion + i);

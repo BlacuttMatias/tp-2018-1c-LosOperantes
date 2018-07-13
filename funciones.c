@@ -1630,7 +1630,10 @@ t_list* persistirDatos(Almacenamiento almacenamiento,Instruccion* datosInstrucci
 							if(esEntradaAtomica(almacenamiento,entradaAux)){
 								//en caso de empate, usar algoritmo circular
 								if(entradaAux->tamanioValorAlmacenado == otraEntradaAux->tamanioValorAlmacenado){
-									entradaBorrada=desempatarReemplazo(almacenamiento, puntero);
+									puts("entro desempate");
+									entradaBorrada=desempatarReemplazo(almacenamiento, puntero);  //aca ya tambien lo saco de la lista
+									printf("saco a la clave    %s  \n ",entradaBorrada->clave);
+									showContenidoTablaEntradas(almacenamiento.tablaEntradas);
 									list_add(entradasBorradas,entradaBorrada);
 								}
 								else{
@@ -1764,6 +1767,8 @@ t_entrada* desempatarReemplazo(Almacenamiento almacenamiento, int* puntero){
 			entradaBorrada=list_find(entradasDeMismoTamanio,(void*)esSenialadoPorPuntero);
 			free(punteroAuxiliar);
 			liberarEntradaEnVector(almacenamiento,entradaBorrada);
+			
+
 			return entradaBorrada;
 		}
 		else{incrementarPuntero(almacenamiento,punteroAuxiliar);}

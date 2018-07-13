@@ -1653,10 +1653,10 @@ t_list* persistirDatos(Almacenamiento almacenamiento,Instruccion* datosInstrucci
 
 		} else {if (string_starts_with(algoritmoDistribucion, "LRU")){
 				i=0;
-				while(espaciosLibres<tamanio || i<almacenamiento.cantidadEntradas){								//aplico algoritmo hasta tener espacio suficiente
+				while(espaciosLibres<tamanio && i<almacenamiento.cantidadEntradas){								//aplico algoritmo hasta tener espacio suficiente
 					entradaAux=list_get(almacenamiento.tablaEntradas,i); //saca valores atomicos en el orden de la lista
 					if(esEntradaAtomica(almacenamiento, entradaAux)){					//estoy suponiendo que la lista esta ordenada de menos usado a mas recientemente usado, al igual que en el algoritmo de distribucion
-						destruirEntradaEnPosicion(almacenamiento,i);	// y tambien asumo que siempre habrá un valor atómico para sacar. Leí en el issue  1097 que no sucederá ese caso
+						destruirEntradaEnPosicion(almacenamiento,i);	// y tambien asumo que siempre habrá un valor atómico para sacar. Leí en el issue  1097 que no sucederá el caso en que no haya valor atomico a sacar
 						list_add(entradasBorradas,entradaAux);
 						mostrarVectorBin(almacenamiento);
 					}

@@ -1607,7 +1607,6 @@ t_list* persistirDatos(Almacenamiento almacenamiento,Instruccion* datosInstrucci
 	}
 
 
-
 	if(espaciosLibres<tamanio){//aplico algoritmo en caso de tener que sacar un valor del bin
 		if(string_starts_with(algoritmoDistribucion, "CIRCULAR")){
 				
@@ -1674,7 +1673,7 @@ t_list* persistirDatos(Almacenamiento almacenamiento,Instruccion* datosInstrucci
 	}		// Dependiendo el algoritmoDistricucion, persistir los datos localmente
 			//en este caso tengo espacio suficiente sin reemplazar, o ya reemplacé cuanto necesitaba. analizo si compactar o simplemente guardar
 	if(espaciosLibres<tamanio){
-		log_info(infoLogger,"no se pueden borrar datos atomicos en la instancia para guardar nuevos datos");
+		log_error(infoLogger,"no se pueden borrar datos atomicos en la instancia para guardar nuevos datos");
 		printf("SALGO RETORNANDO %d",i);
 		return entradasBorradas; }//retorno -1 si no se puede encontrar espacio suficiente para guardar el dato
 	FILE* vectorBin= fopen(almacenamiento.vector,"r+");
@@ -1685,12 +1684,12 @@ t_list* persistirDatos(Almacenamiento almacenamiento,Instruccion* datosInstrucci
 		fseek(vectorBin,i,SEEK_SET);
 		fread(&letra,sizeof(char),1,vectorBin);
 		if(letra=='0'){
-			printf("primer 0 en posicion   %d\n",i);
+			//printf("primer 0 en posicion   %d\n",i);
 			j=1;
 			while(letra=='0' && j<tamanio && j+i < almacenamiento.cantidadEntradas){//cuento cuantas posiciones libres consecutivas hay hasta conseguir la cantidad necesaria
-				printf("buscando 0s consecutivos, leo posicion   %d\n", i+j);
+				//printf("buscando 0s consecutivos, leo posicion   %d\n", i+j);
 				fread(&letra,sizeof(char),1,vectorBin);
-				printf("la posicion tenía un   %c\n",letra);
+				//printf("la posicion tenía un   %c\n",letra);
 				if(letra=='0'){j++;}
 
 			}
@@ -2545,14 +2544,17 @@ bool entraEnPosicionPuntero(Almacenamiento almacenamiento, int* puntero, t_entra
 		int espacioNecesario= entradasValorAlmacenado(almacenamiento,entrada);
 
 		char letra;
+		int posicionActual=*puntero;
 
 		FILE* vector= fopen(almacenamiento.vector,"r");
 
 		fseek(vector,*puntero,SEEK_SET);
+		fread(&letra,sizeof(char),1,vector);
 
-		while(posicionesLibres<espacioNecesario	 && 	fread(&letra,sizeof(char),1,vector)!= EOF
-												 && 	letra=='0'){
+		while(posicionesLibres<espacioNecesario	 && letra=='0' 	&&  posicionActual<almacenamiento.cantidadEntradas){
 			posicionesLibres++;
+			fread(&letra,sizeof(char),1,vector);
+			posicionActual++;
 		 }
 		 if(posicionesLibres<espacioNecesario){return false;}
 		 else{return true;}

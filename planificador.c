@@ -38,6 +38,7 @@
     t_list* listaESIconectados;
 
     bool elAlgoritmoEsConDesalojo;
+    bool sePlanificoPorDesalojo;
     int socketAux;
 
     bool respuestaEjecucionInstruccionEsi;
@@ -114,20 +115,31 @@ void planificarProcesos(){
 
             //si no es nulo el proceso seleccionado que estaba ejecutando, se le actualizan las rafagas
             //antes de cambiar de proceso por la planificacion
-            if(procesoSeleccionado !=NULL){
+            if(procesoSeleccionado !=NULL && !sePlanificoPorDesalojo){
                 Rafagas* registroRafagaAux=NULL;
                 registroRafagaAux = dictionary_get(diccionarioRafagas,procesoSeleccionado->nombreProceso);
 
-                registroRafagaAux->rafagaAnterior = rafagaActual;
+                registroRafagaAux->rafagaAnterior += rafagaActual;
                 registroRafagaAux->proximaEstimacion = estimarRafaga(registroRafagaAux->estimacionRafagaAnterior, registroRafagaAux->rafagaAnterior, alfa);
                 registroRafagaAux->estimacionRafagaAnterior = registroRafagaAux->proximaEstimacion;
                 //al salir de ejecutarse, se resetea su tiempo de espera de cpu
                 registroRafagaAux->tiempoDeEsperaDeCpu = 0;
+                registroRafagaAux->rafagaAnterior = 0;
+            }
+
+
+
+            if(procesoSeleccionado !=NULL && sePlanificoPorDesalojo){
+                Rafagas* registroRafagaAux=NULL;
+                registroRafagaAux = dictionary_get(diccionarioRafagas,procesoSeleccionado->nombreProceso);
+
+                registroRafagaAux->rafagaAnterior += rafagaActual;
+                registroRafagaAux->tiempoDeEsperaDeCpu = 0;
+
             }
 
             procesoSeleccionado = obtenerProximoProcesoPlanificado(listaReady, colaReady, diccionarioRafagas, algoritmoPlanificacion, alfa);
 
- 
 /*            
             //este if solo lo pongo para informar qué proceso se selecciono en la planificacion
             Rafagas* rafagasAux2=NULL;
@@ -141,6 +153,9 @@ void planificarProcesos(){
 
         // Desactivo la Planificacion de los Procesos
         ejecutarAlgoritmoPlanificacion=false;
+        sePlanificoPorDesalojo=false;
+
+
         /*
         //si cambia el proceso, guarda nuevas rafagas
         if(procesoAnterior == NULL){
@@ -695,8 +710,9 @@ void* atenderConexiones(void* socketConexion){
                     //cargo el proceso en dictionary
                     Rafagas* registroRafagaAux= malloc(sizeof(Rafagas));
                     registroRafagaAux->rafagaAnterior=0;
-                    registroRafagaAux->estimacionRafagaAnterior=config_get_int_value(cfg,"ESTIMACION_INICIAL");
-                    registroRafagaAux->proximaEstimacion=estimarRafaga(registroRafagaAux->estimacionRafagaAnterior, registroRafagaAux->rafagaAnterior, alfa);
+                    //registroRafagaAux->estimacionRafagaAnterior=config_get_int_value(cfg,"ESTIMACION_INICIAL");
+                    //registroRafagaAux->proximaEstimacion=estimarRafaga(registroRafagaAux->estimacionRafagaAnterior, registroRafagaAux->rafagaAnterior, alfa);
+                    registroRafagaAux->proximaEstimacion=config_get_int_value(cfg,"ESTIMACION_INICIAL");
                     registroRafagaAux->estimacionRafagaAnterior = registroRafagaAux->proximaEstimacion;
                     registroRafagaAux->tiempoDeEsperaDeCpu=0;
                     dictionary_put(diccionarioRafagas,registroProcesoAux->nombreProceso,registroRafagaAux);
@@ -705,7 +721,12 @@ void* atenderConexiones(void* socketConexion){
                     // Activo la Planificacion de los Procesos
 
                     if(list_size(listaReady)==1 && queue_size(colaEjecucion)==0) ejecutarAlgoritmoPlanificacion=true;
-                    if(elAlgoritmoEsConDesalojo) ejecutarAlgoritmoPlanificacion=true;
+                    if(elAlgoritmoEsConDesalojo){
+
+                    	ejecutarAlgoritmoPlanificacion=true;
+                    	sePlanificoPorDesalojo=true;
+
+                    }
                     break;
 
                 case RESPUESTA_EJECUTAR_INSTRUCCION:
@@ -714,18 +735,19 @@ void* atenderConexiones(void* socketConexion){
 
 
                     resultadoEjecucion = encabezado.tam_payload;
+                    rafagaActual += 1;
+
+                    void actualizarTiempoDeEsperaDeLosProcesos(Proceso* registroProcesoAux){
+                           Rafagas* registroRafagaAux;
+                           registroRafagaAux = dictionary_get(diccionarioRafagas,registroProcesoAux->nombreProceso);
+                           registroRafagaAux->tiempoDeEsperaDeCpu++;
+                    }
+
+                    //actualizo el tiempo de espera de CPU de cada proceso en la lista de ready
+                    list_iterate(listaReady, (void *) actualizarTiempoDeEsperaDeLosProcesos);
 
                     // Si la ejecucion de la instruccion no fallo
                     if(resultadoEjecucion == EJECUCION_EXITOSA){
-                        rafagaActual += 1;
-
-                        void actualizarTiempoDeEsperaDeLosProcesos(Proceso* registroProcesoAux){
-                               Rafagas* registroRafagaAux;
-                               registroRafagaAux = dictionary_get(diccionarioRafagas,registroProcesoAux->nombreProceso);
-                               registroRafagaAux->tiempoDeEsperaDeCpu++;
-                        }
-                        //actualizo el tiempo de espera de CPU de cada proceso en la lista de ready
-                        list_iterate(listaReady, (void *) actualizarTiempoDeEsperaDeLosProcesos);
 
                         // Pongo el proceso en la Cola Ready
                         cargarProcesoCola(listaESIconectados, colaReady, i);
@@ -816,7 +838,12 @@ void* atenderConexiones(void* socketConexion){
                         cargarProcesoCola(listaESIconectados, colaReady, socketAux);
                         cargarProcesoLista(listaESIconectados, listaReady, socketAux);
                     	liberarKeyBloqueada(registroKeyBloqueada);
-                    	if(elAlgoritmoEsConDesalojo) ejecutarAlgoritmoPlanificacion=true;
+                    	if(elAlgoritmoEsConDesalojo) {
+
+                    		ejecutarAlgoritmoPlanificacion=true;
+                    		sePlanificoPorDesalojo=true;
+
+                    	}
 
                     }
 

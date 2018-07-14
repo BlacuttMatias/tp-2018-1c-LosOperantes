@@ -1798,7 +1798,7 @@ void preCargarTablaEntradas(char* puntoMontaje, Almacenamiento almacenamiento){
 
     // Miramos que no haya error 
     if (dir == NULL){
-        printf("No se puede abrir el directorio\n" );
+        //printf("No se puede abrir el directorio\n" );
     	return;
     }
 
@@ -1833,7 +1833,7 @@ void limpiarInstancia(char* puntoMontaje){
 
     // Miramos que no haya error 
     if (dir == NULL){
-        printf("No se puede abrir el directorio\n" );
+        //printf("No se puede abrir el directorio\n" );
     	return;
     }
 

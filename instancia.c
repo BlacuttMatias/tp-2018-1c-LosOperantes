@@ -290,7 +290,7 @@ int main(int argc, char* argv[]){
 
 
                     // Muestro el contenido de la Tabla de Entradas
-                    showContenidoTablaEntradas(tablaEntradas);
+                    //showContenidoTablaEntradas(tablaEntradas);
 
                     //PARA UTILIZAR PARA INICIAR LA COMPACTACION GLOBAL
                     if(seCompacto){
@@ -307,9 +307,7 @@ int main(int argc, char* argv[]){
                         seCompacto=false;
                     }
 
-                    // TODO
-                    // Determinar si fallo o no y corregir el mensaje de abajo. Ahora esta harcodeado a EJECUCION_EXITOSA
-
+                    
                     entradasLibres = espacioLibre(almacenamiento);
 
                     // Armo el Paquete del Resultado de la Ejecucion de la Instruccion

@@ -1577,6 +1577,7 @@ t_list* persistirDatos(Almacenamiento almacenamiento,Instruccion* datosInstrucci
 	int i=0;
 	int j=0;
 	char letra;
+	log_info(infoLogger,"La clave %s necesita %d entradas",datosInstruccion->key,tamanio);
 	//printf("\n la entrada necesita  %d  espacios\n",tamanio);
 	int espaciosLibres= espacioLibre(almacenamiento);
 	t_entrada* entradaAux=NULL;
@@ -1696,7 +1697,7 @@ t_list* persistirDatos(Almacenamiento almacenamiento,Instruccion* datosInstrucci
 			fclose(vectorBin);
 			if(j==tamanio){
 				escribirBinarioEnPosicion(almacenamiento,i,valor);//retorno i que es la posicion donde se guarda el comienzo del valor
-				//printf("SALGO RETORNANDO %d\n",i);
+				log_info(infoLogger,"se guardó en posicion %d",i);//printf("SALGO RETORNANDO %d\n",i);
 				nuevaEntrada->numeroDeEntrada=i;
 				grabarEntradaEnVector(almacenamiento,i,nuevaEntrada);
 				return entradasBorradas;
@@ -1720,7 +1721,7 @@ t_list* persistirDatos(Almacenamiento almacenamiento,Instruccion* datosInstrucci
 	for(j=0;j<tamanio;j++){
 		grabarPosicionEnVector(almacenamiento,i+j);
 	}
-	//printf("SALGO RETORNANDO %d",i);
+	log_info(infoLogger,"se guardó en posicion %d",i);
 	nuevaEntrada->numeroDeEntrada=i;
 	return entradasBorradas;
 }

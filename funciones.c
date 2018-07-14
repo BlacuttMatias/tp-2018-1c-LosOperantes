@@ -1596,7 +1596,7 @@ t_list* persistirDatos(Almacenamiento almacenamiento,Instruccion* datosInstrucci
 			grabarEntradaEnVector(almacenamiento,*puntero,nuevaEntrada);
 			escribirBinarioEnPosicion(almacenamiento,*puntero,valor);
 			nuevaEntrada->numeroDeEntrada=*puntero;
-			mostrarVectorBin(almacenamiento);
+			//mostrarVectorBin(almacenamiento);
 			for(i=0;i<tamanio;i++){
 				incrementarPuntero(almacenamiento,puntero);
 				return entradasBorradas;
@@ -1612,7 +1612,7 @@ t_list* persistirDatos(Almacenamiento almacenamiento,Instruccion* datosInstrucci
 				
 				while(espaciosLibres<tamanio){//aplico algoritmo hasta tener espacio suficiente
 					entradaBorrada=liberarUnEspacio(almacenamiento, puntero);
-					mostrarVectorBin(almacenamiento);
+					//mostrarVectorBin(almacenamiento);
 					list_add(entradasBorradas,entradaBorrada);
 					espaciosLibres=espacioLibre(almacenamiento);
 				}
@@ -1637,7 +1637,7 @@ t_list* persistirDatos(Almacenamiento almacenamiento,Instruccion* datosInstrucci
 									destruirEntradaEnPosicion(almacenamiento,i);
 									list_add(entradasBorradas,entradaAux);
 								}
-								mostrarVectorBin(almacenamiento);
+								//mostrarVectorBin(almacenamiento);
 							}
 							else{i++;}    			//aplico i++ unicamente en el else porque cuando destruyo una entrada en pos i, la entrada i+1 pasa a ocupar i
 							espaciosLibres=espacioLibre(almacenamiento);
@@ -1658,7 +1658,7 @@ t_list* persistirDatos(Almacenamiento almacenamiento,Instruccion* datosInstrucci
 					if(esEntradaAtomica(almacenamiento, entradaAux)){					//estoy suponiendo que la lista esta ordenada de menos usado a mas recientemente usado, al igual que en el algoritmo de distribucion
 						destruirEntradaEnPosicion(almacenamiento,i);	// y tambien asumo que siempre habrá un valor atómico para sacar. Leí en el issue  1097 que no sucederá el caso en que no haya valor atomico a sacar
 						list_add(entradasBorradas,entradaAux);
-						mostrarVectorBin(almacenamiento);
+						//mostrarVectorBin(almacenamiento);
 					}
 					else{i++;}
 					espaciosLibres=espacioLibre(almacenamiento);
@@ -1680,7 +1680,7 @@ t_list* persistirDatos(Almacenamiento almacenamiento,Instruccion* datosInstrucci
 	
 	//ahora escribo en el primer espacio libre consecutivo que encuentre sin compactar
 	for(i=0;i<almacenamiento.cantidadEntradas;i++){//busco primer 0 en vectorBin
-	mostrarVectorBin(almacenamiento);
+	//mostrarVectorBin(almacenamiento);
 		fseek(vectorBin,i,SEEK_SET);
 		fread(&letra,sizeof(char),1,vectorBin);
 		if(letra=='0'){

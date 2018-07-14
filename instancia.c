@@ -41,10 +41,11 @@
 // Gestor del Intervalo del Dump
 void handle_alarm(int sig) {
 
-    printf("Dump automatizado cada %d segundos...\n", intervaloDump);
+    //printf("Dump automatizado cada %d segundos...\n", intervaloDump);
 
     //Realizo el Dump de la Tabla de Entradas
     dump(tablaEntradas, puntoMontaje, almacenamiento);
+    log_info(infoLogger, "Se realizo el dump automatizado");
 
     alarm(intervaloDump);
 }
@@ -192,7 +193,7 @@ int main(int argc, char* argv[]){
 
 
                     if(registroInstruccion.operacion == SET){
-                        mostrarVectorBin(almacenamiento);
+                        //mostrarVectorBin(almacenamiento);
                         // TODO
                         // Persistir el Valor en el Archivo Binario
 						//Prototipado
@@ -267,7 +268,7 @@ int main(int argc, char* argv[]){
                             }
                         }
                         list_destroy(entradasBorradas);
-                        mostrarVectorBin(almacenamiento);
+                        //mostrarVectorBin(almacenamiento);
                     }
                     if(registroInstruccion.operacion == STORE){                                
                         // Realizo el Dump de la Tabla de Entradas

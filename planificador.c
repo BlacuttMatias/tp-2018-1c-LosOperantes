@@ -654,7 +654,7 @@ void* atenderConexiones(void* socketConexion){
         if((nbytes = encabezado.tam_payload) <= 0){
             // error o conexión cerrada por el cliente
             if(nbytes == 0){
-                printf("Socket %d se ha caído\n", i);
+                //printf("Socket %d se ha caído\n", i);
             }else{
                 perror("recv failed");
             }            

@@ -57,6 +57,8 @@ void* atenderConexiones(void* socketConexion){
     int socketESI = 0;
     int socketInstancia = 0;
 
+    //Instancia* registroInstanciaAux;
+
     while(true){
         // Recibo el Encabezado del Paquete
         encabezado=recibir_header(&i);
@@ -66,7 +68,13 @@ void* atenderConexiones(void* socketConexion){
             // error o conexión cerrada por el cliente
             if (nbytes == 0) {
                 // conexión cerrada
-                printf("Socket %d se ha caído\n", i);
+            	/*registroInstanciaAux = obtenerRegistroInstancia(listaInstanciasConectadas, i);
+            	if(registroInstanciaAux!=NULL){
+            		eliminarProcesoLista(listaProcesosConectados, i);
+            		eliminarProcesoListaPorNombre(listaInstanciasConectadas, registroInstanciaAux->nombreProceso);
+            	}*/
+                //printf("Socket %d se ha caído\n", i);
+                //showContenidolistaProcesosConectados(listaProcesosConectados);
             } else {
                 perror("recv");
             }

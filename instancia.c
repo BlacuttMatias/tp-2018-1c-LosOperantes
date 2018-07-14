@@ -114,7 +114,7 @@ int main(int argc, char* argv[]){
 	Paquete paquete;
     int nbytes;
 
-    // Creo conexión con el Coordinador
+    // Creo la conexión con el Coordinador
     int coordinador_fd = conectarseAservidor(config_get_string_value(cfg,"COORDINADOR_IP"),config_get_int_value(cfg,"COORDINADOR_PUERTO"));
 
     if(coordinador_fd == -1){

@@ -1512,13 +1512,13 @@ t_entrada* liberarUnEspacio(Almacenamiento almacenamiento, int* puntero){
 
 	t_entrada* reemplazada=NULL;
 	while(reemplazada==NULL && i<almacenamiento.cantidadEntradas){
-		printf("el puntero apunta al valor %d\n\n",*puntero);
+		//printf("el puntero apunta al valor %d\n\n",*puntero);
 		reemplazada = list_find(almacenamiento.tablaEntradas,(void*)esAtomica);
 		incrementarPuntero(almacenamiento,puntero);
 		i++;
 	}
 	liberarEntradaEnVector(almacenamiento,reemplazada);
-	printf("\n seleccioné para borrar a la clave %s\n\n",reemplazada->clave);
+	//printf("\n seleccioné para borrar a la clave %s\n\n",reemplazada->clave);
 	
 	return reemplazada;
 }
@@ -1559,7 +1559,7 @@ void destruirEntradaEnPosicion(Almacenamiento almacenamiento, int posicion){
 
 t_list* persistirDatos(Almacenamiento almacenamiento,Instruccion* datosInstruccion, char* algoritmoDistribucion, int* puntero, bool* seCompacto){
 	//creo y agrego la nueva entrada dentro de esta funcion, asi puedo retornar la lista de entradas Borradas
-	printf("\n\n ENTRO A PERSISTIR DATOS\n\n");
+	//printf("\n\n ENTRO A PERSISTIR DATOS\n\n");
 	t_entrada* nuevaEntrada = NULL;
 	nuevaEntrada=malloc(sizeof(t_entrada));
 	nuevaEntrada->clave = malloc(tamanioValorAlmacenado(datosInstruccion->key)+1);
@@ -1577,7 +1577,7 @@ t_list* persistirDatos(Almacenamiento almacenamiento,Instruccion* datosInstrucci
 	int i=0;
 	int j=0;
 	char letra;
-	printf("\n la entrada necesita  %d  espacios\n",tamanio);
+	//printf("\n la entrada necesita  %d  espacios\n",tamanio);
 	int espaciosLibres= espacioLibre(almacenamiento);
 	t_entrada* entradaAux=NULL;
 	t_entrada* otraEntradaAux=NULL;
@@ -1667,14 +1667,14 @@ t_list* persistirDatos(Almacenamiento almacenamiento,Instruccion* datosInstrucci
 
 
 
-		}	else {printf("\n no se pudo leer el algoritmo de reemplazo %s \n", algoritmoDistribucion);
+		}	else {//printf("\n no se pudo leer el algoritmo de reemplazo %s \n", algoritmoDistribucion);
 				log_info(infoLogger,"no se pudo leer algoritmo de reemplazo");
 				return entradasBorradas;}}}
 	}		// Dependiendo el algoritmoDistricucion, persistir los datos localmente
 			//en este caso tengo espacio suficiente sin reemplazar, o ya reemplacé cuanto necesitaba. analizo si compactar o simplemente guardar
 	if(espaciosLibres<tamanio){
 		log_error(infoLogger,"no se pueden borrar datos atomicos en la instancia para guardar nuevos datos");
-		printf("SALGO RETORNANDO %d",i);
+		//printf("SALGO RETORNANDO %d",i);
 		return entradasBorradas; }//retorno -1 si no se puede encontrar espacio suficiente para guardar el dato
 	FILE* vectorBin= fopen(almacenamiento.vector,"r+");
 	
@@ -1696,7 +1696,7 @@ t_list* persistirDatos(Almacenamiento almacenamiento,Instruccion* datosInstrucci
 			fclose(vectorBin);
 			if(j==tamanio){
 				escribirBinarioEnPosicion(almacenamiento,i,valor);//retorno i que es la posicion donde se guarda el comienzo del valor
-				printf("SALGO RETORNANDO %d\n",i);
+				//printf("SALGO RETORNANDO %d\n",i);
 				nuevaEntrada->numeroDeEntrada=i;
 				grabarEntradaEnVector(almacenamiento,i,nuevaEntrada);
 				return entradasBorradas;
@@ -1720,7 +1720,7 @@ t_list* persistirDatos(Almacenamiento almacenamiento,Instruccion* datosInstrucci
 	for(j=0;j<tamanio;j++){
 		grabarPosicionEnVector(almacenamiento,i+j);
 	}
-	printf("SALGO RETORNANDO %d",i);
+	//printf("SALGO RETORNANDO %d",i);
 	nuevaEntrada->numeroDeEntrada=i;
 	return entradasBorradas;
 }
@@ -1867,7 +1867,7 @@ void cargarTablaEntradas(t_list *tablaEntradas,Instruccion* estructuraInstruccio
 
 	int posicion=buscarPosicionEnBin(almacenamiento,estructuraInstruccion->dato);
 
-printf("#entrada: %d encontrado en el binario para %s\n", posicion, estructuraInstruccion->dato);
+//printf("#entrada: %d encontrado en el binario para %s\n", posicion, estructuraInstruccion->dato);
 
 	//nuevaEntrada->numeroDeEntrada = 999; //para luego verificar si se carga bien el nmEntrada. quedara 999 si se hizo mal
 	nuevaEntrada->numeroDeEntrada = posicion;
@@ -1916,7 +1916,7 @@ void procesoArchivoDump(char *archivo, char* punto_montaje, Almacenamiento almac
 
     //printf( "Contenido/clave-key con formato del fichero: %s\n\n", archivo ); //muestro key con formato ".txt"
     //printf( "Valor: %s\n", contenido_fichero ); 
-    printf ("Clave/key: %s\n\n",nombre_archivo_sin_extension); //muestro key sin formato ".txt"
+    //printf ("Clave/key: %s\n\n",nombre_archivo_sin_extension); //muestro key sin formato ".txt"
 
 		
   /*  	//carga de valor/dato
@@ -2178,9 +2178,9 @@ char* valorEntrada(t_entrada* entrada){
 	fseek(fichero,0,SEEK_END);
 	int tamanio= ftell(fichero) ;
 	fseek(fichero,0,SEEK_SET);
-	printf("\n sobre el string %s ",valor);
+	//printf("\n sobre el string %s ",valor);
 	fread(valor,sizeof(char)*tamanio,1,fichero);
-	printf("\nleí el valor    %s \n", valor);
+	//printf("\nleí el valor    %s \n", valor);
 	return valor;
 
 
@@ -2209,7 +2209,7 @@ int buscarPosicionEnBin(Almacenamiento almacenamiento, char* valor){
 	int posicion=0;
 	char*buffer= string_new();
 	int i=0;
-	printf("\nse busca %s\n",valor);
+	//printf("\nse busca %s\n",valor);
 	while(i<entradas){
 		if(!posicionXEnVectorLibre(almacenamiento,i)){
 		buffer= leerBinarioEnPosicion(almacenamiento ,i);
@@ -2217,7 +2217,7 @@ int buscarPosicionEnBin(Almacenamiento almacenamiento, char* valor){
 		if(strcmp(buffer,valor) == 0){
 			fclose(binario);
 			free(buffer);
-			printf("retorno %d \n",i);
+			//printf("retorno %d \n",i);
 			return i;}}	
 		i +=1;
 
@@ -2419,9 +2419,9 @@ bool existeEntradaEnTabla(t_list* tablaEntradas, char key[40]){
 	}
 
 		if(list_any_satisfy(tablaEntradas, (void*)esIgualAKey)){
-			printf(" EXISTE ");
+			//printf(" EXISTE ");
 			return true;
-		}else{printf(" NO EXISTE ");
+		}else{//printf(" NO EXISTE ");
 				return false;
 		}
 }
@@ -2574,9 +2574,9 @@ bool yaExisteCarpeta(char* nombreCarpeta){
     }
 
     if(ent->d_name == nombreCarpeta){
-    	printf("ya existe");
+    	//printf("ya existe");
     	return 1;
-    }else{printf("no existe");
+    }else{//printf("no existe");
     		return 0;
     }
 
